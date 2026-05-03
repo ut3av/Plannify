@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  :root {
+    --bg-main: hsl(210, 30%, 98%);
+    --text-main: hsl(210, 40%, 10%);
+    --scrollbar-track: rgba(0, 0, 0, 0.03);
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+    --primary: hsl(260, 80%, 60%);
+    
+    --glass-bg: #ffffff;
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --glass-hover-bg: #fcfcfc;
+    --glass-hover-border: rgba(0, 0, 0, 0.12);
+    --glass-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    
+    --input-bg: #ffffff;
+    --input-border: rgba(0, 0, 0, 0.15);
+    --input-text: #0f172a;
+    --input-placeholder: rgba(0, 0, 0, 0.4);
+    --input-focus-bg: #ffffff;
+    
+    --btn-disabled-bg: rgba(0, 0, 0, 0.05);
+    --btn-disabled-text: rgba(0, 0, 0, 0.3);
+    
+    --shimmer-1: rgba(0, 0, 0, 0.03);
+    --shimmer-2: rgba(0, 0, 0, 0.08);
+    
+    --btn-outline-text: #6d28d9;
+    --btn-outline-border: rgba(109, 40, 217, 0.4);
+    --btn-outline-hover-bg: rgba(109, 40, 217, 0.05);
+    --btn-outline-disabled-border: rgba(0, 0, 0, 0.1);
+  }
+
+  .dark {
+    --bg-main: linear-gradient(145deg, #0a0a12 0%, #0f0a1e 30%, #0d1025 60%, #0a0e1a 100%);
+    --text-main: #e2e8f0;
+    --scrollbar-track: rgba(255, 255, 255, 0.03);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+    
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --glass-hover-bg: rgba(255, 255, 255, 0.06);
+    --glass-hover-border: rgba(255, 255, 255, 0.12);
+    --glass-hover-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    
+    --input-bg: rgba(255, 255, 255, 0.04);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-text: #e2e8f0;
+    --input-placeholder: rgba(255, 255, 255, 0.3);
+    --input-focus-bg: rgba(255, 255, 255, 0.06);
+    
+    --btn-disabled-bg: rgba(255, 255, 255, 0.08);
+    --btn-disabled-text: rgba(255, 255, 255, 0.3);
+    
+    --shimmer-1: rgba(255, 255, 255, 0.03);
+    --shimmer-2: rgba(255, 255, 255, 0.08);
+    
+    --btn-outline-text: #c4b5fd;
+    --btn-outline-border: rgba(139, 92, 246, 0.4);
+    --btn-outline-hover-bg: rgba(139, 92, 246, 0.1);
+    --btn-outline-disabled-border: rgba(255, 255, 255, 0.08);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+}
+
+@layer components {
+  /* Glassmorphic card */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  .glass-card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card-hover:hover {
+    background: var(--glass-hover-bg);
+    border-color: var(--glass-hover-border);
+    box-shadow: var(--glass-hover-shadow);
+    transform: translateY(-1px);
+  }
+
+  /* Glass input */
+  .glass-input {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    color: var(--input-text);
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.25s ease;
+    width: 100%;
+  }
+
+  .glass-input::placeholder {
+    color: var(--input-placeholder);
+  }
+
+  .glass-input:focus {
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 0 16px rgba(139, 92, 246, 0.08);
+    background: var(--input-focus-bg);
+  }
+
+  /* Gradient button */
+  .btn-gradient {
+    background: linear-gradient(135deg, var(--primary), hsl(var(--hue-primary), 70%, 45%));
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);
+  }
+
+  .btn-gradient:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(124, 58, 237, 0.4);
+  }
+
+  .btn-gradient:active {
+    transform: translateY(0px) scale(0.98);
+  }
+
+  .btn-gradient:disabled {
+    background: var(--btn-disabled-bg);
+    color: var(--btn-disabled-text);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Outline button */
+  .btn-outline {
+    background: transparent;
+    color: var(--btn-outline-text);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--btn-outline-border);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline:hover {
+    background: var(--btn-outline-hover-bg);
+    border-color: rgba(139, 92, 246, 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+  }
+
+  .btn-outline:active {
+    transform: translateY(0px) scale(0.98);
+  }
+
+  .btn-outline:disabled {
+    border-color: var(--btn-outline-disabled-border);
+    color: var(--btn-disabled-text);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-outline:disabled:hover {
+    background: transparent;
+  }
+
+  /* Shimmer loading */
+  .shimmer {
+    background: var(--bg-main);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  /* Status dot */
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status-dot-active {
+    background: #34d399;
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .status-dot-idle {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}

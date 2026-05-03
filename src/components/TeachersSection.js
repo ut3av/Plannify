@@ -1,0 +1,113 @@
+import { useState } from "react";
+
+const TEACHER_COLORS = [
+  { bg: "rgba(59, 130, 246, 0.05)", border: "rgba(59, 130, 246, 0.2)", accent: "#60a5fa", icon: "bg-blue-500/10" },
+  { bg: "rgba(16, 185, 129, 0.05)", border: "rgba(16, 185, 129, 0.2)", accent: "#34d399", icon: "bg-emerald-500/10" },
+  { bg: "rgba(245, 158, 11, 0.05)", border: "rgba(245, 158, 11, 0.2)", accent: "#fbbf24", icon: "bg-amber-500/10" },
+  { bg: "rgba(236, 72, 153, 0.05)", border: "rgba(236, 72, 153, 0.2)", accent: "#f472b6", icon: "bg-pink-500/10" },
+];
+
+const hashName = (name) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return Math.abs(hash) % TEACHER_COLORS.length;
+};
+
+export default function TeachersSection({ teachers, onChange }) {
+  const [name, setName] = useState("");
+  const [freePeriods, setFreePeriods] = useState(1);
+
+  const addTeacher = () => {
+    const trimmed = name.trim();
+    if (trimmed && !teachers.find(t => t.name.toLowerCase() === trimmed.toLowerCase())) {
+      onChange([...teachers, { name: trimmed, free_periods: freePeriods }]);
+      setName("");
+      setFreePeriods(1);
+    }
+  };
+
+  const removeTeacher = (index) => {
+    onChange(teachers.filter((_, i) => i !== index));
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTeacher();
+    }
+  };
+
+  return (
+    <div className="glass-card p-6 animate-scale-in">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+              <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
+              </svg>
+            </div>
+            Teachers
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 ml-10">
+            Add the teachers who will be scheduled. Each teacher can teach multiple subjects.
+          </p>
+        </div>
+        <span className="text-sm font-semibold text-slate-500 bg-white dark:bg-white/[0.04] rounded-lg px-3 py-1.5 border border-slate-200 dark:border-white/[0.06]">
+          {teachers.length} added
+        </span>
+      </div>
+
+      {/* Add input */}
+      <div className="flex gap-2 mb-6">
+        <input className="glass-input flex-1" placeholder="Teacher name e.g. John Doe..." value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
+        <div className="w-32">
+          <input type="number" min="0" className="glass-input w-full" placeholder="Free Periods" value={freePeriods} onChange={(e) => setFreePeriods(parseInt(e.target.value) || 0)} title="Free Periods Per Day" />
+        </div>
+        <button className="btn-gradient px-5" onClick={addTeacher} disabled={!name.trim()}>
+          <span className="flex items-center gap-1.5">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+            Add
+          </span>
+        </button>
+      </div>
+
+      {/* Teacher cards */}
+      {teachers.length === 0 ? (
+        <div className="text-center py-12 text-slate-500">
+          <svg className="w-12 h-12 mx-auto mb-3 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
+          <p className="text-sm">No teachers added yet. Add your first teacher above.</p>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {teachers.map((t, index) => {
+            const color = TEACHER_COLORS[hashName(t.name)];
+            return (
+              <div key={index} className="group relative rounded-xl p-3 sm:p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ background: color.bg, border: `1px solid ${color.border}` }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm ${color.icon}`} style={{ color: color.accent }}>
+                      {t.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900 dark:text-white">{t.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: color.accent }}>{t.free_periods} free period{t.free_periods !== 1 ? 's' : ''}/day</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeTeacher(index)}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                    title="Remove teacher"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
