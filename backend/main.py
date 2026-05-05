@@ -5,7 +5,20 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from ortools.sat.python import cp_model
 from pydantic import BaseModel, Field
-from db import save_timetable_to_db, get_timetables_from_db, get_timetable_by_id, delete_timetable_from_db
+try:
+    from .db import (
+        delete_timetable_from_db,
+        get_timetable_by_id,
+        get_timetables_from_db,
+        save_timetable_to_db,
+    )
+except ImportError:
+    from db import (
+        delete_timetable_from_db,
+        get_timetable_by_id,
+        get_timetables_from_db,
+        save_timetable_to_db,
+    )
 
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
@@ -27,8 +40,10 @@ class SubjectInput(BaseModel):
     name: str
     teacher: str
     section: Optional[str] = None
+    sections: List[str] = []
     is_lab: bool = False
     required_slots: int = Field(default=3, ge=1, le=20)
+    room: Optional[str] = None
 
 
 class TeacherInput(BaseModel):
@@ -72,18 +87,34 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
     rooms = [clean_name(room) for room in request.rooms if clean_name(room)]
     slots = [clean_name(slot)
              for slot in request.time_slots if clean_name(slot)]
-    subjects = [
-        SubjectInput(
-            code=clean_name(subject.code),
-            name=clean_name(subject.name),
-            teacher=clean_name(subject.teacher),
-            section=clean_name(subject.section) if subject.section else None,
-            is_lab=subject.is_lab,
-            required_slots=subject.required_slots,
-        )
-        for subject in request.subjects
-        if clean_name(subject.name) and clean_name(subject.teacher)
-    ]
+    subjects = []
+    for subject in request.subjects:
+        if clean_name(subject.name) and clean_name(subject.teacher):
+            if getattr(subject, 'sections', None) and len(subject.sections) > 0:
+                for sec in subject.sections:
+                    subjects.append(
+                        SubjectInput(
+                            code=clean_name(subject.code),
+                            name=clean_name(subject.name),
+                            teacher=clean_name(subject.teacher),
+                            section=clean_name(sec),
+                            room=clean_name(subject.room) if subject.room else None,
+                            is_lab=subject.is_lab,
+                            required_slots=subject.required_slots,
+                        )
+                    )
+            else:
+                subjects.append(
+                    SubjectInput(
+                        code=clean_name(subject.code),
+                        name=clean_name(subject.name),
+                        teacher=clean_name(subject.teacher),
+                        section=clean_name(subject.section) if subject.section else None,
+                        room=clean_name(subject.room) if subject.room else None,
+                        is_lab=subject.is_lab,
+                        required_slots=subject.required_slots,
+                    )
+                )
     sections = [
         SectionInput(
             name=clean_name(sec.name),
@@ -164,12 +195,15 @@ def solve_timetable(request: GenerateRequest):
 
     # Each required occurrence of a subject must be placed exactly once.
     for subject_idx, subject in enumerate(request.subjects):
-        section_obj = next((s for s in request.sections if s.name == subject.section), None)
         target_room_idx = -1
-        if section_obj:
-            target_room = section_obj.lab_room if subject.is_lab else section_obj.room
-            if target_room and target_room in rooms:
-                target_room_idx = rooms.index(target_room)
+        if subject.room and subject.room in rooms:
+            target_room_idx = rooms.index(subject.room)
+        else:
+            section_obj = next((s for s in request.sections if s.name == subject.section), None)
+            if section_obj:
+                target_room = section_obj.lab_room if subject.is_lab else section_obj.room
+                if target_room and target_room in rooms:
+                    target_room_idx = rooms.index(target_room)
 
         for occurrence in range(subject.required_slots):
             model.AddExactlyOne(
@@ -453,13 +487,25 @@ def solve_timetable(request: GenerateRequest):
                                 }
                             )
 
+    score = int(solver.ObjectiveValue())
+    
+    if score == 0:
+        ai_desc = "Perfect! The timetable was generated with an optimal score of 0. All teacher preferences and subject distributions are perfectly balanced with no idle gaps or overloads."
+    elif score <= 10:
+        ai_desc = f"Great schedule! A low score of {score} means the timetable is highly optimized, with only minor compromises in teacher gaps or subject spread."
+    elif score <= 25:
+        ai_desc = f"Good schedule. We had to make a few trade-offs, such as some back-to-back classes for teachers or uneven subject distribution across days."
+    else:
+        ai_desc = f"Feasible but tight schedule. The higher score indicates several teacher overloads or idle gaps were necessary. Consider adding more resources if possible."
+
     return {
         "days": DAYS,
         "time_slots": slots,
         "timetable": timetable,
         "assignments": assignments,
         "solver_status": solver.StatusName(status),
-        "objective_score": int(solver.ObjectiveValue()),
+        "objective_score": score,
+        "ai_description": ai_desc,
     }
 
 

@@ -1,17 +1,6 @@
 import { useState } from "react";
 
-const TEACHER_COLORS = [
-  { bg: "rgba(59, 130, 246, 0.05)", border: "rgba(59, 130, 246, 0.2)", accent: "#60a5fa", icon: "bg-blue-500/10" },
-  { bg: "rgba(16, 185, 129, 0.05)", border: "rgba(16, 185, 129, 0.2)", accent: "#34d399", icon: "bg-emerald-500/10" },
-  { bg: "rgba(245, 158, 11, 0.05)", border: "rgba(245, 158, 11, 0.2)", accent: "#fbbf24", icon: "bg-amber-500/10" },
-  { bg: "rgba(236, 72, 153, 0.05)", border: "rgba(236, 72, 153, 0.2)", accent: "#f472b6", icon: "bg-pink-500/10" },
-];
-
-const hashName = (name) => {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return Math.abs(hash) % TEACHER_COLORS.length;
-};
+const DEFAULT_TEACHER_COLOR = { bg: "rgba(14,165,233,0.12)", border: "rgba(14,165,233,0.3)", text: "#7dd3fc", accent: "#38bdf8" };
 
 export default function TeachersSection({ teachers, onChange }) {
   const [name, setName] = useState("");
@@ -82,12 +71,12 @@ export default function TeachersSection({ teachers, onChange }) {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {teachers.map((t, index) => {
-            const color = TEACHER_COLORS[hashName(t.name)];
+            const color = DEFAULT_TEACHER_COLOR;
             return (
               <div key={index} className="group relative rounded-xl p-3 sm:p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ background: color.bg, border: `1px solid ${color.border}` }}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm ${color.icon}`} style={{ color: color.accent }}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm`} style={{ color: color.accent, backgroundColor: color.bg, border: `1px solid ${color.border}` }}>
                       {t.name.charAt(0).toUpperCase()}
                     </div>
                     <div>

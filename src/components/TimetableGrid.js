@@ -1,22 +1,4 @@
-const TEACHER_COLORS = [
-  { bg: "rgba(139,92,246,0.12)", border: "rgba(139,92,246,0.3)", text: "#6958adff", accent: "#a78bfa" },
-  { bg: "rgba(244,63,94,0.12)", border: "rgba(244,63,94,0.3)", text: "#fda4af", accent: "#fb7185" },
-  { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.3)", text: "#fcd34d", accent: "#fbbf24" },
-  { bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", text: "#6ee7b7", accent: "#34d399" },
-  { bg: "rgba(14,165,233,0.12)", border: "rgba(14,165,233,0.3)", text: "#7dd3fc", accent: "#38bdf8" },
-  { bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.3)", text: "#d8b4fe", accent: "#c084fc" },
-  { bg: "rgba(236,72,153,0.12)", border: "rgba(236,72,153,0.3)", text: "#f9a8d4", accent: "#f472b6" },
-  { bg: "rgba(6,182,212,0.12)", border: "rgba(6,182,212,0.3)", text: "#67e8f9", accent: "#22d3ee" },
-  { bg: "rgba(234,88,12,0.12)", border: "rgba(234,88,12,0.3)", text: "#fdba74", accent: "#fb923c" },
-  { bg: "rgba(34,197,94,0.12)", border: "rgba(34,197,94,0.3)", text: "#86efac", accent: "#4ade80" },
-];
-
-function hashName(name) {
-  if (!name) return 0;
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = ((h << 5) - h + name.charCodeAt(i)) | 0;
-  return Math.abs(h) % TEACHER_COLORS.length;
-}
+import { SUBJECT_COLORS } from "./SubjectsSection";
 
 function ShimmerGrid() {
   return (
@@ -53,8 +35,10 @@ function EmptyState({ loading }) {
   );
 }
 
-function AssignmentCard({ item }) {
-  const c = TEACHER_COLORS[hashName(item.teacher)];
+function AssignmentCard({ item, subjects }) {
+  const subject = subjects?.find(s => s.name === item.subject);
+  const colorIndex = subject?.colorIndex ?? 0;
+  const c = SUBJECT_COLORS[colorIndex] || SUBJECT_COLORS[0];
   return (
     <div className="relative rounded-lg p-2.5 transition-all duration-200 hover:translate-y-[-1px] hover:shadow-lg cursor-default" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
       <div className="flex items-start justify-between gap-1">
@@ -80,7 +64,7 @@ function AssignmentCard({ item }) {
   );
 }
 
-export default function TimetableGrid({ result, loading, onExport, onSaveDb }) {
+export default function TimetableGrid({ result, subjects, loading, onExport, onSaveDb }) {
   if (!result) return <EmptyState loading={loading} />;
 
   return (
@@ -142,7 +126,7 @@ export default function TimetableGrid({ result, loading, onExport, onSaveDb }) {
                     <td key={`${day}-${slot}`} className="h-28 align-top border-b border-r border-slate-200 dark:border-white/[0.06] p-2 hover:bg-slate-50 dark:bg-white/[0.02] transition-colors">
                       {a.length === 0
                         ? <span className="text-xs text-slate-700">—</span>
-                        : <div className="flex flex-col gap-1.5">{a.map((item, i) => <AssignmentCard key={`${item.subject}-${item.room}-${i}`} item={item} />)}</div>
+                        : <div className="flex flex-col gap-1.5">{a.map((item, i) => <AssignmentCard key={`${item.subject}-${item.room}-${i}`} item={item} subjects={subjects} />)}</div>
                       }
                     </td>
                   );

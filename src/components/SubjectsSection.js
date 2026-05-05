@@ -1,22 +1,54 @@
 import { useState } from "react";
 
-export default function SubjectsSection({ subjects, teachers, sections = [], onChange }) {
+/* Color palette for subject badges */
+export const SUBJECT_COLORS = [
+  { bg: "rgba(139,92,246,0.12)", border: "rgba(139,92,246,0.3)", text: "#c4b5fd", accent: "#a78bfa" },
+  { bg: "rgba(244,63,94,0.12)", border: "rgba(244,63,94,0.3)", text: "#fda4af", accent: "#fb7185" },
+  { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.3)", text: "#fcd34d", accent: "#fbbf24" },
+  { bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", text: "#6ee7b7", accent: "#34d399" },
+  { bg: "rgba(14,165,233,0.12)", border: "rgba(14,165,233,0.3)", text: "#7dd3fc", accent: "#38bdf8" },
+  { bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.3)", text: "#d8b4fe", accent: "#c084fc" },
+  { bg: "rgba(236,72,153,0.12)", border: "rgba(236,72,153,0.3)", text: "#f9a8d4", accent: "#f472b6" },
+  { bg: "rgba(6,182,212,0.12)", border: "rgba(6,182,212,0.3)", text: "#67e8f9", accent: "#22d3ee" },
+  { bg: "rgba(234,88,12,0.12)", border: "rgba(234,88,12,0.3)", text: "#fdba74", accent: "#fb923c" },
+  { bg: "rgba(34,197,94,0.12)", border: "rgba(34,197,94,0.3)", text: "#86efac", accent: "#4ade80" },
+];
+
+export default function SubjectsSection({ subjects, teachers, sections = [], rooms = [], onChange }) {
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [teacher, setTeacher] = useState(teachers[0]?.name || "");
-  const [section, setSection] = useState(sections[0]?.name || "");
+  const [selectedSections, setSelectedSections] = useState([]);
+  const [room, setRoom] = useState("");
   const [slots, setSlots] = useState(3);
   const [isLab, setIsLab] = useState(false);
+  const [colorIndex, setColorIndex] = useState(0);
+  const [isSectionOpen, setIsSectionOpen] = useState(false);
 
   const addSubject = () => {
     const trimmedCode = code.trim();
     const trimmedName = name.trim();
     if (trimmedName && teacher) {
-      onChange([...subjects, { code: trimmedCode, name: trimmedName, teacher, section: section || undefined, is_lab: isLab, required_slots: slots }]);
+      const newSubject = { 
+        code: trimmedCode, 
+        name: trimmedName, 
+        teacher, 
+        section: undefined, 
+        sections: selectedSections.length > 0 ? selectedSections : undefined,
+        room: room || undefined, 
+        is_lab: isLab, 
+        required_slots: slots, 
+        colorIndex 
+      };
+      
+      onChange([...subjects, newSubject]);
       setCode("");
       setName("");
       setSlots(3);
       setIsLab(false);
+      setRoom("");
+      setSelectedSections([]);
+      setColorIndex((colorIndex + 1) % SUBJECT_COLORS.length);
     }
   };
 
@@ -30,18 +62,6 @@ export default function SubjectsSection({ subjects, teachers, sections = [], onC
       addSubject();
     }
   };
-
-  /* Color palette for subject badges */
-  const COLORS = [
-    { bg: "from-violet-500/20 to-purple-500/20", border: "border-violet-500/30", dot: "bg-violet-400" },
-    { bg: "from-rose-500/20 to-pink-500/20", border: "border-rose-500/30", dot: "bg-rose-400" },
-    { bg: "from-amber-500/20 to-orange-500/20", border: "border-amber-500/30", dot: "bg-amber-400" },
-    { bg: "from-emerald-500/20 to-teal-500/20", border: "border-emerald-500/30", dot: "bg-emerald-400" },
-    { bg: "from-sky-500/20 to-cyan-500/20", border: "border-sky-500/30", dot: "bg-sky-400" },
-    { bg: "from-indigo-500/20 to-blue-500/20", border: "border-indigo-500/30", dot: "bg-indigo-400" },
-    { bg: "from-pink-500/20 to-fuchsia-500/20", border: "border-pink-500/30", dot: "bg-pink-400" },
-    { bg: "from-teal-500/20 to-cyan-500/20", border: "border-teal-500/30", dot: "bg-teal-400" },
-  ];
 
   return (
     <div className="glass-card p-6 animate-scale-in">
@@ -66,7 +86,7 @@ export default function SubjectsSection({ subjects, teachers, sections = [], onC
       </div>
 
       {/* Add form */}
-      <div className={`grid gap-3 mb-6 items-end ${sections.length > 0 ? "sm:grid-cols-[80px_1fr_160px_160px_80px_auto_auto]" : "sm:grid-cols-[80px_1fr_160px_80px_auto_auto]"}`}>
+      <div className={`grid gap-3 mb-6 items-end ${sections.length > 0 ? "sm:grid-cols-[80px_1fr_140px_120px_120px_70px_auto_auto]" : "sm:grid-cols-[80px_1fr_160px_120px_80px_auto_auto]"}`}>
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Code</label>
           <input
@@ -101,16 +121,53 @@ export default function SubjectsSection({ subjects, teachers, sections = [], onC
           </select>
         </div>
         {sections.length > 0 && (
+          <div className="relative">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Sections</label>
+            <div 
+              className="glass-input cursor-pointer flex items-center justify-between" 
+              style={{ height: '42px', padding: '0 12px' }}
+              onClick={() => setIsSectionOpen(!isSectionOpen)}
+            >
+              <span className="truncate text-sm pr-2 text-slate-800 dark:text-slate-200">
+                {selectedSections.length === 0 ? "None" : selectedSections.join(", ")}
+              </span>
+              <svg className={`w-4 h-4 text-slate-400 transition-transform ${isSectionOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+            
+            {isSectionOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsSectionOpen(false)} />
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 glass-card p-2 flex flex-col gap-1 max-h-48 overflow-y-auto shadow-xl border border-slate-200 dark:border-white/[0.1] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl">
+                  {sections.map((s) => (
+                    <label key={s.name} className="flex items-center gap-2.5 p-1.5 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded cursor-pointer transition-colors">
+                      <input
+                        type="checkbox"
+                        className="w-3.5 h-3.5 rounded border-slate-300 dark:border-white/[0.2] bg-white dark:bg-white/[0.04] text-violet-500 focus:ring-violet-500/30 cursor-pointer"
+                        checked={selectedSections.includes(s.name)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedSections([...selectedSections, s.name]);
+                          else setSelectedSections(selectedSections.filter(x => x !== s.name));
+                        }}
+                      />
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{s.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        {rooms.length > 0 && (
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Section</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5" title="Override Section Room">Fixed Room</label>
             <select
               className="glass-input cursor-pointer"
-              value={section}
-              onChange={(e) => setSection(e.target.value)}
+              value={room}
+              onChange={(e) => setRoom(e.target.value)}
             >
-              <option value="" className="bg-slate-900">None</option>
-              {sections.map((s) => (
-                <option key={s.name} value={s.name} className="bg-slate-900">{s.name}</option>
+              <option value="" className="bg-slate-900">Auto</option>
+              {rooms.map((r) => (
+                <option key={r} value={r} className="bg-slate-900">{r}</option>
               ))}
             </select>
           </div>
@@ -153,6 +210,22 @@ export default function SubjectsSection({ subjects, teachers, sections = [], onC
         </button>
       </div>
 
+      {/* Color Picker */}
+      <div className="mb-6">
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-2">Subject Color</label>
+        <div className="flex gap-2 flex-wrap">
+          {SUBJECT_COLORS.map((color, index) => (
+            <button
+              key={index}
+              className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${colorIndex === index ? 'scale-110 shadow-lg' : 'opacity-70 hover:opacity-100 hover:scale-105'}`}
+              style={{ backgroundColor: color.accent, borderColor: colorIndex === index ? 'white' : 'transparent' }}
+              onClick={() => setColorIndex(index)}
+              title={`Color ${index + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* Subject cards */}
       {subjects.length === 0 ? (
         <div className="text-center py-12 text-slate-500">
@@ -164,14 +237,15 @@ export default function SubjectsSection({ subjects, teachers, sections = [], onC
       ) : (
         <div className="space-y-2">
           {subjects.map((subject, index) => {
-            const color = COLORS[index % COLORS.length];
+            const color = SUBJECT_COLORS[subject.colorIndex ?? 0];
             return (
               <div
                 key={`${subject.name}-${index}`}
-                className={`group flex items-center justify-between rounded-xl bg-gradient-to-r ${color.bg} border ${color.border} px-4 py-3 hover:scale-[1.005] transition-all duration-200`}
+                className="group flex items-center justify-between rounded-xl px-4 py-3 hover:scale-[1.005] transition-all duration-200"
+                style={{ background: color.bg, border: `1px solid ${color.border}` }}
               >
                 <div className="flex items-center gap-4 min-w-0 flex-1">
-                  <div className={`w-2.5 h-2.5 rounded-full ${color.dot} flex-shrink-0`} />
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color.accent }} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
@@ -183,7 +257,11 @@ export default function SubjectsSection({ subjects, teachers, sections = [], onC
                       )}
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      {subject.teacher} {subject.section ? `• ${subject.section}` : "• Any Section (Auto)"}
+                      {subject.teacher} 
+                      {subject.sections && subject.sections.length > 0 
+                        ? ` • ${subject.sections.join(", ")}` 
+                        : (subject.section ? ` • ${subject.section}` : " • Any Section (Auto)")}
+                      {subject.room ? ` • Fixed Room: ${subject.room}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-2.5 py-1 flex-shrink-0">
