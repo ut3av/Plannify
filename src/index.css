@@ -157,7 +157,7 @@
 
   /* Gradient button */
   .btn-gradient {
-    background: linear-gradient(135deg, var(--primary), hsl(var(--hue-primary), 70%, 45%));
+    background: linear-gradient(135deg, var(--primary), hsl(260, 70%, 45%));
     color: #ffffff;
     font-weight: 600;
     font-size: 0.875rem;

@@ -555,7 +555,7 @@ export default function App() {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
     });
     saveAs(data, `timetable_${new Date().toISOString().slice(0, 10)}.xlsx`);
-  }, [result]);
+  }, [result, sections]);
 
   const saveToDatabase = async () => {
     if (!result) return;

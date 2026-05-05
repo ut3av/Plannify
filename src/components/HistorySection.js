@@ -44,6 +44,15 @@ export default function HistorySection({ onSelectTimetable }) {
     }
   };
 
+  if (error) {
+    return (
+      <div className="glass-card p-12 text-center">
+        <div className="w-10 h-10 border-2 border-red-500/50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-400">!</div>
+        <p className="text-red-400">{error}</p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="glass-card p-12 text-center">
