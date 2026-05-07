@@ -8,6 +8,8 @@ import TimeSlotsSection from "./components/TimeSlotsSection";
 import ReschedulePanel from "./components/ReschedulePanel";
 import TimetableGrid from "./components/TimetableGrid";
 import HistorySection from "./components/HistorySection";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
+import AIChatBot from "./components/AIChatBot";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 
@@ -20,6 +22,7 @@ const TABS = [
   { id: "rooms", label: "Classrooms", icon: "building" },
   { id: "slots", label: "Time Slots", icon: "clock" },
   { id: "timetable", label: "Timetable", icon: "grid" },
+  { id: "analytics", label: "Analytics", icon: "bar-chart" },
   { id: "reschedule", label: "Reschedule", icon: "refresh" },
   { id: "history", label: "History", icon: "clock" },
 ];
@@ -136,6 +139,21 @@ function TabIcon({ icon, className = "w-4 h-4" }) {
         strokeLinejoin="round"
       >
         <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z" />
+      </svg>
+    ),
+    "bar-chart": (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
       </svg>
     ),
   };
@@ -639,6 +657,14 @@ export default function App() {
             }}
           />
         );
+      case "analytics":
+        return (
+          <AnalyticsDashboard 
+            result={result} 
+            teachers={teachers} 
+            subjects={subjects} 
+          />
+        );
       default:
         return null;
     }
@@ -838,6 +864,7 @@ export default function App() {
           {renderContent()}
         </div>
       </div>
+      <AIChatBot result={result} />
     </main>
   );
 }

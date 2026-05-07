@@ -1,24 +1,29 @@
-from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from collections import defaultdict #Provides a dictionary-like object that allows us to specify a default value type for keys that haven't been set yet. In this code, it's used to track teacher unavailability without having to check if the key exists first.
+from typing import Dict, List, Optional, Tuple #Used for type annotations to improve code readability and help with static analysis. Dict is a generic type for dictionaries, List for lists, Optional indicates that a value can be of a specified type or None, and Tuple is used for fixed-length tuples of specified types.
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from ortools.sat.python import cp_model
-from pydantic import BaseModel, Field
-try:
+from fastapi import FastAPI, HTTPException #Backend framework for building APIs
+from fastapi.middleware.cors import CORSMiddleware #Middleware to handle Cross-Origin Resource Sharing (CORS) which allows the frontend (running on a different origin) to communicate with this backend API.
+from ortools.sat.python import cp_model    #Main Ai tool by google (OR-CP-SAT Solver or Satisfier )
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+load_dotenv()
+from pydantic import BaseModel, Field #Data validation and settings management using Python type annotations. It allows us to define data models with type hints and automatically validates incoming data against those models.
+try:#Relative import for database functions, used when this file is imported as a module. This allows the code to work in both contexts (as a module or as a standalone script) without modification. If this file is run as a script, the relative import will fail, so we catch the ImportError and do an absolute import instead.
     from .db import (
         delete_timetable_from_db,
         get_timetable_by_id,
         get_timetables_from_db,
         save_timetable_to_db,
-    )
+    ) #Relative import for database functions. If this file is run as a script, the relative import will fail, so we catch the ImportError and do an absolute import instead.
 except ImportError:
     from db import (
         delete_timetable_from_db,
         get_timetable_by_id,
         get_timetables_from_db,
         save_timetable_to_db,
-    )
+    )#Absolute import for database functions, used when the file is run as a script. This allows the code to work in both contexts (as a module or as a standalone script) without modification.
 
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
@@ -68,6 +73,12 @@ class RescheduleRequest(BaseModel):
     teacher: str
     day: Optional[str] = None
     slots: List[str] = []
+
+
+class ChatRequest(BaseModel):
+    message: str
+    context: Optional[dict] = None
+    history: List[dict] = []
 
 
 LAST_REQUEST: Optional[GenerateRequest] = None
@@ -659,3 +670,47 @@ def delete_saved_timetable(tid: int):
         raise HTTPException(status_code=404, detail="Timetable not found")
     delete_timetable_from_db(tid)
     return {"message": "Timetable deleted successfully"}
+
+@app.post("/chat")
+def chat_with_gemini(request: ChatRequest):
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key or api_key == "your_api_key_here":
+        return {"reply": "Please set your GEMINI_API_KEY in the backend/.env file and restart the backend to use the AI chatbot."}
+    
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-pro')
+        
+        ctx = request.context or {}
+        system_instruction = (
+            "You are an elite, highly intelligent AI Timetable Scheduling Assistant. "
+            "You MUST use Markdown heavily to make your responses beautiful, readable, and structured. "
+            "Use tables, bullet points, bold text, and clear headings. "
+        )
+        if ctx:
+            system_instruction += f"\nCurrent Timetable State:\n- Objective Score: {ctx.get('objective_score', 'N/A')}\n- Total Classes: {len(ctx.get('assignments', []))}\n"
+        
+        # Build conversation history
+        formatted_history = []
+        for h in request.history:
+            role = "model" if h.get("sender") == "bot" else "user"
+            # Skip the initial greeting as it might not match Google's format strictness sometimes, but we'll add it anyway
+            if h.get("text"):
+                formatted_history.append({"role": role, "parts": [h.get("text")]})
+                
+        # To avoid first message role errors, we ensure history starts properly if we use it
+        # Actually, the simplest way to maintain history without start_chat is just appending to the prompt.
+        prompt = f"{system_instruction}\n\n"
+        if len(request.history) > 0:
+            prompt += "--- CONVERSATION HISTORY ---\n"
+            for h in request.history:
+                sender = "AI Assistant" if h.get("sender") == "bot" else "User"
+                prompt += f"**{sender}:** {h.get('text')}\n"
+            prompt += "----------------------------\n\n"
+            
+        prompt += f"**User:** {request.message}\n**AI Assistant:**"
+        
+        response = model.generate_content(prompt)
+        return {"reply": response.text}
+    except Exception as e:
+        return {"reply": f"Error communicating with Gemini: {str(e)}"}
