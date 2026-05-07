@@ -10,8 +10,10 @@ import TimetableGrid from "./components/TimetableGrid";
 import HistorySection from "./components/HistorySection";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import AIChatBot from "./components/AIChatBot";
+import LoginPage from "./components/LoginPage";
+import TeacherDashboard from "./components/TeacherDashboard";
 import { saveAs } from "file-saver";
-import * as XLSX from "xlsx";
+import { supabase } from "./supabaseClient";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
@@ -168,7 +170,9 @@ function getErrorMessage(error) {
 }
 
 export default function App() {
+  const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("teachers");
+
   const [teachers, setTeachers] = useState([
     { name: "Mohit Kumade", free_periods: 1 },
     { name: "Rohit Singh", free_periods: 1 },
@@ -184,70 +188,99 @@ export default function App() {
     { name: "BCA-F", room: "", lab_room: "" },
   ]);
   const [subjects, setSubjects] = useState([
-    {
-      code: "201",
-      name: "Data Structures",
-      teacher: "Mohit Kumade",
-      section: "BCA-A",
-      required_slots: 4,
-      colorIndex: 0,
-    },
-    {
-      code: "202",
-      name: "Operating System",
-      teacher: "Rohit Singh",
-      section: "BCA-A",
-      required_slots: 3,
-      colorIndex: 1,
-    },
-    {
-      code: "203",
-      name: "Environmental Studies",
-      teacher: "Deepa Waswani",
-      section: "BCA-B",
-      required_slots: 3,
-      colorIndex: 2,
-    },
-    {
-      code: "205",
-      name: "Basic Communication",
-      teacher: "Pragya Shastri",
-      section: undefined,
-      required_slots: 2,
-      colorIndex: 3,
-    },
-    {
-      code: "206",
-      name: "Programming Lab in Data Structures",
-      teacher: "Mohit Kumade",
-      section: "BCA-A",
-      is_lab: true,
-      required_slots: 2,
-      colorIndex: 4,
-    },
+    { code: "201", name: "Data Structures", teacher: "Mohit Kumade", section: "BCA-A", required_slots: 4, colorIndex: 0 },
+    { code: "202", name: "Operating System", teacher: "Rohit Singh", section: "BCA-A", required_slots: 3, colorIndex: 1 },
+    { code: "203", name: "Environmental Studies", teacher: "Deepa Waswani", section: "BCA-B", required_slots: 3, colorIndex: 2 },
+    { code: "205", name: "Basic Communication", teacher: "Pragya Shastri", section: undefined, required_slots: 2, colorIndex: 3 },
+    { code: "206", name: "Programming Lab in Data Structures", teacher: "Mohit Kumade", section: "BCA-A", is_lab: true, required_slots: 2, colorIndex: 4 },
   ]);
   const [rooms, setRooms] = useState([
-    "Room 401",
-    "Room 402",
-    "Lab 105",
-    "Lab 003",
+    "Room 401", "Room 402", "Lab 105", "Lab 003"
   ]);
   const [timeSlots, setTimeSlots] = useState([
-    "10:30 AM - 11:20 AM",
-    "11:20 AM - 12:10 PM",
-    "01:00 PM - 01:50 PM",
-    "01:50 PM - 02:40 PM",
-    "02:40 PM - 03:30 PM",
+    "10:30 AM - 11:20 AM", "11:20 AM - 12:10 PM", "01:00 PM - 01:50 PM", "01:50 PM - 02:40 PM", "02:40 PM - 03:30 PM"
   ]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [rescheduleNote, setRescheduleNote] = useState("");
+  const [isCloudLoaded, setIsCloudLoaded] = useState(false);
+
+  // Load from Supabase on mount
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.add("dark");
-    localStorage.setItem("theme", "dark");
+
+    const loadCloudState = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('timetable_state')
+          .select('*')
+          .eq('id', 'draft')
+          .single();
+        
+        if (data && !error) {
+          if (data.teachers) setTeachers(data.teachers);
+          if (data.sections) setSections(data.sections);
+          if (data.subjects) setSubjects(data.subjects);
+          if (data.rooms) setRooms(data.rooms);
+          if (data.timeSlots) setTimeSlots(data.timeSlots);
+        }
+        setIsCloudLoaded(true);
+      } catch (e) {
+        console.warn("Supabase fetch failed. Ensure .env is set and table exists.", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadCloudState();
   }, []);
+
+  // Auto-save to Supabase
+  useEffect(() => {
+    if (!isCloudLoaded) return;
+    
+    const timeoutId = setTimeout(() => {
+      const stateToSave = { teachers, sections, subjects, rooms, timeSlots, teacher: "" };
+      supabase
+        .from('timetable_state')
+        .upsert({ 
+          id: 'draft', 
+          ...stateToSave,
+          updated_at: new Date().toISOString()
+        }).then(({ error }) => {
+          if (error) console.error("Auto-save error:", error);
+        });
+    }, 1500); // 1.5 second debounce
+    
+    return () => clearTimeout(timeoutId);
+  }, [teachers, sections, subjects, rooms, timeSlots, isCloudLoaded]);
+
+  // Manual Save to Cloud function
+  const saveToCloud = async () => {
+    setLoading(true);
+    setError("");
+    setRescheduleNote("");
+    try {
+      const stateToSave = { teachers, sections, subjects, rooms, timeSlots, teacher: "" };
+      const { error } = await supabase
+        .from('timetable_state')
+        .upsert({ 
+          id: 'draft', 
+          ...stateToSave,
+          updated_at: new Date().toISOString()
+        });
+      if (error) throw error;
+      setRescheduleNote("Saved successfully to Supabase Cloud!");
+    } catch (e) {
+      console.error(e);
+      setError("Failed to save to Cloud. Check Supabase URL and Key in .env.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const payload = useMemo(
     () => ({
@@ -313,8 +346,11 @@ export default function App() {
   };
 
   /* ── Export to Excel & Save to DB ── */
-  const exportToExcel = useCallback(() => {
+  const exportToExcel = useCallback(async () => {
     if (!result) return;
+
+    // Dynamically import xlsx to reduce initial bundle size
+    const XLSX = await import("xlsx");
 
     // Find all unique sections in the assignments
     const sectionsSet = new Set();
@@ -598,77 +634,39 @@ export default function App() {
     [subjects],
   );
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "teachers":
-        return <TeachersSection teachers={teachers} onChange={setTeachers} />;
-      case "sections":
-        return (
-          <SectionsSection
-            sections={sections}
-            rooms={rooms}
-            onChange={setSections}
-          />
-        );
-      case "subjects":
-        return (
-          <SubjectsSection
-            subjects={subjects}
-            teachers={teachers}
-            sections={sections}
-            rooms={rooms}
-            onChange={setSubjects}
-          />
-        );
-      case "rooms":
-        return <RoomsSection rooms={rooms} onChange={setRooms} />;
-      case "slots":
-        return (
-          <TimeSlotsSection timeSlots={timeSlots} onChange={setTimeSlots} />
-        );
-      case "timetable":
-        return (
-          <TimetableGrid
-            result={result}
-            subjects={subjects}
-            loading={loading}
-            onExport={exportToExcel}
-            onSaveDb={saveToDatabase}
-          />
-        );
-      case "reschedule":
-        return (
-          <ReschedulePanel
-            teachers={teachers}
-            days={result?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]}
-            slots={result?.time_slots || timeSlots}
-            disabled={!result || loading}
-            onReschedule={rescheduleTimetable}
-            onAssignProxy={assignProxy}
-          />
-        );
-      case "history":
-        return (
-          <HistorySection
-            onSelectTimetable={(data) => {
-              setResult(data);
-              setActiveTab("timetable");
-              setRescheduleNote("Loaded saved timetable from database.");
-            }}
-          />
-        );
-      case "analytics":
-        return (
-          <AnalyticsDashboard 
-            result={result} 
-            teachers={teachers} 
-            subjects={subjects} 
-          />
-        );
-      default:
-        return null;
-    }
-  };
+  useEffect(() => {
+    // Check active session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({ 
+           role: session.user.user_metadata?.role || "teacher", 
+           name: session.user.user_metadata?.name || session.user.email 
+        });
+      }
+    });
+
+    // Listen for auth state changes (login/logout/signup)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({ 
+           role: session.user.user_metadata?.role || "teacher", 
+           name: session.user.user_metadata?.name || session.user.email 
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  if (user.role === "teacher") {
+    return <TeacherDashboard user={user} result={result} onLogout={() => setUser(null)} />;
+  }
 
   return (
     <main className="min-h-screen text-slate-800 dark:text-slate-100">
@@ -692,11 +690,14 @@ export default function App() {
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+                <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl flex flex-wrap items-center gap-3">
                   AI Timetable<span className="text-violet-400">X</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-violet-500/20 text-violet-300 px-2.5 py-1 rounded-full border border-violet-500/30 whitespace-nowrap">Admin Dashboard</span>
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Constraint-based scheduler powered by OR-Tools CP-SAT
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-2 font-medium">Powered by OR-Tools</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Supabase Real-Time Sync Active
                 </p>
               </div>
             </div>
@@ -735,6 +736,23 @@ export default function App() {
 
 
               <button
+                onClick={async () => { await supabase.auth.signOut(); }}
+                className="btn-outline flex items-center gap-2 px-4 border border-rose-500/40 text-rose-400 hover:bg-rose-500/10"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                Logout
+              </button>
+
+              <button
+                onClick={saveToCloud}
+                disabled={loading}
+                className="btn-outline flex items-center gap-2 px-4 border border-blue-500/40 text-blue-400 hover:bg-blue-500/10"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save to Cloud
+              </button>
+
+              <button
                 className="btn-gradient flex items-center gap-2 px-6"
                 disabled={
                   loading || teachers.length === 0 || subjects.length === 0
@@ -771,6 +789,7 @@ export default function App() {
                   </>
                 )}
               </button>
+
             </div>
           </div>
 
@@ -860,11 +879,56 @@ export default function App() {
         </nav>
 
         {/* ── Tab Content ── */}
-        <div className="animate-fade-in-delay-2" key={activeTab}>
-          {renderContent()}
+        <div className="animate-fade-in-delay-2">
+          <div className={activeTab === "teachers" ? "block" : "hidden"}>
+            <TeachersSection teachers={teachers} onChange={setTeachers} />
+          </div>
+          <div className={activeTab === "sections" ? "block" : "hidden"}>
+            <SectionsSection sections={sections} rooms={rooms} onChange={setSections} />
+          </div>
+          <div className={activeTab === "subjects" ? "block" : "hidden"}>
+            <SubjectsSection subjects={subjects} teachers={teachers} sections={sections} rooms={rooms} onChange={setSubjects} />
+          </div>
+          <div className={activeTab === "rooms" ? "block" : "hidden"}>
+            <RoomsSection rooms={rooms} onChange={setRooms} />
+          </div>
+          <div className={activeTab === "slots" ? "block" : "hidden"}>
+            <TimeSlotsSection timeSlots={timeSlots} onChange={setTimeSlots} />
+          </div>
+          <div className={activeTab === "timetable" ? "block" : "hidden"}>
+            <TimetableGrid result={result} subjects={subjects} loading={loading} onExport={exportToExcel} onSaveDb={saveToDatabase} />
+          </div>
+          <div className={activeTab === "reschedule" ? "block" : "hidden"}>
+            <ReschedulePanel teachers={teachers} days={result?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]} slots={result?.time_slots || timeSlots} hasResult={!!result} loading={loading} onReschedule={rescheduleTimetable} onAssignProxy={assignProxy} />
+          </div>
+          <div className={activeTab === "history" ? "block" : "hidden"}>
+            <HistorySection onSelectTimetable={(data) => { setResult(data); setActiveTab("timetable"); setRescheduleNote("Loaded saved timetable from database."); }} />
+          </div>
+          <div className={activeTab === "analytics" ? "block" : "hidden"}>
+            <AnalyticsDashboard result={result} teachers={teachers} subjects={subjects} />
+          </div>
         </div>
       </div>
-      <AIChatBot result={result} />
+      <AIChatBot 
+        result={result} 
+        onExtractedData={(data) => {
+          if (data.teachers && data.teachers.length > 0) {
+             const cleanTeachers = data.teachers.map(t => {
+                let parsedFP = parseInt(t.free_periods);
+                return {
+                   name: t.name,
+                   free_periods: isNaN(parsedFP) ? 1 : Math.max(0, parsedFP)
+                };
+             });
+             setTeachers(cleanTeachers);
+          }
+          if (data.sections && data.sections.length > 0) setSections(data.sections);
+          if (data.subjects && data.subjects.length > 0) setSubjects(data.subjects);
+          if (data.rooms && data.rooms.length > 0) setRooms(data.rooms);
+          if (data.timeSlots && data.timeSlots.length > 0) setTimeSlots(data.timeSlots);
+          setRescheduleNote("AI successfully extracted and seamlessly filled timetable data from your image!");
+        }}
+      />
     </main>
   );
 }

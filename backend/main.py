@@ -1,13 +1,12 @@
 from collections import defaultdict #Provides a dictionary-like object that allows us to specify a default value type for keys that haven't been set yet. In this code, it's used to track teacher unavailability without having to check if the key exists first.
 from typing import Dict, List, Optional, Tuple #Used for type annotations to improve code readability and help with static analysis. Dict is a generic type for dictionaries, List for lists, Optional indicates that a value can be of a specified type or None, and Tuple is used for fixed-length tuples of specified types.
-
 from fastapi import FastAPI, HTTPException #Backend framework for building APIs
 from fastapi.middleware.cors import CORSMiddleware #Middleware to handle Cross-Origin Resource Sharing (CORS) which allows the frontend (running on a different origin) to communicate with this backend API.
 from ortools.sat.python import cp_model    #Main Ai tool by google (OR-CP-SAT Solver or Satisfier )
 import os
 from dotenv import load_dotenv
-import google.generativeai as genai
-
+from groq import Groq
+import requests
 load_dotenv()
 from pydantic import BaseModel, Field #Data validation and settings management using Python type annotations. It allows us to define data models with type hints and automatically validates incoming data against those models.
 try:#Relative import for database functions, used when this file is imported as a module. This allows the code to work in both contexts (as a module or as a standalone script) without modification. If this file is run as a script, the relative import will fail, so we catch the ImportError and do an absolute import instead.
@@ -24,7 +23,6 @@ except ImportError:
         get_timetables_from_db,
         save_timetable_to_db,
     )#Absolute import for database functions, used when the file is run as a script. This allows the code to work in both contexts (as a module or as a standalone script) without modification.
-
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 DEFAULT_SLOTS = ["9-10", "10-11", "11-12", "12-1", "2-3"]
@@ -79,6 +77,7 @@ class ChatRequest(BaseModel):
     message: str
     context: Optional[dict] = None
     history: List[dict] = []
+    image: Optional[str] = None
 
 
 LAST_REQUEST: Optional[GenerateRequest] = None
@@ -672,45 +671,91 @@ def delete_saved_timetable(tid: int):
     return {"message": "Timetable deleted successfully"}
 
 @app.post("/chat")
-def chat_with_gemini(request: ChatRequest):
-    api_key = os.getenv("GEMINI_API_KEY")
+def chat_with_groq(request: ChatRequest):
+    api_key = os.getenv("GROQ_API_KEY")
     if not api_key or api_key == "your_api_key_here":
-        return {"reply": "Please set your GEMINI_API_KEY in the backend/.env file and restart the backend to use the AI chatbot."}
+        return {"reply": "Please set your GROQ_API_KEY in the backend/.env file and restart the backend to use the AI chatbot."}
     
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-pro')
+        client = Groq(api_key=api_key)
         
         ctx = request.context or {}
         system_instruction = (
-            "You are an elite, highly intelligent AI Timetable Scheduling Assistant. "
+            "You are an elite, highly intelligent AI Timetable Scheduling Assistant powered by Groq. "
+            "You MUST provide GENUINE, intelligent, and highly optimized scheduling suggestions based on the current context. "
             "You MUST use Markdown heavily to make your responses beautiful, readable, and structured. "
-            "Use tables, bullet points, bold text, and clear headings. "
+            "If the user uploads an image or pdf of a timetable, YOU MUST ACT AS AN ADVANCED OCR SYSTEM. "
+            "Extract all scheduling data from the image into a STRICT JSON block. "
+            "The JSON block MUST be enclosed in ```json ... ``` and contain the following exact keys: "
+            "`teachers` (list of objects with `name` and `free_periods`), "
+            "`subjects` (list of objects with `code`, `name`, `teacher`, `section`, `required_slots`, `is_lab`, `colorIndex`), "
+            "`rooms` (list of strings), "
+            "`sections` (list of objects with `name`, `room`, `lab_room`), "
+            "`timeSlots` (list of strings). "
+            "If the user asks about exporting exactly to Excel, tell them that the system's `exportToExcel` function automatically generates a highly structured Excel file matching standard academic layouts (Days as rows, Time slots as columns, with separate sheets for each section and teacher). "
+            "ALWAYS provide a helpful markdown message summarizing your actions or suggestions alongside the JSON."
         )
         if ctx:
             system_instruction += f"\nCurrent Timetable State:\n- Objective Score: {ctx.get('objective_score', 'N/A')}\n- Total Classes: {len(ctx.get('assignments', []))}\n"
         
-        # Build conversation history
-        formatted_history = []
-        for h in request.history:
-            role = "model" if h.get("sender") == "bot" else "user"
-            # Skip the initial greeting as it might not match Google's format strictness sometimes, but we'll add it anyway
-            if h.get("text"):
-                formatted_history.append({"role": role, "parts": [h.get("text")]})
-                
-        # To avoid first message role errors, we ensure history starts properly if we use it
-        # Actually, the simplest way to maintain history without start_chat is just appending to the prompt.
-        prompt = f"{system_instruction}\n\n"
-        if len(request.history) > 0:
-            prompt += "--- CONVERSATION HISTORY ---\n"
-            for h in request.history:
-                sender = "AI Assistant" if h.get("sender") == "bot" else "User"
-                prompt += f"**{sender}:** {h.get('text')}\n"
-            prompt += "----------------------------\n\n"
+        # If an image is provided, fallback to Gemini 2.5 Flash for OCR
+        if request.image:
+            gemini_key = os.getenv("GEMINI_API_KEY")
+            if not gemini_key:
+                return {"reply": "Groq vision is currently disabled. Please set your GEMINI_API_KEY in the backend/.env file to fallback to Gemini for OCR image extraction."}
             
-        prompt += f"**User:** {request.message}\n**AI Assistant:**"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+            payload = {
+                "systemInstruction": {
+                    "parts": [{"text": system_instruction}]
+                },
+                "contents": [{
+                    "parts": [
+                        {"text": request.message or "Please extract and format the timetable data from this image."},
+                        {
+                            "inlineData": {
+                                "mimeType": "image/jpeg",
+                                "data": request.image
+                            }
+                        }
+                    ]
+                }]
+            }
+            res = requests.post(url, json=payload)
+            if res.status_code == 200:
+                data = res.json()
+                try:
+                    return {"reply": data["candidates"][0]["content"]["parts"][0]["text"]}
+                except KeyError:
+                    return {"reply": f"Gemini OCR failed to parse: {res.text}"}
+            else:
+                return {"reply": f"Gemini OCR Error: {res.text}"}
+
+        # Otherwise, process text chat with Groq
+        messages = [{"role": "system", "content": system_instruction}]
         
-        response = model.generate_content(prompt)
-        return {"reply": response.text}
+        # Build conversation history
+        for h in request.history:
+            role = "assistant" if h.get("sender") == "bot" else "user"
+            if h.get("text"):
+                messages.append({"role": role, "content": h.get("text")})
+                
+        messages.append({"role": "user", "content": request.message})
+        
+        chat_completion = client.chat.completions.create(
+            messages=messages,
+            model="llama-3.3-70b-versatile",
+        )
+        
+        return {"reply": chat_completion.choices[0].message.content}
     except Exception as e:
-        return {"reply": f"Error communicating with Gemini: {str(e)}"}
+        error_str = str(e)
+        if "429" in error_str and "quota" in error_str.lower():
+            friendly_error = (
+                "**⚠️ Rate Limit Exceeded**\n\n"
+                "You have reached the maximum number of requests allowed by your current Groq API quota. "
+                "Please wait before asking another question.\n\n"
+                "_Tip: Avoid sending multiple messages too quickly!_"
+            )
+            return {"reply": friendly_error}
+        return {"reply": f"Error communicating with Groq: {error_str}"}

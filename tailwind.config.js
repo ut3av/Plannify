@@ -21,6 +21,16 @@ module.exports = {
           "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-5px)" },
+          "50%": { transform: "translateX(5px)" },
+          "75%": { transform: "translateX(-5px)" },
+        },
         "slide-down": {
           "0%": { opacity: "0", transform: "translateY(-12px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
@@ -40,6 +50,8 @@ module.exports = {
       },
       animation: {
         "fade-in": "fade-in 0.5s ease-out both",
+        "fade-in-up": "fade-in-up 0.6s ease-out both",
+        "shake": "shake 0.4s ease-in-out both",
         "fade-in-delay-1": "fade-in 0.5s ease-out 0.1s both",
         "fade-in-delay-2": "fade-in 0.5s ease-out 0.2s both",
         "fade-in-delay-3": "fade-in 0.5s ease-out 0.3s both",

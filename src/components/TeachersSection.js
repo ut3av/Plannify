@@ -49,12 +49,16 @@ export default function TeachersSection({ teachers, onChange }) {
       </div>
 
       {/* Add input */}
-      <div className="flex gap-2 mb-6">
-        <input className="glass-input flex-1" placeholder="Teacher name e.g. John Doe..." value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
-        <div className="w-32">
-          <input type="number" min="0" className="glass-input w-full" placeholder="Free Periods" value={freePeriods} onChange={(e) => setFreePeriods(parseInt(e.target.value) || 0)} title="Free Periods Per Day" />
+      <div className="flex items-end gap-3 mb-6">
+        <div className="flex-1 flex flex-col gap-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Teacher Name</label>
+          <input className="glass-input w-full" placeholder="e.g. John Doe..." value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
         </div>
-        <button className="btn-gradient px-5" onClick={addTeacher} disabled={!name.trim()}>
+        <div className="w-32 flex flex-col gap-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Free Periods / Day</label>
+          <input type="number" min="0" className="glass-input w-full" value={freePeriods} onChange={(e) => setFreePeriods(parseInt(e.target.value) || 0)} title="Free Periods Per Day" />
+        </div>
+        <button className="btn-gradient px-5 h-[42px]" onClick={addTeacher} disabled={!name.trim()}>
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
             Add
@@ -74,22 +78,22 @@ export default function TeachersSection({ teachers, onChange }) {
             const color = DEFAULT_TEACHER_COLOR;
             return (
               <div key={index} className="group relative rounded-xl p-3 sm:p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" style={{ background: color.bg, border: `1px solid ${color.border}` }}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm`} style={{ color: color.accent, backgroundColor: color.bg, border: `1px solid ${color.border}` }}>
+                <div className="flex items-start justify-between gap-3 overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm shrink-0`} style={{ color: color.accent, backgroundColor: color.bg, border: `1px solid ${color.border}` }}>
                       {t.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="font-semibold text-slate-900 dark:text-white">{t.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: color.accent }}>{t.free_periods} free period{t.free_periods !== 1 ? 's' : ''}/day</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-slate-900 dark:text-white truncate">{t.name}</p>
+                      <p className="text-xs mt-0.5 truncate" style={{ color: color.accent }}>{t.free_periods} free period{t.free_periods !== 1 ? 's' : ''}/day</p>
                     </div>
                   </div>
                   <button
                     onClick={() => removeTeacher(index)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
                     title="Remove teacher"
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                   </button>
                 </div>
               </div>

@@ -19,7 +19,6 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
   const [name, setName] = useState("");
   const [teacher, setTeacher] = useState(teachers[0]?.name || "");
   const [selectedSections, setSelectedSections] = useState([]);
-  const [room, setRoom] = useState("");
   const [slots, setSlots] = useState(3);
   const [isLab, setIsLab] = useState(false);
   const [colorIndex, setColorIndex] = useState(0);
@@ -35,7 +34,6 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
         teacher, 
         section: undefined, 
         sections: selectedSections.length > 0 ? selectedSections : undefined,
-        room: room || undefined, 
         is_lab: isLab, 
         required_slots: slots, 
         colorIndex 
@@ -46,7 +44,6 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
       setName("");
       setSlots(3);
       setIsLab(false);
-      setRoom("");
       setSelectedSections([]);
       setColorIndex((colorIndex + 1) % SUBJECT_COLORS.length);
     }
@@ -157,21 +154,6 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
             )}
           </div>
         )}
-        {rooms.length > 0 && (
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5" title="Override Section Room">Fixed Room</label>
-            <select
-              className="glass-input cursor-pointer"
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
-            >
-              <option value="" className="bg-slate-900">Auto</option>
-              {rooms.map((r) => (
-                <option key={r} value={r} className="bg-slate-900">{r}</option>
-              ))}
-            </select>
-          </div>
-        )}
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Slots</label>
           <input
@@ -261,7 +243,6 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
                       {subject.sections && subject.sections.length > 0 
                         ? ` • ${subject.sections.join(", ")}` 
                         : (subject.section ? ` • ${subject.section}` : " • Any Section (Auto)")}
-                      {subject.room ? ` • Fixed Room: ${subject.room}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-2.5 py-1 flex-shrink-0">

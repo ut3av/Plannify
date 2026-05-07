@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export default function ReschedulePanel({ teachers, days, slots, disabled, onReschedule, onAssignProxy }) {
+export default function ReschedulePanel({ teachers, days, slots, hasResult, loading, onReschedule, onAssignProxy }) {
   const [teacher, setTeacher] = useState("");
   const [day, setDay] = useState("Mon");
   const [selectedSlots, setSelectedSlots] = useState([]);
@@ -16,38 +16,50 @@ export default function ReschedulePanel({ teachers, days, slots, disabled, onRes
   const submitProxy = () => { onAssignProxy({ teacher, day, slots: selectedSlots }); };
 
   return (
-    <div className="glass-card p-6 animate-scale-in">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
-              <svg className="w-4 h-4 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" /></svg>
-            </div>
-            Dynamic Rescheduling
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 ml-10">Mark a teacher unavailable for specific day/slots and generate a new valid timetable.</p>
-        </div>
-      </div>
-
-      {disabled && (
-        <div className="text-center py-8 text-slate-500">
-          <svg className="w-12 h-12 mx-auto mb-3 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" /></svg>
-          <p className="text-sm">Generate a timetable first to enable rescheduling.</p>
+    <div className="glass-card p-6 animate-scale-in relative overflow-hidden">
+      {loading && (
+        <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in text-white">
+          <div className="w-16 h-16 relative mb-6">
+            <div className="absolute inset-0 border-4 border-violet-500/20 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-violet-500 rounded-full border-t-transparent animate-spin"></div>
+            <svg className="w-6 h-6 text-violet-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold mb-2">AI Rescheduling in Progress</h3>
+          <p className="text-sm text-slate-300">Re-optimizing affected timetable sections...</p>
         </div>
       )}
 
-      {!disabled && (
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center shadow-lg shadow-orange-500/20">
+              <svg className="w-4 h-4 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" /></svg>
+            </div>
+            Dynamic AI Rescheduling
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 ml-10">Mark a teacher unavailable or room blocked, and AI will dynamically re-optimize the affected section.</p>
+        </div>
+      </div>
+
+      {!hasResult ? (
+        <div className="text-center py-8 text-slate-500 bg-slate-800/30 rounded-xl border border-white/5">
+          <svg className="w-12 h-12 mx-auto mb-3 opacity-30 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" /></svg>
+          <p className="text-sm">Generate a timetable first to enable dynamic AI rescheduling.</p>
+        </div>
+      ) : (
         <div className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Teacher unavailable</label>
-              <select className="glass-input cursor-pointer" value={teacher} onChange={(e) => setTeacher(e.target.value)}>
+              <select className="glass-input cursor-pointer text-white" value={teacher} onChange={(e) => setTeacher(e.target.value)}>
                 {teachers.map((t) => (<option key={t.name} value={t.name} className="bg-slate-900">{t.name}</option>))}
               </select>
             </div>
             <div>
               <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Day</label>
-              <select className="glass-input cursor-pointer" value={day} onChange={(e) => setDay(e.target.value)}>
+              <select className="glass-input cursor-pointer text-white" value={day} onChange={(e) => setDay(e.target.value)}>
                 {days.map((d) => (<option key={d} value={d} className="bg-slate-900">{d}</option>))}
               </select>
             </div>
@@ -62,8 +74,8 @@ export default function ReschedulePanel({ teachers, days, slots, disabled, onRes
                   <button key={slot} onClick={() => toggleSlot(slot)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ${
                       active
-                        ? "bg-red-500/15 border-red-500/40 text-red-200"
-                        : "bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:bg-white dark:bg-white/[0.04] hover:border-slate-300 dark:border-white/[0.1]"
+                        ? "bg-red-500/20 border-red-500/40 text-red-200 shadow-md shadow-red-500/10"
+                        : "bg-slate-800 border-white/10 text-slate-400 hover:bg-slate-700 hover:text-white"
                     }`}
                   >{slot}</button>
                 );
@@ -72,12 +84,12 @@ export default function ReschedulePanel({ teachers, days, slots, disabled, onRes
             <p className="mt-2 text-[11px] text-slate-500">Leave all unselected to block the teacher for the entire day.</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button className="btn-outline flex-1 px-8" onClick={submit} disabled={!teacher}>
-              Reschedule Entire Timetable
+              Full Dynamic Re-optimization
             </button>
             <button className="btn-gradient flex-1 px-8" onClick={submitProxy} disabled={!teacher || !day}>
-              Find Proxy / Substitute
+              AI Assign Substitute Proxy
             </button>
           </div>
         </div>
@@ -85,3 +97,4 @@ export default function ReschedulePanel({ teachers, days, slots, disabled, onRes
     </div>
   );
 }
+
