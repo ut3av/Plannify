@@ -58,28 +58,34 @@ export default function TeachersSection({ teachers, onChange }) {
       </div>
 
       {/* Add input */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Full Name</label>
-          <input type="text" className="glass-input w-full" placeholder="e.g. John Doe..." value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Email Address</label>
-          <input type="email" className="glass-input w-full" placeholder="john@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Mobile No.</label>
-          <input type="tel" className="glass-input w-full" placeholder="+91..." value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-        <div className="flex items-end gap-3">
-          <div className="flex-1 flex flex-col gap-1.5">
-            <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Free Periods</label>
-            <input type="number" min="0" className="glass-input w-full" value={freePeriods} onChange={(e) => setFreePeriods(parseInt(e.target.value) || 0)} title="Free Periods Per Day" />
+      <div className="glass-card p-6 rounded-2xl bg-white/[0.02] border border-white/5 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-widest text-slate-500 font-black ml-1">Full Name</label>
+            <input type="text" className="glass-input w-full" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
           </div>
-          <button className="btn-gradient px-5 h-[42px]" onClick={addTeacher} disabled={!name.trim()}>
-            <span className="flex items-center gap-1.5">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-              Add
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-widest text-slate-500 font-black ml-1">Email Address</label>
+            <input type="email" className="glass-input w-full" placeholder="john@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-widest text-slate-500 font-black ml-1">Mobile No.</label>
+            <input type="tel" className="glass-input w-full" placeholder="+91..." value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+        </div>
+        <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/5">
+          <div className="flex items-center gap-4">
+            <label className="text-[10px] uppercase tracking-widest text-slate-500 font-black">Daily Free Periods</label>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setFreePeriods(Math.max(0, freePeriods - 1))} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">-</button>
+              <span className="w-8 text-center font-bold text-white">{freePeriods}</span>
+              <button onClick={() => setFreePeriods(freePeriods + 1)} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">+</button>
+            </div>
+          </div>
+          <button className="btn-gradient px-10 h-[46px] rounded-xl font-bold text-sm shadow-lg shadow-violet-500/20" onClick={addTeacher} disabled={!name.trim()}>
+            <span className="flex items-center gap-2">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              Add Teacher
             </span>
           </button>
         </div>
