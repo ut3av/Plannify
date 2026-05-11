@@ -15,7 +15,7 @@ import TeacherDashboard from "./components/TeacherDashboard";
 import { saveAs } from "file-saver";
 import { supabase } from "./supabaseClient";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 const TABS = [
   { id: "teachers", label: "Teachers", icon: "users" },
@@ -164,9 +164,122 @@ function TabIcon({ icon, className = "w-4 h-4" }) {
 
 function getErrorMessage(error) {
   const detail = error?.response?.data?.detail;
-  if (Array.isArray(detail)) return detail.map((item) => item.msg).join(" ");
-  if (typeof detail === "string") return detail;
-  return "Could not reach the scheduler API. Make sure the FastAPI backend is running.";
+  if (Array.isArray(detail)) {
+    return {
+      title: "Some timetable inputs need attention.",
+      suggestions: detail.map((item) => item.msg),
+      facts: [],
+    };
+  }
+  if (detail && typeof detail === "object") {
+    return {
+      title: detail.message || "Could not generate timetable.",
+      suggestions: Array.isArray(detail.suggestions) ? detail.suggestions : [],
+      facts: Array.isArray(detail.facts) ? detail.facts : [],
+    };
+  }
+  if (typeof detail === "string") {
+    return { title: detail, suggestions: [], facts: [] };
+  }
+  return {
+    title: "Could not reach the scheduler API.",
+    suggestions: ["Make sure the FastAPI backend is running on port 8080."],
+    facts: [],
+  };
+}
+
+function ErrorAlert({ error }) {
+  if (!error) return null;
+  const info = typeof error === "string"
+    ? { title: error, suggestions: [], facts: [] }
+    : error;
+
+  return (
+    <div className="animate-slide-down flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-5 py-4 text-sm text-red-100 mb-4">
+      <svg
+        className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-300"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <div className="min-w-0">
+        <p className="font-semibold text-red-50">{info.title}</p>
+        {info.facts?.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {info.facts.map((fact, index) => (
+              <span key={`${fact}-${index}`} className="rounded-md border border-red-400/20 bg-red-950/30 px-2 py-1 text-xs text-red-100">
+                {fact}
+              </span>
+            ))}
+          </div>
+        )}
+        {info.suggestions?.length > 0 && (
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-red-100/90">
+            {info.suggestions.map((suggestion, index) => (
+              <li key={`${suggestion}-${index}`}>{suggestion}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+const DEMO_TIMETABLE_DATA = {
+  teachers: [
+    { name: "Dr. Arvind Kumar", free_periods: 1 },
+    { name: "Prof. Sarah Jenkins", free_periods: 1 },
+    { name: "Rajesh Malhotra", free_periods: 1 },
+    { name: "Anita Desai", free_periods: 1 },
+    { name: "Kevin Peterson", free_periods: 1 },
+    { name: "Dr. Meenakshi Iyer", free_periods: 1 },
+    { name: "Suresh Raina", free_periods: 1 },
+    { name: "Monica Geller", free_periods: 1 },
+    { name: "Vikram Seth", free_periods: 1 },
+    { name: "Librarian", free_periods: 0 },
+  ],
+  sections: [
+    { name: "BCA-I", room: "Room 101", lab_room: "Computer Lab A" },
+    { name: "BCA-II", room: "Room 102", lab_room: "Computer Lab B" },
+    { name: "BCA-III", room: "Room 103", lab_room: "Computer Lab A" },
+  ],
+  rooms: ["Room 101", "Room 102", "Room 103", "Computer Lab A", "Computer Lab B", "Seminar Hall"],
+  timeSlots: [
+    "09:00 AM - 10:00 AM",
+    "10:00 AM - 11:00 AM",
+    "11:15 AM - 12:15 PM",
+    "12:15 PM - 01:15 PM",
+    "02:00 PM - 03:00 PM",
+  ],
+  subjects: [
+    { code: "CS101", name: "Python Programming", teacher: "Dr. Arvind Kumar", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 3, colorIndex: 0 },
+    { code: "CS102", name: "Data Structures", teacher: "Prof. Sarah Jenkins", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 3, colorIndex: 1 },
+    { code: "CS103", name: "Operating Systems", teacher: "Rajesh Malhotra", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 3, colorIndex: 2 },
+    { code: "CS104", name: "Computer Networks", teacher: "Anita Desai", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 3, colorIndex: 3 },
+    { code: "CS105", name: "Database Management", teacher: "Kevin Peterson", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 4 },
+    { code: "CS106", name: "Software Engineering", teacher: "Dr. Meenakshi Iyer", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 5 },
+    { code: "CS107", name: "Web Technologies", teacher: "Suresh Raina", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 6 },
+    { code: "MGT101", name: "Principles of Management", teacher: "Monica Geller", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 7 },
+    { code: "MAT101", name: "Discrete Mathematics", teacher: "Vikram Seth", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 8 },
+    { code: "LAB101", name: "Coding Lab", teacher: "Dr. Arvind Kumar", sections: ["BCA-I", "BCA-II", "BCA-III"], is_lab: true, required_slots: 2, colorIndex: 9 },
+    { code: "LIB", name: "Library", teacher: "Librarian", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 1, colorIndex: 0 },
+  ],
+};
+
+function buildApiPayload(data) {
+  return {
+    teachers: data.teachers,
+    subjects: data.subjects,
+    rooms: data.rooms,
+    sections: data.sections,
+    time_slots: data.timeSlots,
+  };
 }
 
 export default function App() {
@@ -202,7 +315,7 @@ export default function App() {
   ]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const [rescheduleNote, setRescheduleNote] = useState("");
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);
 
@@ -234,34 +347,14 @@ export default function App() {
         setLoading(false);
       }
     };
-    
+
     loadCloudState();
   }, []);
 
-  // Auto-save to Supabase
-  useEffect(() => {
-    if (!isCloudLoaded) return;
-    
-    const timeoutId = setTimeout(() => {
-      const stateToSave = { teachers, sections, subjects, rooms, timeSlots, teacher: "" };
-      supabase
-        .from('timetable_state')
-        .upsert({ 
-          id: 'draft', 
-          ...stateToSave,
-          updated_at: new Date().toISOString()
-        }).then(({ error }) => {
-          if (error) console.error("Auto-save error:", error);
-        });
-    }, 1500); // 1.5 second debounce
-    
-    return () => clearTimeout(timeoutId);
-  }, [teachers, sections, subjects, rooms, timeSlots, isCloudLoaded]);
-
   // Manual Save to Cloud function
-  const saveToCloud = async () => {
+  const saveToCloud = useCallback(async () => {
     setLoading(true);
-    setError("");
+    setError(null);
     setRescheduleNote("");
     try {
       const stateToSave = { teachers, sections, subjects, rooms, timeSlots, teacher: "" };
@@ -276,41 +369,81 @@ export default function App() {
       setRescheduleNote("Saved successfully to Supabase Cloud!");
     } catch (e) {
       console.error(e);
-      setError("Failed to save to Cloud. Check Supabase URL and Key in .env.");
+      setError({
+        title: "Failed to save to Supabase Cloud.",
+        suggestions: ["Check the Supabase URL and anon key in .env, then try again."],
+        facts: [],
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [teachers, sections, subjects, rooms, timeSlots]);
+
+  // --- Auto-save to Supabase ---
+  useEffect(() => {
+    if (!user || !isCloudLoaded) return;
+    
+    const timeout = setTimeout(() => {
+      saveToCloud();
+    }, 2500); 
+
+    return () => clearTimeout(timeout);
+  }, [teachers, sections, subjects, rooms, timeSlots, user, saveToCloud, isCloudLoaded]);
 
   const payload = useMemo(
-    () => ({
-      teachers,
-      subjects,
-      rooms,
-      sections,
-      time_slots: timeSlots,
-    }),
+    () => buildApiPayload({ teachers, subjects, rooms, sections, timeSlots }),
     [teachers, subjects, rooms, sections, timeSlots],
   );
 
-  const generateTimetable = useCallback(async () => {
+  const generateFromPayload = useCallback(async (nextPayload, successMessage = "") => {
     setLoading(true);
-    setError("");
+    setError(null);
     setRescheduleNote("");
     try {
-      const response = await axios.post(`${API_BASE_URL}/generate`, payload);
+      const response = await axios.post(`${API_BASE_URL}/generate`, nextPayload);
       setResult(response.data);
+      if (successMessage) setRescheduleNote(successMessage);
       setActiveTab("timetable");
     } catch (apiError) {
       setError(getErrorMessage(apiError));
     } finally {
       setLoading(false);
     }
-  }, [payload]);
+  }, []);
+
+  const generateTimetable = useCallback(async () => {
+    await generateFromPayload(payload);
+  }, [generateFromPayload, payload]);
+
+  const generateDemoTimetable = useCallback(async () => {
+    // Deep clone demo data to avoid reference issues
+    const demoData = JSON.parse(JSON.stringify(DEMO_TIMETABLE_DATA));
+
+    // Update frontend state first
+    setTeachers(demoData.teachers);
+    setSections(demoData.sections);
+    setSubjects(demoData.subjects);
+    setRooms(demoData.rooms);
+    setTimeSlots(demoData.timeSlots);
+    setResult(null);
+
+    // Give React a tick to update state, then call the solver with local data
+    setTimeout(async () => {
+      try {
+        await generateFromPayload(
+          buildApiPayload(demoData),
+          "✨ AI-Optimized Demo Timetable generated for 3 sections with 10 teachers and specialized subject assignments."
+        );
+      } catch (err) {
+        console.error("Demo generation failed:", err);
+        setError("Failed to generate demo timetable. Please check if the backend is running.");
+      }
+    }, 100);
+  }, [generateFromPayload]);
 
   const rescheduleTimetable = async (request) => {
     setLoading(true);
-    setError("");
+    setError(null);
     setRescheduleNote("");
     try {
       const response = await axios.post(`${API_BASE_URL}/reschedule`, request);
@@ -329,7 +462,7 @@ export default function App() {
 
   const assignProxy = async (request) => {
     setLoading(true);
-    setError("");
+    setError(null);
     setRescheduleNote("");
     try {
       const response = await axios.post(`${API_BASE_URL}/proxy`, request);
@@ -614,6 +747,7 @@ export default function App() {
   const saveToDatabase = async () => {
     if (!result) return;
     setLoading(true);
+    setError(null);
     try {
       await axios.post(`${API_BASE_URL}/save`, {
         name: `Timetable - ${new Date().toLocaleString()}`,
@@ -691,7 +825,7 @@ export default function App() {
               </div>
               <div>
                 <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl flex flex-wrap items-center gap-3">
-                  AI Timetable<span className="text-violet-400">X</span>
+                  <img src="https://see.fontimg.com/api/rf5/DYgy0/OTc3MzU3MmZhOGI2NGE4ODg0OTFhNjIyZTU1MDc1Y2Yub3Rm/UGxhbmlmeS5leGU/qurovademo-regular.png?r=fs&h=81&w=1250&fg=FFFFFF&bg=FFFFFF&tb=1&s=65" alt="Planify.exe" className="h-7 md:h-8 object-contain" />
                   <span className="text-[10px] font-bold uppercase tracking-wider bg-violet-500/20 text-violet-300 px-2.5 py-1 rounded-full border border-violet-500/30 whitespace-nowrap">Admin Dashboard</span>
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-2 font-medium">Powered by OR-Tools</p>
@@ -751,6 +885,8 @@ export default function App() {
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 Save to Cloud
               </button>
+
+
 
               <button
                 className="btn-gradient flex items-center gap-2 px-6"
@@ -819,22 +955,7 @@ export default function App() {
         </header>
 
         {/* ── Alerts ── */}
-        {error && (
-          <div className="animate-slide-down flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm px-5 py-4 text-sm text-red-200 mb-4">
-            <svg
-              className="w-4 h-4 flex-shrink-0 mt-0.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
+        <ErrorAlert error={error} />
         {rescheduleNote && (
           <div className="animate-slide-down flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm px-5 py-4 text-sm text-emerald-200 mb-4">
             <svg
@@ -909,8 +1030,29 @@ export default function App() {
           </div>
         </div>
       </div>
+      
+
+
+      {/* ── Footer ── */}
+      <footer className="mt-12 mb-8 text-center animate-fade-in-delay-3">
+        <div className="flex items-center justify-center gap-6 mb-4">
+          <div className="w-10 h-px bg-gradient-to-r from-transparent to-slate-200 dark:to-white/10" />
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+            System Status: <span className="text-emerald-400">Ready to Ship</span>
+          </p>
+          <div className="w-10 h-px bg-gradient-to-l from-transparent to-slate-200 dark:to-white/10" />
+        </div>
+        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+          Planify.exe AI Academic OS • v1.0.0-PRO • Built with Google OR-Tools & Gemini
+        </p>
+        <p className="mt-1 text-[9px] text-slate-500/60 dark:text-slate-400/30">
+          &copy; 2026 Planify AI. All constraints reserved.
+        </p>
+      </footer>
+
       <AIChatBot 
         result={result} 
+        onLoadDemo={generateDemoTimetable}
         onExtractedData={(data) => {
           if (data.teachers && data.teachers.length > 0) {
              const cleanTeachers = data.teachers.map(t => {
@@ -929,6 +1071,24 @@ export default function App() {
           setRescheduleNote("AI successfully extracted and seamlessly filled timetable data from your image!");
         }}
       />
+
+      {/* ── Global Loading Overlay ── */}
+      {loading && activeTab !== "timetable" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 backdrop-blur-md animate-fade-in">
+          <div className="glass-card flex flex-col items-center gap-6 p-10 animate-scale-in">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-violet-500/10 animate-pulse" />
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-white">AI Engine Working</h3>
+              <p className="text-sm text-slate-400 mt-1">Processing complex academic constraints...</p>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

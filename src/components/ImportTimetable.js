@@ -38,7 +38,7 @@ export default function ImportTimetable() {
 
   return (
     <div className="glass-card p-6 rounded-2xl border border-white/10 text-slate-200">
-      <h2 className="text-2xl font-bold mb-4 text-white">AI Timetable Import</h2>
+      <h2 className="text-2xl font-bold mb-4 text-white">Planify.exe Import</h2>
       <p className="text-sm text-slate-400 mb-6">
         Upload a PDF, Image, or Excel timetable. Our AI will automatically extract teachers, subjects, classrooms, and timings using OCR and GPT-based parsing.
       </p>

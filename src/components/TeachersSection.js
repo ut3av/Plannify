@@ -52,7 +52,7 @@ export default function TeachersSection({ teachers, onChange }) {
       <div className="flex items-end gap-3 mb-6">
         <div className="flex-1 flex flex-col gap-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Teacher Name</label>
-          <input className="glass-input w-full" placeholder="e.g. John Doe..." value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
+          <input type="text" className="glass-input w-full" placeholder="e.g. John Doe..." value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
         </div>
         <div className="w-32 flex flex-col gap-1.5">
           <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Free Periods / Day</label>

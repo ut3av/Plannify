@@ -64,7 +64,7 @@ function AssignmentCard({ item, subjects }) {
   );
 }
 
-export default function TimetableGrid({ result, subjects, loading, onExport, onSaveDb }) {
+export default function TimetableGrid({ result, subjects, loading, onExport }) {
   if (!result) return <EmptyState loading={loading} />;
 
   return (
@@ -76,9 +76,19 @@ export default function TimetableGrid({ result, subjects, loading, onExport, onS
             Objective score: <span className="text-violet-300 font-semibold">{result.objective_score}</span>
           </p>
           {result.ai_description && (
-            <div className="mt-2 text-xs text-indigo-200 bg-indigo-500/10 p-2 rounded border border-indigo-500/20 max-w-2xl flex items-start gap-2">
-              <span>✨</span>
-              <p className="leading-relaxed">{result.ai_description}</p>
+            <div className="mt-2 max-w-2xl rounded-lg border border-indigo-500/20 bg-indigo-500/10 p-3 text-xs text-indigo-100">
+              <p className="font-semibold uppercase tracking-wider text-indigo-200">AI summary</p>
+              <p className="mt-1 leading-relaxed">{result.ai_description}</p>
+            </div>
+          )}
+          {result.ai_suggestions?.length > 0 && (
+            <div className="mt-2 max-w-2xl rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-100">
+              <p className="font-semibold uppercase tracking-wider text-emerald-200">Suggestions</p>
+              <ul className="mt-1 list-disc space-y-1 pl-4 leading-relaxed">
+                {result.ai_suggestions.map((suggestion, index) => (
+                  <li key={`${suggestion}-${index}`}>{suggestion}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
@@ -87,14 +97,7 @@ export default function TimetableGrid({ result, subjects, loading, onExport, onS
             <div className="w-2 h-2 rounded-full bg-emerald-400" />
             <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{result.assignments?.length || 0} scheduled</span>
           </div>
-          {onSaveDb && (
-            <button onClick={onSaveDb} className="btn-outline flex items-center gap-2 text-xs px-4 py-2 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
-              </svg>
-              Save to DB
-            </button>
-          )}
+
           {onExport && (
             <button onClick={onExport} className="btn-outline flex items-center gap-2 text-xs px-4 py-2">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -124,10 +127,10 @@ export default function TimetableGrid({ result, subjects, loading, onExport, onS
                   const a = result.timetable?.[day]?.[slot] || [];
                   return (
                     <td key={`${day}-${slot}`} className="h-28 align-top border-b border-r border-slate-200 dark:border-white/[0.06] p-2 hover:bg-slate-50 dark:bg-white/[0.02] transition-colors">
-                      {a.length === 0
-                        ? <span className="text-xs text-slate-700">—</span>
-                        : <div className="flex flex-col gap-1.5">{a.map((item, i) => <AssignmentCard key={`${item.subject}-${item.room}-${i}`} item={item} subjects={subjects} />)}</div>
-                      }
+                      <div className="flex flex-col gap-1.5">
+                        {a.length === 0 && <span className="text-xs text-slate-700">—</span>}
+                        {a.map((item, i) => <AssignmentCard key={`${item.subject}-${item.room}-${i}`} item={item} subjects={subjects} />)}
+                      </div>
                     </td>
                   );
                 })}

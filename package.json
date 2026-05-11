@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@splinetool/react-spline": "^4.1.0",
     "@supabase/supabase-js": "^2.105.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -21,7 +22,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "api": "python -m uvicorn backend.main:app --port 8000",
+    "api": "python -m uvicorn backend.main:app --host 0.0.0.0 --port 8080",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

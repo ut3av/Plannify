@@ -1,42 +1,68 @@
-from collections import defaultdict #Provides a dictionary-like object that allows us to specify a default value type for keys that haven't been set yet. In this code, it's used to track teacher unavailability without having to check if the key exists first.
-from typing import Dict, List, Optional, Tuple #Used for type annotations to improve code readability and help with static analysis. Dict is a generic type for dictionaries, List for lists, Optional indicates that a value can be of a specified type or None, and Tuple is used for fixed-length tuples of specified types.
-from fastapi import FastAPI, HTTPException #Backend framework for building APIs
-from fastapi.middleware.cors import CORSMiddleware #Middleware to handle Cross-Origin Resource Sharing (CORS) which allows the frontend (running on a different origin) to communicate with this backend API.
-from ortools.sat.python import cp_model    #Main Ai tool by google (OR-CP-SAT Solver or Satisfier )
+from collections import defaultdict
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Tuple
+from urllib.parse import urlparse
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from ortools.sat.python import cp_model
 import os
+import json
+import logging
 from dotenv import load_dotenv
 from groq import Groq
 import requests
+from pydantic import BaseModel, Field
+
 load_dotenv()
-from pydantic import BaseModel, Field #Data validation and settings management using Python type annotations. It allows us to define data models with type hints and automatically validates incoming data against those models.
-try:#Relative import for database functions, used when this file is imported as a module. This allows the code to work in both contexts (as a module or as a standalone script) without modification. If this file is run as a script, the relative import will fail, so we catch the ImportError and do an absolute import instead.
+
+# --- Logging Setup ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("backend.log"), logging.StreamHandler()]
+)
+logger = logging.getLogger("ai-timetablex")
+
+try:
     from .db import (
         delete_timetable_from_db,
         get_timetable_by_id,
         get_timetables_from_db,
         save_timetable_to_db,
-    ) #Relative import for database functions. If this file is run as a script, the relative import will fail, so we catch the ImportError and do an absolute import instead.
+    )
 except ImportError:
     from db import (
         delete_timetable_from_db,
         get_timetable_by_id,
         get_timetables_from_db,
         save_timetable_to_db,
-    )#Absolute import for database functions, used when the file is run as a script. This allows the code to work in both contexts (as a module or as a standalone script) without modification.
+    )
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 DEFAULT_SLOTS = ["9-10", "10-11", "11-12", "12-1", "2-3"]
 
-app = FastAPI(title="AI-Powered Timetable Scheduler")
+app = FastAPI(title="AI-Powered Timetable Scheduler", version="1.0.0")
 
+# --- Middleware & Error Handling ---
+origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    logger.error(f"Global error: {exc}", exc_info=True)
+    return {
+        "detail": {
+            "message": "An unexpected server error occurred.",
+            "suggestions": ["Refresh the page.", "Check connectivity."],
+            "facts": [str(exc)[:100]]
+        }
+    }
 
 class SubjectInput(BaseModel):
     code: str = ""
@@ -59,6 +85,7 @@ class SectionInput(BaseModel):
     room: Optional[str] = None
     lab_room: Optional[str] = None
 
+
 class GenerateRequest(BaseModel):
     teachers: List[TeacherInput]
     subjects: List[SubjectInput]
@@ -73,6 +100,7 @@ class RescheduleRequest(BaseModel):
     slots: List[str] = []
 
 
+
 class ChatRequest(BaseModel):
     message: str
     context: Optional[dict] = None
@@ -80,26 +108,152 @@ class ChatRequest(BaseModel):
     image: Optional[str] = None
 
 
+class N8nTestRequest(BaseModel):
+    event: str = "manual_test"
+    payload: dict = Field(default_factory=dict)
+
+
 LAST_REQUEST: Optional[GenerateRequest] = None
 UNAVAILABILITY: Dict[str, List[Tuple[str, str]]] = defaultdict(list)
 LAST_TIMETABLE: Optional[dict] = None
+
+
+def notify_n8n(event: str, data: dict) -> dict:
+    webhook_url = os.getenv("N8N_WEBHOOK_URL", "").strip()
+    if not webhook_url:
+        return {
+            "enabled": False,
+            "delivered": False,
+            "message": "Set N8N_WEBHOOK_URL in .env to enable n8n webhooks.",
+        }
+
+    payload = {
+        "event": event,
+        "service": "ai-timetablex",
+        "sent_at": datetime.now(timezone.utc).isoformat(),
+        "data": data,
+    }
+
+    try:
+        response = requests.post(webhook_url, json=payload, timeout=8)
+        response.raise_for_status()
+        return {
+            "enabled": True,
+            "delivered": True,
+            "status_code": response.status_code,
+        }
+    except requests.RequestException as exc:
+        return {
+            "enabled": True,
+            "delivered": False,
+            "message": str(exc),
+        }
 
 
 def clean_name(value: str) -> str:
     return value.strip()
 
 
+def scheduler_error(
+    status_code: int,
+    message: str,
+    suggestions: Optional[List[str]] = None,
+    facts: Optional[List[str]] = None,
+):
+    raise HTTPException(
+        status_code=status_code,
+        detail={
+            "message": message,
+            "suggestions": suggestions or [],
+            "facts": facts or [],
+        },
+    )
+
+
+def get_ai_suggestions_for_failure(request: GenerateRequest, error_msg: str) -> List[str]:
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key or api_key == "your_api_key_here":
+        return []
+    
+    try:
+        client = Groq(api_key=api_key)
+        
+        # Prepare a concise summary of the request for the AI
+        summary = {
+            "num_teachers": len(request.teachers),
+            "num_subjects": len(request.subjects),
+            "num_rooms": len(request.rooms),
+            "num_sections": len(request.sections),
+            "time_slots": request.time_slots,
+            "total_required_slots": sum(s.required_slots for s in request.subjects),
+            "capacity": len(DAYS) * len(request.time_slots) * len(request.rooms)
+        }
+        
+        prompt = (
+            f"The academic timetable solver failed with this error: '{error_msg}'.\n"
+            f"Here is a summary of the constraints:\n{json.dumps(summary, indent=2)}\n"
+            "Provide 3-4 very specific, human-readable, and 'genius' suggestions to fix this logical bottleneck. "
+            "Focus on things like teacher-room ratios, lab constraints, or section-slot mismatches. "
+            "Keep suggestions concise and friendly. Use a supportive 'Academic OS' tone."
+        )
+        
+        completion = client.chat.completions.create(
+            messages=[{"role": "system", "content": "You are an expert academic scheduling consultant."},
+                      {"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            max_tokens=300
+        )
+        
+        ai_text = completion.choices[0].message.content
+        # Extract bullet points
+        suggestions = [line.strip().lstrip("-*•").strip() for line in ai_text.split("\n") if line.strip() and any(line.strip().startswith(c) for c in "-*•")]
+        return suggestions if suggestions else [ai_text.strip()]
+    except Exception as e:
+        print(f"AI Suggestion Error: {e}")
+        return []
+
+
+def unique_clean_strings(values: List[str]) -> List[str]:
+    cleaned = []
+    seen = set()
+    for value in values:
+        name = clean_name(value)
+        key = name.lower()
+        if name and key not in seen:
+            cleaned.append(name)
+            seen.add(key)
+    return cleaned
+
+
 def validate_request(request: GenerateRequest) -> GenerateRequest:
-    teachers = [
-        TeacherInput(name=clean_name(t.name), free_periods=t.free_periods)
-        for t in request.teachers if clean_name(t.name)
-    ]
-    rooms = [clean_name(room) for room in request.rooms if clean_name(room)]
-    slots = [clean_name(slot)
-             for slot in request.time_slots if clean_name(slot)]
+    teachers = []
+    seen_teachers = set()
+    for teacher in request.teachers:
+        name = clean_name(teacher.name)
+        key = name.lower()
+        if name and key not in seen_teachers:
+            teachers.append(
+                TeacherInput(
+                    name=name,
+                    free_periods=max(0, teacher.free_periods),
+                )
+            )
+            seen_teachers.add(key)
+
+    rooms = unique_clean_strings(request.rooms)
+    slots = unique_clean_strings(request.time_slots)
     subjects = []
     for subject in request.subjects:
         if clean_name(subject.name) and clean_name(subject.teacher):
+            if subject.is_lab and subject.required_slots % 2 != 0:
+                scheduler_error(
+                    400,
+                    f"Lab subject '{clean_name(subject.name)}' has {subject.required_slots} required slots.",
+                    [
+                        "Set lab subjects to an even number of slots because each lab is scheduled as a continuous two-period block.",
+                        "Use 2, 4, or 6 slots for a weekly lab depending on how many lab sessions are needed.",
+                    ],
+                )
             if getattr(subject, 'sections', None) and len(subject.sections) > 0:
                 for sec in subject.sections:
                     subjects.append(
@@ -133,39 +287,187 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
         )
         for sec in request.sections if clean_name(sec.name)
     ]
+    unique_sections = []
+    seen_sections = set()
+    for section in sections:
+        key = section.name.lower()
+        if key not in seen_sections:
+            unique_sections.append(section)
+            seen_sections.add(key)
+    sections = unique_sections
 
     if not teachers:
-        raise HTTPException(
-            status_code=400,
-            detail="Add at least one teacher.")
+        scheduler_error(
+            400,
+            "No teachers are available for scheduling.",
+            [
+                "Add at least one teacher in the Teachers tab.",
+                "If you are testing the app, use Generate Demo Timetable to load a complete sample setup.",
+            ],
+        )
     if not rooms:
-        raise HTTPException(
-            status_code=400,
-            detail="Add at least one classroom.")
+        scheduler_error(
+            400,
+            "No classrooms or labs are available.",
+            [
+                "Add at least one room in the Classrooms tab.",
+                "If sections have fixed rooms or lab rooms, make sure those exact room names also exist in the Classrooms list.",
+            ],
+        )
     if not slots:
-        raise HTTPException(
-            status_code=400,
-            detail="Add at least one time slot.")
+        scheduler_error(
+            400,
+            "No teaching time slots are available.",
+            [
+                "Add periods in the Time Slots tab.",
+                "For lab subjects, keep at least two consecutive periods available.",
+            ],
+        )
+    if any(subject.is_lab for subject in subjects) and len(slots) < 2:
+        scheduler_error(
+            400,
+            "Lab subjects need at least two time slots in a day.",
+            [
+                "Add another time slot so the solver can place a continuous two-period lab.",
+                "Or turn off the Lab option for subjects that do not need consecutive periods.",
+            ],
+        )
     if not subjects:
-        raise HTTPException(
-            status_code=400,
-            detail="Add at least one subject.")
+        scheduler_error(
+            400,
+            "No subjects are available for scheduling.",
+            [
+                "Add subjects with an assigned teacher and weekly lecture count.",
+                "For multiple sections, select the sections that should receive that subject.",
+            ],
+        )
+
+    known_rooms = set(rooms)
+    missing_fixed_rooms = []
+    for section in sections:
+        if section.room and section.room not in known_rooms:
+            missing_fixed_rooms.append(f"{section.name}: fixed room '{section.room}'")
+        if section.lab_room and section.lab_room not in known_rooms:
+            missing_fixed_rooms.append(f"{section.name}: lab room '{section.lab_room}'")
+    for subject in subjects:
+        if subject.room and subject.room not in known_rooms:
+            missing_fixed_rooms.append(f"{subject.name}: room '{subject.room}'")
+    if missing_fixed_rooms:
+        scheduler_error(
+            400,
+            "Some fixed rooms are not present in the Classrooms list.",
+            [
+                "Add the missing room names to the Classrooms tab exactly as written.",
+                "Or clear the fixed room/lab room selection so the solver can choose any available room.",
+            ],
+            missing_fixed_rooms,
+        )
+
+    section_names = {section.name for section in sections}
+    if section_names:
+        unknown_sections = sorted(
+            {
+                subject.section
+                for subject in subjects
+                if subject.section and subject.section not in section_names
+            }
+        )
+        if unknown_sections:
+            scheduler_error(
+                400,
+                "Some subjects are assigned to sections that do not exist.",
+                [
+                    "Create those sections in the Sections tab.",
+                    "Or edit the subject and select one of the existing sections.",
+                ],
+                [", ".join(unknown_sections)],
+            )
+
+    # (Auto-library period enforcement removed as requested)
+
 
     teacher_names = {t.name for t in teachers}
     unknown_teachers = sorted(
         {subject.teacher for subject in subjects} - teacher_names)
     if unknown_teachers:
-        raise HTTPException(
-            status_code=400, detail=f"Subject teacher not found: {
-                ', '.join(unknown_teachers)}.", )
+        scheduler_error(
+            400,
+            "Some subjects refer to teachers who are not in the Teachers tab.",
+            [
+                "Add the missing teachers.",
+                "Or edit the affected subjects and assign an existing teacher.",
+            ],
+            [", ".join(unknown_teachers)],
+        )
 
     total_required = sum(subject.required_slots for subject in subjects)
     total_capacity = len(DAYS) * len(slots) * len(rooms)
     if total_required > total_capacity:
-        raise HTTPException(
-            status_code=400,
-            detail="Required subject slots exceed total room capacity.",
+        shortage = total_required - total_capacity
+        error_msg = "The requested classes exceed total room capacity."
+        ai_suggestions = get_ai_suggestions_for_failure(request, error_msg)
+        scheduler_error(
+            400,
+            error_msg,
+            ai_suggestions if ai_suggestions else [
+                f"Add at least {shortage} more room-slot capacity across the week.",
+                "You can add rooms, add time slots, or reduce weekly lecture counts.",
+            ],
+            [
+                f"Required classes: {total_required}",
+                f"Available room slots: {total_capacity}",
+            ],
         )
+
+    teacher_lectures = defaultdict(int)
+    for subject in subjects:
+        teacher_lectures[subject.teacher] += subject.required_slots
+        
+    for t in teachers:
+        # A teacher can at most teach total slots minus their free periods (per day)
+        max_classes = (len(DAYS) * len(slots)) - (t.free_periods * len(DAYS))
+        if teacher_lectures[t.name] > max_classes:
+            excess = teacher_lectures[t.name] - max_classes
+            error_msg = f"{t.name} is assigned more lectures than their weekly capacity allows."
+            ai_suggestions = get_ai_suggestions_for_failure(request, error_msg)
+            scheduler_error(
+                400,
+                error_msg,
+                ai_suggestions if ai_suggestions else [
+                    f"Move at least {excess} lecture(s) from {t.name} to another teacher.",
+                    "Or reduce that teacher's free periods per day.",
+                ],
+                [
+                    f"Assigned lectures: {teacher_lectures[t.name]}",
+                    f"Maximum with {t.free_periods} free period(s)/day: {max_classes}",
+                ],
+            )
+
+    section_lectures = defaultdict(int)
+    for subject in subjects:
+        if subject.section:
+            section_lectures[subject.section] += subject.required_slots
+
+    expected_lectures = len(DAYS) * len(slots)
+    for sec_name, count in section_lectures.items():
+        if count != expected_lectures:
+            difference = abs(expected_lectures - count)
+            action = "add" if count < expected_lectures else "remove"
+            error_msg = f"Section {sec_name} has {count} weekly lectures, but it needs exactly {expected_lectures}."
+            ai_suggestions = get_ai_suggestions_for_failure(request, error_msg)
+            scheduler_error(
+                400,
+                error_msg,
+                ai_suggestions if ai_suggestions else [
+                    f"{action.capitalize()} {difference} lecture slot(s) for {sec_name}.",
+                    "Every section must total days x periods per day for a full timetable.",
+                ],
+                [
+                    f"Days: {len(DAYS)}",
+                    f"Periods per day: {len(slots)}",
+                    f"Expected weekly lectures: {expected_lectures}",
+                ],
+            )
 
     return GenerateRequest(
         teachers=teachers,
@@ -178,6 +480,106 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
 
 def build_empty_grid(slots: List[str]):
     return {day: {slot: [] for slot in slots} for day in DAYS}
+
+
+def build_schedule_suggestions(
+    request: GenerateRequest,
+    assignments: List[dict],
+    score: int,
+) -> List[str]:
+    suggestions = []
+    slots = request.time_slots
+    slot_index = {slot: idx for idx, slot in enumerate(slots)}
+    teacher_loads = defaultdict(int)
+    teacher_daily_slots = defaultdict(lambda: defaultdict(set))
+
+    for assignment in assignments:
+        teacher = assignment.get("teacher")
+        day = assignment.get("day")
+        slot = assignment.get("slot")
+        if teacher:
+            teacher_loads[teacher] += 1
+        if teacher and day in DAYS and slot in slot_index:
+            teacher_daily_slots[teacher][day].add(slot_index[slot])
+
+    score_ratio = score / max(1, len(request.subjects))
+
+    if score == 0:
+        suggestions.append(
+            "The solver found a clean timetable with no teacher idle-gap or subject-spread penalty."
+        )
+    elif score_ratio <= 1.5:
+        suggestions.append(
+            "This is a strong timetable; only small compromises were needed for teacher gaps or subject spread."
+        )
+    elif score_ratio <= 3:
+        suggestions.append(
+            "This timetable is workable, but a few teacher gaps, back-to-back stretches, or uneven subject days remain."
+        )
+    else:
+        suggestions.append(
+            "This timetable is feasible but tight. Add another room, add a period, or rebalance teacher assignments for a cleaner result."
+        )
+
+    load_notes = []
+    for teacher in request.teachers:
+        weekly_capacity = len(DAYS) * max(0, len(slots) - teacher.free_periods)
+        load = teacher_loads[teacher.name]
+        if weekly_capacity > 0 and load / weekly_capacity >= 0.85:
+            load_notes.append((load / weekly_capacity, teacher.name, load, weekly_capacity))
+    if load_notes:
+        _, teacher_name, load, capacity = sorted(load_notes, reverse=True)[0]
+        suggestions.append(
+            f"{teacher_name} is carrying {load}/{capacity} available teaching periods; move one subject if you want more buffer."
+        )
+
+    gap_notes = []
+    stretch_notes = []
+    for teacher_name, days in teacher_daily_slots.items():
+        gap_count = 0
+        stretch_count = 0
+        for scheduled_slots in days.values():
+            if not scheduled_slots:
+                continue
+            first = min(scheduled_slots)
+            last = max(scheduled_slots)
+            gap_count += sum(
+                1 for idx in range(first + 1, last) if idx not in scheduled_slots
+            )
+            stretch_count += sum(
+                1
+                for idx in range(max(0, len(slots) - 2))
+                if {idx, idx + 1, idx + 2}.issubset(scheduled_slots)
+            )
+        if gap_count:
+            gap_notes.append((gap_count, teacher_name))
+        if stretch_count:
+            stretch_notes.append((stretch_count, teacher_name))
+
+    if gap_notes:
+        gap_count, teacher_name = sorted(gap_notes, reverse=True)[0]
+        suggestions.append(
+            f"{teacher_name} has {gap_count} idle gap(s) between classes; adding flexibility to their subjects can reduce waiting time."
+        )
+
+    if stretch_notes:
+        stretch_count, teacher_name = sorted(stretch_notes, reverse=True)[0]
+        suggestions.append(
+            f"{teacher_name} has {stretch_count} three-period teaching stretch(es); consider swapping one class with a lighter teacher."
+        )
+
+    if len(suggestions) == 1:
+        suggestions.append(
+            "Room, teacher, section, and subject constraints are all respected in this generated timetable."
+        )
+
+    unique_suggestions = []
+    seen = set()
+    for suggestion in suggestions:
+        if suggestion not in seen:
+            unique_suggestions.append(suggestion)
+            seen.add(suggestion)
+    return unique_suggestions[:5]
 
 
 def solve_timetable(request: GenerateRequest):
@@ -239,14 +641,10 @@ def solve_timetable(request: GenerateRequest):
                 for day_idx in range(len(DAYS)):
                     for room_idx in range(room_count):
                         for slot_idx in range(len(slots)):
-                            if slot_idx == len(slots) - 1:
-                                # Cannot start a 2-period lab in the very last
-                                # slot of the day
+                            if slot_idx not in [0, len(slots) - 2]:
                                 model.Add(
                                     x[(subject_idx, first_occ, day_idx, slot_idx, room_idx)] == 0)
                             else:
-                                # The second occurrence must immediately follow
-                                # the first in the same room
                                 model.Add(
                                     x[(subject_idx, first_occ, day_idx, slot_idx, room_idx)] ==
                                     x[(subject_idx, second_occ, day_idx, slot_idx + 1, room_idx)]
@@ -459,9 +857,20 @@ def solve_timetable(request: GenerateRequest):
     status = solver.Solve(model)
 
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        raise HTTPException(
-            status_code=422,
-            detail="No feasible timetable found. Try adding more rooms or time slots.",
+        error_msg = "No feasible timetable could be found with the current rules."
+        ai_suggestions = get_ai_suggestions_for_failure(request, error_msg)
+        
+        base_suggestions = [
+            "Add more rooms or time slots.",
+            "Reduce fixed room restrictions for sections or labs.",
+            "Lower free periods for overloaded teachers.",
+            "Check lab subjects: they need two consecutive periods in the same room.",
+        ]
+        
+        scheduler_error(
+            422,
+            error_msg,
+            ai_suggestions if ai_suggestions else base_suggestions,
         )
 
     timetable = build_empty_grid(slots)
@@ -499,14 +908,18 @@ def solve_timetable(request: GenerateRequest):
 
     score = int(solver.ObjectiveValue())
     
+    score_ratio = score / max(1, len(request.subjects))
+
     if score == 0:
         ai_desc = "Perfect! The timetable was generated with an optimal score of 0. All teacher preferences and subject distributions are perfectly balanced with no idle gaps or overloads."
-    elif score <= 10:
-        ai_desc = f"Great schedule! A low score of {score} means the timetable is highly optimized, with only minor compromises in teacher gaps or subject spread."
-    elif score <= 25:
+    elif score_ratio <= 1.5:
+        ai_desc = f"Great schedule! A score of {score} across {len(request.subjects)} subject-section blocks means only minor compromises were needed for teacher gaps or subject spread."
+    elif score_ratio <= 3:
         ai_desc = f"Good schedule. We had to make a few trade-offs, such as some back-to-back classes for teachers or uneven subject distribution across days."
     else:
         ai_desc = f"Feasible but tight schedule. The higher score indicates several teacher overloads or idle gaps were necessary. Consider adding more resources if possible."
+
+    ai_suggestions = build_schedule_suggestions(request, assignments, score)
 
     return {
         "days": DAYS,
@@ -516,6 +929,7 @@ def solve_timetable(request: GenerateRequest):
         "solver_status": solver.StatusName(status),
         "objective_score": score,
         "ai_description": ai_desc,
+        "ai_suggestions": ai_suggestions,
     }
 
 
@@ -524,12 +938,51 @@ def health_check():
     return {"status": "ok", "service": "AI-Powered Timetable Scheduler"}
 
 
+@app.get("/n8n/status")
+def n8n_status():
+    webhook_url = os.getenv("N8N_WEBHOOK_URL", "").strip()
+    webhook_host = urlparse(webhook_url).netloc if webhook_url else None
+    return {
+        "enabled": bool(webhook_url),
+        "webhook_configured": bool(webhook_url),
+        "webhook_host": webhook_host,
+        "events": [
+            "timetable.generated",
+            "timetable.rescheduled",
+            "timetable.proxy_assigned",
+            "timetable.saved",
+            "manual_test",
+        ],
+    }
+
+
+@app.post("/n8n/test")
+def test_n8n(request: N8nTestRequest):
+    delivery = notify_n8n(
+        request.event,
+        {
+            "message": "AI TimetableX n8n test event",
+            "payload": request.payload,
+        },
+    )
+    if delivery["enabled"] and not delivery["delivered"]:
+        raise HTTPException(status_code=502, detail=delivery["message"])
+    return delivery
+
+
 @app.post("/generate")
 def generate(request: GenerateRequest):
     global LAST_REQUEST, UNAVAILABILITY, LAST_TIMETABLE
     LAST_REQUEST = validate_request(request)
     UNAVAILABILITY = defaultdict(list)
     LAST_TIMETABLE = solve_timetable(LAST_REQUEST)
+    LAST_TIMETABLE["n8n_delivery"] = notify_n8n(
+        "timetable.generated",
+        {
+            "request": LAST_REQUEST.model_dump(),
+            "result": LAST_TIMETABLE,
+        },
+    )
     return LAST_TIMETABLE
 
 
@@ -567,6 +1020,13 @@ def reschedule(request: RescheduleRequest):
         {"day": day, "slot": slot} for day, slot in UNAVAILABILITY[teacher]], }
     global LAST_TIMETABLE
     LAST_TIMETABLE = response
+    response["n8n_delivery"] = notify_n8n(
+        "timetable.rescheduled",
+        {
+            "request": request.model_dump(),
+            "result": response,
+        },
+    )
     return response
 
 
@@ -635,6 +1095,13 @@ def assign_proxy(request: RescheduleRequest):
         "proxies_assigned": proxies_assigned,
         "message": f"Assigned {
             len(proxies_assigned)} proxies for {teacher} on {day}."}
+    LAST_TIMETABLE["n8n_delivery"] = notify_n8n(
+        "timetable.proxy_assigned",
+        {
+            "request": request.model_dump(),
+            "result": LAST_TIMETABLE,
+        },
+    )
 
     return LAST_TIMETABLE
 
@@ -647,7 +1114,19 @@ class SaveTimetableRequest(BaseModel):
 @app.post("/save")
 def save_timetable(request: SaveTimetableRequest):
     tid = save_timetable_to_db(request.name, request.timetable_data)
-    return {"id": tid, "message": "Timetable saved successfully"}
+    delivery = notify_n8n(
+        "timetable.saved",
+        {
+            "id": tid,
+            "name": request.name,
+            "timetable_data": request.timetable_data,
+        },
+    )
+    return {
+        "id": tid,
+        "message": "Timetable saved successfully",
+        "n8n_delivery": delivery,
+    }
 
 
 @app.get("/saved")
@@ -697,6 +1176,10 @@ def chat_with_groq(request: ChatRequest):
         )
         if ctx:
             system_instruction += f"\nCurrent Timetable State:\n- Objective Score: {ctx.get('objective_score', 'N/A')}\n- Total Classes: {len(ctx.get('assignments', []))}\n"
+            if ctx.get("ai_suggestions"):
+                system_instruction += "Current Solver Suggestions:\n"
+                for suggestion in ctx.get("ai_suggestions", [])[:5]:
+                    system_instruction += f"- {suggestion}\n"
         
         # If an image is provided, fallback to Gemini 2.5 Flash for OCR
         if request.image:

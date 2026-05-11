@@ -33,7 +33,7 @@ export default function LoginPage({ onLogin }) {
         }
         setError("Success! If you aren't automatically logged in, check your email for a confirmation link.");
       } else {
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
@@ -63,8 +63,8 @@ export default function LoginPage({ onLogin }) {
                 <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z" />
               </svg>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white mb-1">
-              AI Timetable<span className="text-violet-400">X</span>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white mb-1 flex justify-center">
+              <img src="https://see.fontimg.com/api/rf5/DYgy0/OTc3MzU3MmZhOGI2NGE4ODg0OTFhNjIyZTU1MDc1Y2Yub3Rm/UGxhbmlmeS5leGU/qurovademo-regular.png?r=fs&h=81&w=1250&fg=FFFFFF&bg=FFFFFF&tb=1&s=65" alt="Planify.exe" className="h-9 object-contain" />
             </h1>
             <p className="text-violet-400 font-bold text-xs uppercase tracking-widest mb-2">Supabase Auth Integrated</p>
             <p className="text-slate-400 text-sm">Cloud-Enabled Academic Scheduling Platform</p>

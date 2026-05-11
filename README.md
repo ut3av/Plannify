@@ -62,6 +62,24 @@ npm start
 
 Open `http://localhost:3000`. The API runs at `http://127.0.0.1:8000`.
 
+## n8n Integration
+
+Create an n8n workflow with a Webhook trigger, then set the webhook URL in `.env`:
+
+```env
+N8N_WEBHOOK_URL=https://your-n8n-host/webhook/your-workflow-id
+```
+
+Restart the backend after changing `.env`. The admin dashboard includes an `n8n` tab where you can check the integration status and send a manual test event.
+
+The backend sends these events when the webhook is configured:
+
+- `timetable.generated`
+- `timetable.rescheduled`
+- `timetable.proxy_assigned`
+- `timetable.saved`
+- `manual_test`
+
 ## API Endpoints
 
 ### `POST /generate`

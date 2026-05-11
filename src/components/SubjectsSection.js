@@ -53,6 +53,19 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
     onChange(subjects.filter((_, i) => i !== index));
   };
 
+  const updateSubjectSlots = (index, delta) => {
+    const newSubjects = [...subjects];
+    const subject = { ...newSubjects[index] };
+    const step = subject.is_lab ? 2 : 1;
+    const minSlots = subject.is_lab ? 2 : 1;
+    const newSlots = Math.max(minSlots, subject.required_slots + (delta * step));
+    if (newSlots !== subject.required_slots) {
+      subject.required_slots = newSlots;
+      newSubjects[index] = subject;
+      onChange(newSubjects);
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -88,7 +101,7 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
           <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Code</label>
           <input
             className="glass-input"
-            type="number"
+            type="text"
             placeholder="e.g. 201"
             value={code}
             onChange={(e) => setCode(e.target.value)}
@@ -155,7 +168,7 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
           </div>
         )}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Slots</label>
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Lectures in a week</label>
           <input
             className="glass-input text-center"
             type="number"
@@ -219,7 +232,7 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
       ) : (
         <div className="space-y-2">
           {subjects.map((subject, index) => {
-            const color = SUBJECT_COLORS[subject.colorIndex ?? 0];
+            const color = SUBJECT_COLORS[subject.colorIndex % SUBJECT_COLORS.length] || SUBJECT_COLORS[0];
             return (
               <div
                 key={`${subject.name}-${index}`}
@@ -245,9 +258,25 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
                         : (subject.section ? ` • ${subject.section}` : " • Any Section (Auto)")}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-2.5 py-1 flex-shrink-0">
-                    <svg className="w-3 h-3 text-slate-500 dark:text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{subject.required_slots} slots/week</span>
+                  <div className="flex items-center gap-1.5 rounded-lg bg-white/[0.06] p-1 flex-shrink-0 border border-white/[0.05]">
+                    <button 
+                      onClick={() => updateSubjectSlots(index, -1)}
+                      className="w-6 h-6 rounded flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-white/[0.1] transition-colors"
+                      title="Decrease slots"
+                    >
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    </button>
+                    <div className="flex items-center gap-1 px-1">
+                      <svg className="w-3 h-3 text-slate-500 dark:text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 w-4 text-center">{subject.required_slots}</span>
+                    </div>
+                    <button 
+                      onClick={() => updateSubjectSlots(index, 1)}
+                      className="w-6 h-6 rounded flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-white/[0.1] transition-colors"
+                      title="Increase slots"
+                    >
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    </button>
                   </div>
                 </div>
                 <button
