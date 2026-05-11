@@ -7,6 +7,7 @@ import SectionsSection from "./components/SectionsSection";
 import TimeSlotsSection from "./components/TimeSlotsSection";
 import ReschedulePanel from "./components/ReschedulePanel";
 import TimetableGrid from "./components/TimetableGrid";
+import IntegrationsSection from "./components/IntegrationsSection";
 import HistorySection from "./components/HistorySection";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import AIChatBot from "./components/AIChatBot";
@@ -27,6 +28,7 @@ const TABS = [
   { id: "analytics", label: "Analytics", icon: "bar-chart" },
   { id: "reschedule", label: "Reschedule", icon: "refresh" },
   { id: "history", label: "History", icon: "clock" },
+  { id: "integrations", label: "Integrations", icon: "zap" },
 ];
 
 /* ── SVG icon map ── */
@@ -233,16 +235,16 @@ function ErrorAlert({ error }) {
 
 const DEMO_TIMETABLE_DATA = {
   teachers: [
-    { name: "Dr. Arvind Kumar", free_periods: 1 },
-    { name: "Prof. Sarah Jenkins", free_periods: 1 },
-    { name: "Rajesh Malhotra", free_periods: 1 },
-    { name: "Anita Desai", free_periods: 1 },
-    { name: "Kevin Peterson", free_periods: 1 },
-    { name: "Dr. Meenakshi Iyer", free_periods: 1 },
-    { name: "Suresh Raina", free_periods: 1 },
-    { name: "Monica Geller", free_periods: 1 },
-    { name: "Vikram Seth", free_periods: 1 },
-    { name: "Librarian", free_periods: 0 },
+    { name: "Dr. Arvind Kumar", free_periods: 1, email: "arvind.kumar@univ.edu", phone: "+91-9876543210" },
+    { name: "Prof. Sarah Jenkins", free_periods: 1, email: "s.jenkins@univ.edu", phone: "+91-9876543211" },
+    { name: "Rajesh Malhotra", free_periods: 1, email: "r.malhotra@univ.edu", phone: "+91-9876543212" },
+    { name: "Anita Desai", free_periods: 1, email: "a.desai@univ.edu", phone: "+91-9876543213" },
+    { name: "Kevin Peterson", free_periods: 1, email: "k.peterson@univ.edu", phone: "+91-9876543214" },
+    { name: "Dr. Meenakshi Iyer", free_periods: 1, email: "m.iyer@univ.edu", phone: "+91-9876543215" },
+    { name: "Suresh Raina", free_periods: 1, email: "s.raina@univ.edu", phone: "+91-9876543216" },
+    { name: "Monica Geller", free_periods: 1, email: "m.geller@univ.edu", phone: "+91-9876543217" },
+    { name: "Vikram Seth", free_periods: 1, email: "v.seth@univ.edu", phone: "+91-9876543218" },
+    { name: "Librarian", free_periods: 0, email: "library@univ.edu", phone: "+91-9876543219" },
   ],
   sections: [
     { name: "BCA-I", room: "Room 101", lab_room: "Computer Lab A" },
@@ -379,16 +381,42 @@ export default function App() {
     }
   }, [teachers, sections, subjects, rooms, timeSlots]);
 
-  // --- Auto-save to Supabase ---
+  // --- Periodic Auto-sync (1 min interval) ---
   useEffect(() => {
     if (!user || !isCloudLoaded) return;
     
-    const timeout = setTimeout(() => {
+    // Auto-save every 60 seconds
+    const saveInterval = setInterval(() => {
       saveToCloud();
-    }, 2500); 
+    }, 60000); 
 
-    return () => clearTimeout(timeout);
-  }, [teachers, sections, subjects, rooms, timeSlots, user, saveToCloud, isCloudLoaded]);
+    // Auto-refresh (pull) every 60 seconds to stay in sync
+    const refreshInterval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('timetable_state')
+          .select('*')
+          .eq('id', 'draft')
+          .single();
+        
+        if (data && !error && !loading) {
+          // Compare strings to avoid unnecessary state updates
+          if (JSON.stringify(data.teachers) !== JSON.stringify(teachers)) setTeachers(data.teachers);
+          if (JSON.stringify(data.sections) !== JSON.stringify(sections)) setSections(data.sections);
+          if (JSON.stringify(data.subjects) !== JSON.stringify(subjects)) setSubjects(data.subjects);
+          if (JSON.stringify(data.rooms) !== JSON.stringify(rooms)) setRooms(data.rooms);
+          if (JSON.stringify(data.timeSlots) !== JSON.stringify(timeSlots)) setTimeSlots(data.timeSlots);
+        }
+      } catch (e) {
+        console.warn("Periodic refresh failed", e);
+      }
+    }, 60000);
+
+    return () => {
+      clearInterval(saveInterval);
+      clearInterval(refreshInterval);
+    };
+  }, [teachers, sections, subjects, rooms, timeSlots, user, saveToCloud, isCloudLoaded, loading]);
 
   const payload = useMemo(
     () => buildApiPayload({ teachers, subjects, rooms, sections, timeSlots }),
@@ -1024,6 +1052,9 @@ export default function App() {
           </div>
           <div className={activeTab === "history" ? "block" : "hidden"}>
             <HistorySection onSelectTimetable={(data) => { setResult(data); setActiveTab("timetable"); setRescheduleNote("Loaded saved timetable from database."); }} />
+          </div>
+          <div className={activeTab === "integrations" ? "block" : "hidden"}>
+            <IntegrationsSection />
           </div>
           <div className={activeTab === "analytics" ? "block" : "hidden"}>
             <AnalyticsDashboard result={result} teachers={teachers} subjects={subjects} />

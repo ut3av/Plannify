@@ -417,3 +417,4 @@ Traceback (most recent call last):
     has_lib = section_has_library[sec_name]
               ^^^^^^^^^^^^^^^^^^^
 NameError: name 'section_has_library' is not defined
+2026-05-11 22:54:20,653 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

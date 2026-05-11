@@ -4,13 +4,22 @@ const DEFAULT_TEACHER_COLOR = { bg: "rgba(14,165,233,0.12)", border: "rgba(14,16
 
 export default function TeachersSection({ teachers, onChange }) {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [freePeriods, setFreePeriods] = useState(1);
 
   const addTeacher = () => {
     const trimmed = name.trim();
     if (trimmed && !teachers.find(t => t.name.toLowerCase() === trimmed.toLowerCase())) {
-      onChange([...teachers, { name: trimmed, free_periods: freePeriods }]);
+      onChange([...teachers, { 
+        name: trimmed, 
+        free_periods: freePeriods,
+        email: email.trim(),
+        phone: phone.trim()
+      }]);
       setName("");
+      setEmail("");
+      setPhone("");
       setFreePeriods(1);
     }
   };
@@ -49,21 +58,31 @@ export default function TeachersSection({ teachers, onChange }) {
       </div>
 
       {/* Add input */}
-      <div className="flex items-end gap-3 mb-6">
-        <div className="flex-1 flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Teacher Name</label>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Full Name</label>
           <input type="text" className="glass-input w-full" placeholder="e.g. John Doe..." value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
         </div>
-        <div className="w-32 flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Free Periods / Day</label>
-          <input type="number" min="0" className="glass-input w-full" value={freePeriods} onChange={(e) => setFreePeriods(parseInt(e.target.value) || 0)} title="Free Periods Per Day" />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Email Address</label>
+          <input type="email" className="glass-input w-full" placeholder="john@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
-        <button className="btn-gradient px-5 h-[42px]" onClick={addTeacher} disabled={!name.trim()}>
-          <span className="flex items-center gap-1.5">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-            Add
-          </span>
-        </button>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Mobile No.</label>
+          <input type="tel" className="glass-input w-full" placeholder="+91..." value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </div>
+        <div className="flex items-end gap-3">
+          <div className="flex-1 flex flex-col gap-1.5">
+            <label className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold ml-1">Free Periods</label>
+            <input type="number" min="0" className="glass-input w-full" value={freePeriods} onChange={(e) => setFreePeriods(parseInt(e.target.value) || 0)} title="Free Periods Per Day" />
+          </div>
+          <button className="btn-gradient px-5 h-[42px]" onClick={addTeacher} disabled={!name.trim()}>
+            <span className="flex items-center gap-1.5">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              Add
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Teacher cards */}
@@ -85,7 +104,23 @@ export default function TeachersSection({ teachers, onChange }) {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-slate-900 dark:text-white truncate">{t.name}</p>
-                      <p className="text-xs mt-0.5 truncate" style={{ color: color.accent }}>{t.free_periods} free period{t.free_periods !== 1 ? 's' : ''}/day</p>
+                      <div className="flex flex-col gap-0.5 mt-1">
+                        {t.email && (
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
+                            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            {t.email}
+                          </p>
+                        )}
+                        {t.phone && (
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
+                            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                            {t.phone}
+                          </p>
+                        )}
+                        <p className="text-[10px] font-medium mt-0.5" style={{ color: color.accent }}>
+                          {t.free_periods} free period{t.free_periods !== 1 ? 's' : ''}/day
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <button

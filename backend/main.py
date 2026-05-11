@@ -78,6 +78,8 @@ class SubjectInput(BaseModel):
 class TeacherInput(BaseModel):
     name: str
     free_periods: int = 1
+    email: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class SectionInput(BaseModel):
@@ -236,6 +238,8 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
                 TeacherInput(
                     name=name,
                     free_periods=max(0, teacher.free_periods),
+                    email=teacher.email,
+                    phone=teacher.phone,
                 )
             )
             seen_teachers.add(key)
@@ -443,31 +447,8 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
                 ],
             )
 
-    section_lectures = defaultdict(int)
-    for subject in subjects:
-        if subject.section:
-            section_lectures[subject.section] += subject.required_slots
-
-    expected_lectures = len(DAYS) * len(slots)
-    for sec_name, count in section_lectures.items():
-        if count != expected_lectures:
-            difference = abs(expected_lectures - count)
-            action = "add" if count < expected_lectures else "remove"
-            error_msg = f"Section {sec_name} has {count} weekly lectures, but it needs exactly {expected_lectures}."
-            ai_suggestions = get_ai_suggestions_for_failure(request, error_msg)
-            scheduler_error(
-                400,
-                error_msg,
-                ai_suggestions if ai_suggestions else [
-                    f"{action.capitalize()} {difference} lecture slot(s) for {sec_name}.",
-                    "Every section must total days x periods per day for a full timetable.",
-                ],
-                [
-                    f"Days: {len(DAYS)}",
-                    f"Periods per day: {len(slots)}",
-                    f"Expected weekly lectures: {expected_lectures}",
-                ],
-            )
+    # (Strict section lecture count validation removed to allow for free periods)
+    pass
 
     return GenerateRequest(
         teachers=teachers,
