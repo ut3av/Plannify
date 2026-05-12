@@ -62,15 +62,15 @@ export default function TeachersSection({ teachers, onChange }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] uppercase tracking-widest text-slate-500 font-black ml-1">Full Name</label>
-            <input type="text" className="glass-input w-full" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
+            <input type="text" className="input-premium w-full" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={handleKeyDown} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] uppercase tracking-widest text-slate-500 font-black ml-1">Email Address</label>
-            <input type="email" className="glass-input w-full" placeholder="john@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="email" className="input-premium w-full" placeholder="john@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] uppercase tracking-widest text-slate-500 font-black ml-1">Mobile No.</label>
-            <input type="tel" className="glass-input w-full" placeholder="+91..." value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <input type="tel" className="input-premium w-full" placeholder="+91..." value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
         </div>
         <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/5">

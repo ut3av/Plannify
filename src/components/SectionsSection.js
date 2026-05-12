@@ -54,21 +54,18 @@ export default function SectionsSection({ sections, rooms, onChange }) {
             placeholder="e.g. CS"
             value={branch}
             onChange={(e) => setBranch(e.target.value)}
-            className="glass-input"
+            className="input-premium"
           />
         </div>
-        <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">No. of Sections</label>
-          <input
-            type="number"
-            min="1"
-            max="10"
-            value={numSections}
-            onChange={(e) => setNumSections(parseInt(e.target.value) || 1)}
-            className="glass-input w-24 text-center"
-          />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5 text-center">Sections</label>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setNumSections(Math.max(1, numSections - 1))} className="w-10 h-[46px] rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white transition-all">-</button>
+            <span className="w-8 text-center font-black text-white text-lg">{numSections}</span>
+            <button type="button" onClick={() => setNumSections(Math.min(10, numSections + 1))} className="w-10 h-[46px] rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white transition-all">+</button>
+          </div>
         </div>
-        <button type="submit" disabled={!branch.trim()} className="btn-primary whitespace-nowrap h-[42px] px-4 rounded-lg bg-violet-600 text-white font-semibold">
+        <button type="submit" disabled={!branch.trim()} className="btn-premium whitespace-nowrap h-[46px] px-8 py-0 rounded-xl">
           Generate Sections
         </button>
       </form>
@@ -90,7 +87,7 @@ export default function SectionsSection({ sections, rooms, onChange }) {
                 <div>
                   <label className="text-[10px] uppercase text-slate-500 block mb-1">Fixed Room</label>
                   <select
-                    className="glass-input text-xs py-1.5 px-2 w-full"
+                    className="input-premium text-xs py-2 px-2 w-full"
                     value={sec.room || ""}
                     onChange={(e) => updateSection(sec.name, "room", e.target.value)}
                   >
@@ -101,7 +98,7 @@ export default function SectionsSection({ sections, rooms, onChange }) {
                 <div>
                   <label className="text-[10px] uppercase text-slate-500 block mb-1">Lab Room</label>
                   <select
-                    className="glass-input text-xs py-1.5 px-2 w-full"
+                    className="input-premium text-xs py-2 px-2 w-full"
                     value={sec.lab_room || ""}
                     onChange={(e) => updateSection(sec.name, "lab_room", e.target.value)}
                   >

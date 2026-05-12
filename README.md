@@ -1,175 +1,131 @@
-# AI-Powered Timetable Scheduler
+<div align="center">
+  <img src="public/readme_assets/hero.png" width="800" alt="Planify.exe Hero Banner">
+  
+  # 🚀 Planify.exe | Academic OS
+  
+  **The ultimate AI-powered academic scheduling platform.**  
+  *Generate conflict-free, optimized timetables in seconds using Google OR-Tools and LLM-assisted logic.*
 
-Full-stack hackathon-ready timetable scheduler using:
+  [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+  [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+  [![OR-Tools](https://img.shields.io/badge/Google%20OR--Tools-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://developers.google.com/optimization)
 
-- Frontend: React.js + Tailwind CSS
-- Backend: FastAPI
-- AI engine: Google OR-Tools CP-SAT
-- API: REST
-- Data: in-memory JSON
+</div>
 
-## Folder Structure
+---
 
-```text
-ai-timetablex/
-  backend/
-    main.py
-    requirements.txt
-  public/
-    index.html
-  src/
-    components/
-      ReschedulePanel.js
-      SchedulerForm.js
-      TimetableGrid.js
-    App.js
-    App.test.js
-    index.css
-    index.js
-  package.json
-  tailwind.config.js
+## ✨ Overview
+
+Planify.exe (ai-timetablex) is a high-performance, premium academic scheduling engine designed to solve the "Timetable NP-Hard" problem with elegance and speed. Built for modern educational institutions, it combines the mathematical precision of **Constraint Programming (CP-SAT)** with the intuitive assistance of **Large Language Models (Groq AI)**.
+
+> [!TIP]
+> **Planify isn't just a scheduler—it's an Academic OS.** It manages teachers, sections, labs, and rooms with real-time cloud synchronization and automated workflow triggers.
+
+---
+
+## 🔥 Key Features
+
+- **🧠 AI-Optimized Solver**: Powered by **Google OR-Tools**, our engine handles hundreds of constraints (room capacity, teacher free periods, back-to-back limits) to find the absolute mathematical optimum.
+- **⚡ "Genius" Error Handling**: When a schedule is logically impossible, **Groq AI (Llama 3)** analyzes the bottlenecks and provides human-readable suggestions to fix your inputs.
+- **🧪 Lab-Aware Logic**: Automatically schedules continuous 2-period lab blocks with specialized room requirements.
+- **☁️ Real-time Cloud Sync**: Integrated with **Supabase** for instant auto-saving, multi-device persistence, and secure authentication.
+- **📊 Interactive Analytics**: Visualize teacher loads, room utilization, and scheduling efficiency through a sleek **Recharts** dashboard.
+- **📥 Professional Exports**: One-click **Excel Export** generates multi-sheet workbooks formatted for both class sections and individual teacher schedules.
+- **🤖 AI Chat Assistant**: An integrated AI companion to help you navigate constraints and manage your academic data.
+- **🔗 n8n Automation**: Webhook support to trigger external workflows (Email/Slack/Discord) whenever a schedule is finalized or changed.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Frontend**: React 19, Tailwind CSS, Spline 3D (Interactive UI)
+- **Backend**: FastAPI (Python 3.10+), Uvicorn
+- **Constraint Solver**: Google OR-Tools (CP-SAT)
+- **Database/Auth**: Supabase (PostgreSQL)
+- **AI Engine**: Groq API (Llama-3.3-70B)
+- **Automation**: n8n Webhooks
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- Node.js (v18+)
+- Python (v3.10+)
+- Supabase Account (Optional, for Cloud Sync)
+- Groq API Key (Optional, for AI Suggestions)
+
+### 2. Installation
+
+Clone the repository:
+```bash
+git clone https://github.com/your-repo/ai-timetablex.git
+cd ai-timetablex
 ```
 
-## Run The App
-
-Install frontend dependencies:
-
+**Frontend Setup:**
 ```bash
 npm install
 ```
 
-Install backend dependencies:
-
+**Backend Setup:**
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate
+source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
 pip install -r requirements.txt
 cd ..
 ```
 
-Start the backend:
+### 3. Configuration
+Copy `.env.example` to `.env` and fill in your credentials:
+```bash
+cp .env.example .env
+```
 
+### 4. Run the Application
+
+**Start the API Server:**
 ```bash
 npm run api
 ```
 
-Start the frontend in a second terminal:
-
+**Start the Frontend Dashboard:**
 ```bash
 npm start
 ```
+*Access the dashboard at `http://localhost:3000`*
 
-Open `http://localhost:3000`. The API runs at `http://127.0.0.1:8000`.
+---
 
-## n8n Integration
+## 📸 Dashboard Preview
 
-Create an n8n workflow with a Webhook trigger, then set the webhook URL in `.env`:
+| **Section Management** | **AI Timetable Grid** |
+|:---:|:---:|
+| Interactive forms for Teachers & Rooms | Drag-and-drop logic & Conflict highlights |
+| *Visualizing high-fidelity dark mode* | *Powered by OR-Tools* |
 
-```env
-N8N_WEBHOOK_URL=https://your-n8n-host/webhook/your-workflow-id
-```
+---
 
-Restart the backend after changing `.env`. The admin dashboard includes an `n8n` tab where you can check the integration status and send a manual test event.
+## 🤝 Contributing
 
-The backend sends these events when the webhook is configured:
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-- `timetable.generated`
-- `timetable.rescheduled`
-- `timetable.proxy_assigned`
-- `timetable.saved`
-- `manual_test`
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## API Endpoints
+---
 
-### `POST /generate`
+## 📄 License
 
-Generates a conflict-free weekly timetable.
+Distributed under the MIT License. See `LICENSE` for more information.
 
-Example request:
-
-```json
-{
-  "teachers": ["Asha Rao", "Ben Thomas", "Chen Lee"],
-  "subjects": [
-    { "name": "Mathematics", "teacher": "Asha Rao", "required_slots": 4 },
-    { "name": "Physics", "teacher": "Ben Thomas", "required_slots": 3 },
-    { "name": "Chemistry", "teacher": "Chen Lee", "required_slots": 3 }
-  ],
-  "rooms": ["Room 101", "Room 102"],
-  "time_slots": ["9-10", "10-11", "11-12", "12-1", "2-3"]
-}
-```
-
-### `POST /reschedule`
-
-Marks a teacher unavailable and regenerates the timetable while preserving hard constraints.
-
-Example request:
-
-```json
-{
-  "teacher": "Asha Rao",
-  "day": "Mon",
-  "slots": ["9-10", "10-11"]
-}
-```
-
-Leave `slots` empty to block the selected teacher for the whole day.
-
-## Example Output
-
-```json
-{
-  "days": ["Mon", "Tue", "Wed", "Thu", "Fri"],
-  "time_slots": ["9-10", "10-11", "11-12", "12-1", "2-3"],
-  "timetable": {
-    "Mon": {
-      "9-10": [
-        {
-          "subject": "Mathematics",
-          "teacher": "Asha Rao",
-          "room": "Room 101"
-        }
-      ]
-    }
-  },
-  "assignments": [
-    {
-      "day": "Mon",
-      "slot": "9-10",
-      "subject": "Mathematics",
-      "teacher": "Asha Rao",
-      "room": "Room 101"
-    }
-  ],
-  "solver_status": "OPTIMAL",
-  "objective_score": 2
-}
-```
-
-## How Constraints Are Applied
-
-Hard constraints:
-
-- Each subject is assigned exactly its required number of slots.
-- A teacher can teach at most one class in the same day and time slot.
-- A classroom can host at most one class in the same day and time slot.
-- The same subject is not duplicated in the same time slot.
-- Rescheduling blocks the selected teacher from the requested day and slot combinations.
-
-Soft constraints:
-
-- Teacher idle gaps are penalized.
-- Three back-to-back classes for one teacher are penalized.
-- Subject slots are spread across the week where possible.
-
-The backend uses OR-Tools CP-SAT boolean decision variables for subject occurrence, day, slot, and room combinations, then minimizes the soft-constraint penalty score.
-
-## Useful Commands
-
-```bash
-npm run build
-npm test -- --watchAll=false --runInBand
-python -m py_compile backend/main.py
-```
+<div align="center">
+  <p>Built with ❤️ by the Planify Team</p>
+  <p><i>"Scheduling the future, one period at a time."</i></p>
+</div>

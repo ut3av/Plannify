@@ -42,7 +42,7 @@ export default function RoomsSection({ rooms, onChange }) {
       </div>
 
       <div className="flex gap-2 mb-6">
-        <input className="glass-input flex-1" placeholder="e.g. Room 101, Lab 2..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} />
+        <input className="input-premium flex-1" placeholder="e.g. Room 101, Lab 2..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} />
         <button className="btn-gradient px-5" onClick={addRoom} disabled={!input.trim()}>
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>

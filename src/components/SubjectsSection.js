@@ -100,7 +100,7 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Code</label>
           <input
-            className="glass-input"
+            className="input-premium"
             type="text"
             placeholder="e.g. 201"
             value={code}
@@ -111,7 +111,7 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Subject name</label>
           <input
-            className="glass-input"
+            className="input-premium"
             placeholder="e.g. Mathematics"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -121,7 +121,7 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
         <div>
           <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Teacher</label>
           <select
-            className="glass-input cursor-pointer"
+            className="input-premium cursor-pointer"
             value={teacher}
             onChange={(e) => setTeacher(e.target.value)}
           >
@@ -134,11 +134,11 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
           <div className="relative">
             <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Sections</label>
             <div 
-              className="glass-input cursor-pointer flex items-center justify-between" 
-              style={{ height: '42px', padding: '0 12px' }}
+              className="input-premium cursor-pointer flex items-center justify-between" 
+              style={{ height: '46px', padding: '0 12px' }}
               onClick={() => setIsSectionOpen(!isSectionOpen)}
             >
-              <span className="truncate text-sm pr-2 text-slate-800 dark:text-slate-200">
+              <span className="truncate text-sm pr-2 text-white">
                 {selectedSections.length === 0 ? "None" : selectedSections.join(", ")}
               </span>
               <svg className={`w-4 h-4 text-slate-400 transition-transform ${isSectionOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
@@ -168,16 +168,12 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
           </div>
         )}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Lectures in a week</label>
-          <input
-            className="glass-input text-center"
-            type="number"
-            min={isLab ? "2" : "1"}
-            step={isLab ? "2" : "1"}
-            max="20"
-            value={slots}
-            onChange={(e) => setSlots(Math.max(isLab ? 2 : 1, parseInt(e.target.value) || (isLab ? 2 : 1)))}
-          />
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5 text-center">Lectures</label>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setSlots(Math.max(isLab ? 2 : 1, slots - (isLab ? 2 : 1)))} className="w-10 h-[46px] rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white transition-all">-</button>
+            <span className="w-8 text-center font-black text-white text-lg">{slots}</span>
+            <button onClick={() => setSlots(slots + (isLab ? 2 : 1))} className="w-10 h-[46px] rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white transition-all">+</button>
+          </div>
         </div>
         <div className="flex items-center mb-2 mx-1">
           <label className="flex items-center gap-2 cursor-pointer group">

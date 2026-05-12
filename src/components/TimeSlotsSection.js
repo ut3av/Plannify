@@ -82,15 +82,23 @@ export default function TimeSlotsSection({ timeSlots, onChange }) {
         <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] items-end">
           <div>
             <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Start Time</label>
-            <input type="time" className="glass-input w-full" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            <input type="time" className="input-premium w-full" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </div>
-          <div>
+          <div className="flex flex-col gap-1.5">
             <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Duration (mins)</label>
-            <input type="number" min="1" className="glass-input w-full" value={duration} onChange={(e) => setDuration(parseInt(e.target.value) || 50)} />
+            <div className="flex items-center gap-2">
+              <button onClick={() => setDuration(Math.max(1, duration - 5))} className="w-8 h-[42px] rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">-</button>
+              <span className="w-10 text-center font-black text-white">{duration}</span>
+              <button onClick={() => setDuration(duration + 5)} className="w-8 h-[42px] rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">+</button>
+            </div>
           </div>
-          <div>
+          <div className="flex flex-col gap-1.5">
             <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Lectures / Day</label>
-            <input type="number" min="1" className="glass-input w-full" value={lectures} onChange={(e) => setLectures(parseInt(e.target.value) || 5)} />
+            <div className="flex items-center gap-2">
+              <button onClick={() => setLectures(Math.max(1, lectures - 1))} className="w-8 h-[42px] rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">-</button>
+              <span className="w-10 text-center font-black text-white">{lectures}</span>
+              <button onClick={() => setLectures(lectures + 1)} className="w-8 h-[42px] rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">+</button>
+            </div>
           </div>
         </div>
 
@@ -108,13 +116,21 @@ export default function TimeSlotsSection({ timeSlots, onChange }) {
           </div>
           {lunchBreak ? (
             <>
-              <div>
-                <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Lunch After Period</label>
-                <input type="number" min="1" className="glass-input w-full" value={lunchAfter} onChange={(e) => setLunchAfter(parseInt(e.target.value) || 2)} />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Lunch After</label>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setLunchAfter(Math.max(1, lunchAfter - 1))} className="w-8 h-[42px] rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">-</button>
+                  <span className="w-10 text-center font-black text-white">{lunchAfter}</span>
+                  <button onClick={() => setLunchAfter(lunchAfter + 1)} className="w-8 h-[42px] rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">+</button>
+                </div>
               </div>
-              <div>
+              <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Lunch Duration</label>
-                <input type="number" min="1" className="glass-input w-full" value={lunchDuration} onChange={(e) => setLunchDuration(parseInt(e.target.value) || 50)} />
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setLunchDuration(Math.max(1, lunchDuration - 5))} className="w-8 h-[42px] rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">-</button>
+                  <span className="w-10 text-center font-black text-white">{lunchDuration}</span>
+                  <button onClick={() => setLunchDuration(lunchDuration + 5)} className="w-8 h-[42px] rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-white">+</button>
+                </div>
               </div>
             </>
           ) : (
@@ -150,7 +166,7 @@ export default function TimeSlotsSection({ timeSlots, onChange }) {
 
       {/* Custom input */}
       <div className="flex gap-2 mb-6">
-        <input className="glass-input flex-1" placeholder="Custom slot e.g. 05:00 PM - 06:00 PM..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} />
+        <input className="input-premium flex-1" placeholder="Custom slot e.g. 05:00 PM - 06:00 PM..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} />
         <button className="btn-gradient px-5" onClick={addSlot} disabled={!input.trim()}>
           <span className="flex items-center gap-1.5">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>

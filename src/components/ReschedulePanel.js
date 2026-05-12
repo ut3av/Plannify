@@ -53,13 +53,13 @@ export default function ReschedulePanel({ teachers, days, slots, hasResult, load
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Teacher unavailable</label>
-              <select className="glass-input cursor-pointer text-white" value={teacher} onChange={(e) => setTeacher(e.target.value)}>
+              <select className="input-premium cursor-pointer text-white" value={teacher} onChange={(e) => setTeacher(e.target.value)}>
                 {teachers.map((t) => (<option key={t.name} value={t.name} className="bg-slate-900">{t.name}</option>))}
               </select>
             </div>
             <div>
               <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">Day</label>
-              <select className="glass-input cursor-pointer text-white" value={day} onChange={(e) => setDay(e.target.value)}>
+              <select className="input-premium cursor-pointer text-white" value={day} onChange={(e) => setDay(e.target.value)}>
                 {days.map((d) => (<option key={d} value={d} className="bg-slate-900">{d}</option>))}
               </select>
             </div>

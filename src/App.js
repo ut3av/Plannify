@@ -831,13 +831,9 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen text-slate-800 dark:text-slate-100">
-      {/* Ambient background glow */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-violet-600/[0.07] blur-3xl" />
-        <div className="absolute top-1/3 -right-32 w-80 h-80 rounded-full bg-indigo-500/[0.06] blur-3xl" />
-        <div className="absolute -bottom-40 left-1/3 w-96 h-96 rounded-full bg-purple-600/[0.05] blur-3xl" />
-      </div>
+    <main className="min-h-screen text-slate-100 selection:bg-indigo-500/30 selection:text-white">
+      {/* Background Mesh */}
+      <div className="glow-mesh" />
 
       <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-0 px-4 py-6 sm:px-6 lg:px-8">
         {/* ── Header ── */}
@@ -845,21 +841,25 @@ export default function App() {
           <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-violet-500/60 to-transparent rounded-full" />
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/20">
                 <TabIcon
                   icon="sparkles"
-                  className="w-6 h-6 text-slate-900 dark:text-white"
+                  className="w-6 h-6 text-white"
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl flex flex-wrap items-center gap-3">
-                  <img src="https://see.fontimg.com/api/rf5/DYgy0/OTc3MzU3MmZhOGI2NGE4ODg0OTFhNjIyZTU1MDc1Y2Yub3Rm/UGxhbmlmeS5leGU/qurovademo-regular.png?r=fs&h=81&w=1250&fg=FFFFFF&bg=FFFFFF&tb=1&s=65" alt="Planify.exe" className="h-7 md:h-8 object-contain" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-violet-500/20 text-violet-300 px-2.5 py-1 rounded-full border border-violet-500/30 whitespace-nowrap">Admin Dashboard</span>
+                <h1 className="flex items-center gap-0.5 group">
+                  <img 
+                    src="https://see.fontimg.com/api/rf5/DYgy0/OTc3MzU3MmZhOGI2NGE4ODg0OTFhNjIyZTU1MDc1Y2Yub3Rm/UGxhbmlmeQ/qurovademo-regular.png?r=fs&h=81&w=1250&fg=FFFFFF&bg=transparent&tb=1&s=65" 
+                    alt="Planify" 
+                    className="h-7 md:h-8 object-contain" 
+                  />
+                  <span className="text-exe-glossy text-xl md:text-2xl mt-1 tracking-tighter">.exe</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full border border-indigo-500/30 ml-3">ADMIN OS</span>
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-2 font-medium">Powered by OR-Tools</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Supabase Real-Time Sync Active
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter mt-1 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  OR-Tools Solver Engine Connected
                 </p>
               </div>
             </div>
@@ -1008,19 +1008,19 @@ export default function App() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium
-                  transition-all duration-200 whitespace-nowrap
+                  flex items-center gap-2 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest
+                  transition-all duration-300 whitespace-nowrap border
                   ${
                     activeTab === tab.id
-                      ? "bg-violet-500/20 text-violet-200 border border-violet-500/30 shadow-lg shadow-violet-500/10"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-white dark:bg-white/[0.04] border border-transparent"
+                      ? "bg-indigo-500/20 text-indigo-200 border-indigo-500/40 shadow-xl shadow-indigo-500/10"
+                      : "text-slate-500 border-transparent hover:text-slate-300 hover:bg-white/5"
                   }
                 `}
               >
                 <TabIcon icon={tab.icon} />
                 {tab.label}
                 {tab.id === "timetable" && result && (
-                  <span className="ml-1 w-2 h-2 rounded-full bg-emerald-400 animate-pulse-glow" />
+                  <span className="ml-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 )}
               </button>
             ))}
@@ -1065,19 +1065,19 @@ export default function App() {
 
 
       {/* ── Footer ── */}
-      <footer className="mt-12 mb-8 text-center animate-fade-in-delay-3">
-        <div className="flex items-center justify-center gap-6 mb-4">
-          <div className="w-10 h-px bg-gradient-to-r from-transparent to-slate-200 dark:to-white/10" />
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-            System Status: <span className="text-emerald-400">Ready to Ship</span>
+      <footer className="mt-16 mb-8 text-center animate-fade-in">
+        <div className="flex items-center justify-center gap-6 mb-6">
+          <div className="w-12 h-px bg-gradient-to-r from-transparent to-indigo-500/30" />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+            Academic OS Status: <span className="text-emerald-400">Stable Build</span>
           </p>
-          <div className="w-10 h-px bg-gradient-to-l from-transparent to-slate-200 dark:to-white/10" />
+          <div className="w-12 h-px bg-gradient-to-l from-transparent to-indigo-500/30" />
         </div>
-        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-          Planify.exe AI Academic OS • v1.0.0-PRO • Built with Google OR-Tools & Gemini
+        <p className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">
+          Planify.exe • Enterprise AI Core • v1.0.0-PREMIUM
         </p>
-        <p className="mt-1 text-[9px] text-slate-500/60 dark:text-slate-400/30">
-          &copy; 2026 Planify AI. All constraints reserved.
+        <p className="mt-2 text-[9px] text-slate-700 font-medium">
+          &copy; 2026 Planify AI. Engineered for Mathematical Perfection.
         </p>
       </footer>
 

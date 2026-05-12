@@ -3,3 +3,4 @@ uvicorn[standard]==0.34.0
 ortools==9.15.6755
 groq
 python-dotenv
+requests

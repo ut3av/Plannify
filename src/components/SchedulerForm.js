@@ -39,7 +39,7 @@ export default function SchedulerForm({ form, loading, onChange, onGenerate }) {
             Teachers
           </span>
           <textarea
-            className="glass-input mt-1.5 min-h-[72px] resize-y"
+            className="input-premium mt-1.5 min-h-[72px] resize-y"
             value={form.teachers}
             onChange={(event) => updateField("teachers", event.target.value)}
           />
@@ -53,7 +53,7 @@ export default function SchedulerForm({ form, loading, onChange, onGenerate }) {
             Format: Subject | Teacher | Required slots
           </span>
           <textarea
-            className="glass-input mt-1.5 min-h-[120px] resize-y font-mono text-xs"
+            className="input-premium mt-1.5 min-h-[120px] resize-y font-mono text-xs"
             value={form.subjects}
             onChange={(event) => updateField("subjects", event.target.value)}
           />
@@ -64,7 +64,7 @@ export default function SchedulerForm({ form, loading, onChange, onGenerate }) {
             Classrooms
           </span>
           <textarea
-            className="glass-input mt-1.5 min-h-[60px] resize-y"
+            className="input-premium mt-1.5 min-h-[60px] resize-y"
             value={form.rooms}
             onChange={(event) => updateField("rooms", event.target.value)}
           />
@@ -75,7 +75,7 @@ export default function SchedulerForm({ form, loading, onChange, onGenerate }) {
             Time Slots
           </span>
           <input
-            className="glass-input mt-1.5"
+            className="input-premium mt-1.5"
             value={form.timeSlots}
             onChange={(event) => updateField("timeSlots", event.target.value)}
           />

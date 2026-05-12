@@ -1,7 +1,7 @@
 {
-  "name": "ai-timetablex",
-  "version": "0.1.0",
-  "private": true,
+  "name": "planify-academic-os",
+  "version": "1.0.0",
+  "description": "Premium AI-Powered Academic Scheduling Platform built with React, FastAPI, and Google OR-Tools.",
   "dependencies": {
     "@splinetool/react-spline": "^4.1.0",
     "@supabase/supabase-js": "^2.105.3",
