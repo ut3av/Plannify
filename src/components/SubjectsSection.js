@@ -91,7 +91,7 @@ export default function SubjectsSection({ subjects, teachers, sections = [], roo
           </p>
         </div>
         <span className="text-sm font-semibold text-slate-500 bg-white dark:bg-white/[0.04] rounded-lg px-3 py-1.5 border border-slate-200 dark:border-white/[0.06]">
-          {subjects.reduce((s, sub) => s + sub.required_slots, 0)} total slots
+          {(subjects || []).reduce((s, sub) => s + (sub.required_slots || 0), 0)} total slots
         </span>
       </div>
 

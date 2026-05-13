@@ -117,7 +117,30 @@ class N8nTestRequest(BaseModel):
 
 LAST_REQUEST: Optional[GenerateRequest] = None
 UNAVAILABILITY: Dict[str, List[Tuple[str, str]]] = defaultdict(list)
+@app.post("/n8n/email-all")
+async def trigger_bulk_emails():
+    """
+    Triggers the n8n workflow to fetch all teachers and email their 
+    individual timetables as attachments.
+    """
+    result = notify_n8n("bulk_email_trigger", {
+        "action": "distribute_timetables",
+        "priority": "high",
+        "requested_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    if not result["delivered"]:
+        raise HTTPException(status_code=500, detail=result["message"])
+    
+    return {
+        "status": "triggered",
+        "message": "Bulk email workflow initiated in n8n.",
+        "n8n_response": result
+    }
+
+
 LAST_TIMETABLE: Optional[dict] = None
+
 
 
 def notify_n8n(event: str, data: dict) -> dict:

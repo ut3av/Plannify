@@ -5,7 +5,9 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 export default function IntegrationsSection() {
   const [loading, setLoading] = useState(false);
+  const [distributing, setDistributing] = useState(false);
   const [status, setStatus] = useState(null);
+  const [distributeStatus, setDistributeStatus] = useState(null);
 
   const testWebhook = async () => {
     setLoading(true);
@@ -20,6 +22,19 @@ export default function IntegrationsSection() {
       setStatus({ success: false, error: err.response?.data?.detail || err.message });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const distributeTimetables = async () => {
+    setDistributing(true);
+    setDistributeStatus(null);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/n8n/email-all`);
+      setDistributeStatus({ success: true, message: "Bulk distribution triggered! n8n is now mailing all teachers." });
+    } catch (err) {
+      setDistributeStatus({ success: false, error: err.response?.data?.detail || "Could not reach the distribution engine." });
+    } finally {
+      setDistributing(false);
     }
   };
 
@@ -45,17 +60,37 @@ export default function IntegrationsSection() {
               Bridge the gap between scheduling and delivery. Automatically notify teachers via Email or WhatsApp, generate individual Excel reports, and sync your data with 2000+ apps.
             </p>
           </div>
-          <button 
-            onClick={testWebhook}
-            disabled={loading}
-            className="btn-gradient px-8 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-violet-500/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap shrink-0"
-          >
-            <span className="flex items-center gap-2">
-              {loading ? "Verifying..." : "Ping n8n Instance"}
-              {!loading && <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>}
-            </span>
-          </button>
+          <div className="flex flex-wrap gap-4">
+            <button 
+              onClick={testWebhook}
+              disabled={loading || distributing}
+              className="btn-outline px-6 py-4 rounded-2xl font-bold text-sm hover:scale-105 active:scale-95 transition-all whitespace-nowrap shrink-0"
+            >
+              <span className="flex items-center gap-2 text-slate-300">
+                {loading ? "Verifying..." : "Ping Instance"}
+              </span>
+            </button>
+            <button 
+              onClick={distributeTimetables}
+              disabled={loading || distributing}
+              className="btn-gradient px-8 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-violet-500/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap shrink-0"
+            >
+              <span className="flex items-center gap-2">
+                {distributing ? "Distributing..." : "Distribute Timetables"}
+                {!distributing && <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>}
+              </span>
+            </button>
+          </div>
         </div>
+        
+        {distributeStatus && (
+          <div className={`mt-6 p-4 rounded-xl border animate-slide-up text-sm font-bold flex items-center gap-3 ${distributeStatus.success ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
+             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+               {distributeStatus.success ? <path d="M22 11.08V12a10 10 0 11-5.93-9.14 M22 4L12 14.01 9 11.01" /> : <path d="M18 6L6 18 M6 6l12 12" />}
+             </svg>
+             {distributeStatus.success ? distributeStatus.message : distributeStatus.error}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

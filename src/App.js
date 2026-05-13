@@ -13,10 +13,51 @@ import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import AIChatBot from "./components/AIChatBot";
 import LoginPage from "./components/LoginPage";
 import TeacherDashboard from "./components/TeacherDashboard";
+import LogsSection from "./components/LogsSection";
 import { saveAs } from "file-saver";
 import { supabase } from "./supabaseClient";
+import { syncRelationalData } from "./services/supabaseService";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
+const parseCloudJson = (value, fallback) => {
+  if (value === null || value === undefined || value === "") return fallback;
+  if (Array.isArray(value) || typeof value === "object") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
+
+const readCloudState = (data) => ({
+  teachers: parseCloudJson(data.teachers ?? data.room, null),
+  sections: parseCloudJson(data.sections ?? data.email, null),
+  subjects: parseCloudJson(data.subjects ?? data.day, null),
+  rooms: parseCloudJson(data.rooms ?? data.subject, null),
+  timeSlots: parseCloudJson(data.time_slots ?? data.timeSlots ?? data.teacher_name, null),
+});
+
+const buildCloudPayload = ({ teachers, sections, subjects, rooms, timeSlots }) => ({
+  id: "draft",
+  teachers,
+  sections,
+  subjects,
+  rooms,
+  time_slots: timeSlots,
+  updated_at: new Date().toISOString(),
+});
+
+const buildLegacyCloudPayload = ({ teachers, sections, subjects, rooms, timeSlots }) => ({
+  id: "draft",
+  teacher_name: JSON.stringify(timeSlots),
+  email: JSON.stringify(sections),
+  subject: JSON.stringify(rooms),
+  day: JSON.stringify(subjects),
+  room: JSON.stringify(teachers),
+  slot: new Date().toISOString(),
+});
 
 const TABS = [
   { id: "teachers", label: "Teachers", icon: "users" },
@@ -29,6 +70,7 @@ const TABS = [
   { id: "reschedule", label: "Reschedule", icon: "refresh" },
   { id: "history", label: "History", icon: "clock" },
   { id: "integrations", label: "Integrations", icon: "zap" },
+  { id: "logs", label: "Logs", icon: "terminal" },
 ];
 
 /* ── SVG icon map ── */
@@ -160,6 +202,20 @@ function TabIcon({ icon, className = "w-4 h-4" }) {
         <line x1="6" y1="20" x2="6" y2="14" />
       </svg>
     ),
+    terminal: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="4 17 10 11 4 5" />
+        <line x1="12" y1="19" x2="20" y2="19" />
+      </svg>
+    ),
   };
   return icons[icon] || null;
 }
@@ -288,33 +344,11 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("teachers");
 
-  const [teachers, setTeachers] = useState([
-    { name: "Mohit Kumade", free_periods: 1 },
-    { name: "Rohit Singh", free_periods: 1 },
-    { name: "Deepa Waswani", free_periods: 1 },
-    { name: "Pragya Shastri", free_periods: 1 },
-  ]);
-  const [sections, setSections] = useState([
-    { name: "BCA-A", room: "Room 101", lab_room: "Lab 1" },
-    { name: "BCA-B", room: "Room 102", lab_room: "Lab 1" },
-    { name: "BCA-C", room: "", lab_room: "" },
-    { name: "BCA-D", room: "", lab_room: "" },
-    { name: "BCA-E", room: "", lab_room: "" },
-    { name: "BCA-F", room: "", lab_room: "" },
-  ]);
-  const [subjects, setSubjects] = useState([
-    { code: "201", name: "Data Structures", teacher: "Mohit Kumade", section: "BCA-A", required_slots: 4, colorIndex: 0 },
-    { code: "202", name: "Operating System", teacher: "Rohit Singh", section: "BCA-A", required_slots: 3, colorIndex: 1 },
-    { code: "203", name: "Environmental Studies", teacher: "Deepa Waswani", section: "BCA-B", required_slots: 3, colorIndex: 2 },
-    { code: "205", name: "Basic Communication", teacher: "Pragya Shastri", section: undefined, required_slots: 2, colorIndex: 3 },
-    { code: "206", name: "Programming Lab in Data Structures", teacher: "Mohit Kumade", section: "BCA-A", is_lab: true, required_slots: 2, colorIndex: 4 },
-  ]);
-  const [rooms, setRooms] = useState([
-    "Room 401", "Room 402", "Lab 105", "Lab 003"
-  ]);
-  const [timeSlots, setTimeSlots] = useState([
-    "10:30 AM - 11:20 AM", "11:20 AM - 12:10 PM", "01:00 PM - 01:50 PM", "01:50 PM - 02:40 PM", "02:40 PM - 03:30 PM"
-  ]);
+  const [teachers, setTeachers] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [timeSlots, setTimeSlots] = useState([]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -336,11 +370,12 @@ export default function App() {
           .single();
         
         if (data && !error) {
-          if (data.teachers) setTeachers(data.teachers);
-          if (data.sections) setSections(data.sections);
-          if (data.subjects) setSubjects(data.subjects);
-          if (data.rooms) setRooms(data.rooms);
-          if (data.timeSlots) setTimeSlots(data.timeSlots);
+          const cloudState = readCloudState(data);
+          if (cloudState.teachers) setTeachers(cloudState.teachers);
+          if (cloudState.sections) setSections(cloudState.sections);
+          if (cloudState.subjects) setSubjects(cloudState.subjects);
+          if (cloudState.rooms) setRooms(cloudState.rooms);
+          if (cloudState.timeSlots) setTimeSlots(cloudState.timeSlots);
         }
         setIsCloudLoaded(true);
       } catch (e) {
@@ -359,21 +394,29 @@ export default function App() {
     setError(null);
     setRescheduleNote("");
     try {
-      const stateToSave = { teachers, sections, subjects, rooms, timeSlots, teacher: "" };
+      const stateToSave = { teachers, sections, subjects, rooms, timeSlots };
+      
+      // 1. Primary Save (JSONB Draft)
       const { error } = await supabase
         .from('timetable_state')
-        .upsert({ 
-          id: 'draft', 
-          ...stateToSave,
-          updated_at: new Date().toISOString()
-        });
-      if (error) throw error;
-      setRescheduleNote("Saved successfully to Supabase Cloud!");
+        .upsert(buildCloudPayload(stateToSave));
+      
+      if (error) {
+        const { error: legacyError } = await supabase
+          .from('timetable_state')
+          .upsert(buildLegacyCloudPayload(stateToSave));
+        if (legacyError) throw legacyError;
+      }
+
+      // 2. Relational Sync (Structured Tables for n8n/Analytics)
+      await syncRelationalData({ ...stateToSave, result });
+
+      setRescheduleNote("Saved successfully to Supabase Cloud & Relational Tables!");
     } catch (e) {
       console.error(e);
       setError({
         title: "Failed to save to Supabase Cloud.",
-        suggestions: ["Check the Supabase URL and anon key in .env, then try again."],
+        suggestions: [e?.message || "Check the Supabase table schema, URL, and anon key, then try again."],
         facts: [],
       });
     } finally {
@@ -400,12 +443,13 @@ export default function App() {
           .single();
         
         if (data && !error && !loading) {
+          const cloudState = readCloudState(data);
           // Compare strings to avoid unnecessary state updates
-          if (JSON.stringify(data.teachers) !== JSON.stringify(teachers)) setTeachers(data.teachers);
-          if (JSON.stringify(data.sections) !== JSON.stringify(sections)) setSections(data.sections);
-          if (JSON.stringify(data.subjects) !== JSON.stringify(subjects)) setSubjects(data.subjects);
-          if (JSON.stringify(data.rooms) !== JSON.stringify(rooms)) setRooms(data.rooms);
-          if (JSON.stringify(data.timeSlots) !== JSON.stringify(timeSlots)) setTimeSlots(data.timeSlots);
+          if (cloudState.teachers && JSON.stringify(cloudState.teachers) !== JSON.stringify(teachers)) setTeachers(cloudState.teachers);
+          if (cloudState.sections && JSON.stringify(cloudState.sections) !== JSON.stringify(sections)) setSections(cloudState.sections);
+          if (cloudState.subjects && JSON.stringify(cloudState.subjects) !== JSON.stringify(subjects)) setSubjects(cloudState.subjects);
+          if (cloudState.rooms && JSON.stringify(cloudState.rooms) !== JSON.stringify(rooms)) setRooms(cloudState.rooms);
+          if (cloudState.timeSlots && JSON.stringify(cloudState.timeSlots) !== JSON.stringify(timeSlots)) setTimeSlots(cloudState.timeSlots);
         }
       } catch (e) {
         console.warn("Periodic refresh failed", e);
@@ -430,6 +474,14 @@ export default function App() {
     try {
       const response = await axios.post(`${API_BASE_URL}/generate`, nextPayload);
       setResult(response.data);
+      
+      // Sync to relational tables immediately after generation
+      try {
+        await syncRelationalData({ teachers, sections, subjects, rooms, timeSlots, result: response.data });
+      } catch (syncErr) {
+        console.warn("Relational sync failed after generation", syncErr);
+      }
+
       if (successMessage) setRescheduleNote(successMessage);
       setActiveTab("timetable");
     } catch (apiError) {
@@ -857,10 +909,16 @@ export default function App() {
                   <span className="text-exe-glossy text-xl md:text-2xl mt-1 tracking-tighter">.exe</span>
                   <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full border border-indigo-500/30 ml-3">ADMIN OS</span>
                 </h1>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter mt-1 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  OR-Tools Solver Engine Connected
-                </p>
+                <div className="flex flex-col gap-1">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Active Environment: <span className="text-slate-300">Optimized Core</span>
+                  </p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter flex items-center gap-2">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isCloudLoaded ? 'bg-indigo-400' : 'bg-slate-600'} ${isCloudLoaded && 'animate-pulse'}`} />
+                    Supabase Cloud: <span className={isCloudLoaded ? 'text-indigo-300' : 'text-slate-500'}>{isCloudLoaded ? 'Linked & Syncing' : 'Disconnected'}</span>
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -1055,6 +1113,9 @@ export default function App() {
           </div>
           <div className={activeTab === "integrations" ? "block" : "hidden"}>
             <IntegrationsSection />
+          </div>
+          <div className={activeTab === "logs" ? "block" : "hidden"}>
+            <LogsSection />
           </div>
           <div className={activeTab === "analytics" ? "block" : "hidden"}>
             <AnalyticsDashboard result={result} teachers={teachers} subjects={subjects} />
