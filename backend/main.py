@@ -11,9 +11,20 @@ import logging
 from dotenv import load_dotenv
 from groq import Groq
 import requests
+import io
+import base64
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from pydantic import BaseModel, Field
 
+# --- Environment Setup ---
+# First load from current working directory
 load_dotenv()
+# Then specifically load from backend folder to ensure API keys are picked up
+backend_env = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(backend_env):
+    load_dotenv(backend_env, override=True)
+
 
 # --- Logging Setup ---
 logging.basicConfig(
@@ -117,15 +128,151 @@ class N8nTestRequest(BaseModel):
 
 LAST_REQUEST: Optional[GenerateRequest] = None
 UNAVAILABILITY: Dict[str, List[Tuple[str, str]]] = defaultdict(list)
+def create_teacher_excel(teacher_name: str, slots: List[str], assignments: List[dict]) -> str:
+    """
+    Generates a base64-encoded Excel file for a specific teacher's timetable.
+    Replicates the logic used in the frontend's exportToExcel function.
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = (teacher_name[:31]) if teacher_name else "Teacher"
+
+    # Define Styles
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="4F46E5", end_color="4F46E5", fill_type="solid")
+    sub_header_fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+    alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    # 1. Header Info Row
+    ws.append([f"Teacher: {teacher_name}", "", "", "", "", "", f"Generated: {datetime.now().strftime('%d/%m/%Y')}"])
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=6)
+    
+    # 2. Period & Time Rows
+    period_nums = ["Day / (Period & Time)"]
+    time_slots_row = [""]
+    lunch_cols = []
+
+    period_counter = 1
+    roman_numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
+    
+    for i, slot in enumerate(slots):
+        p_num = roman_numerals[period_counter - 1] if period_counter <= len(roman_numerals) else str(period_counter)
+        period_nums.append(p_num)
+        time_slots_row.append(slot)
+
+        if i < len(slots) - 1:
+            # Check for lunch gap
+            try:
+                end_match = slot.split("-")[1].strip()
+                next_start_match = slots[i+1].split("-")[0].strip()
+                if end_match != next_start_match:
+                    period_nums.append("")
+                    time_slots_row.append("LUNCH")
+                    lunch_cols.append(len(time_slots_row))
+            except (IndexError, AttributeError):
+                pass
+        period_counter += 1
+
+    ws.append(period_nums)
+    ws.append(time_slots_row)
+
+    # Apply styling to headers
+    for r in [2, 3]:
+        for c in range(1, len(time_slots_row) + 1):
+            cell = ws.cell(row=r, column=c)
+            cell.font = Font(bold=True)
+            cell.fill = sub_header_fill
+            cell.border = border
+            cell.alignment = alignment
+
+    # 3. Data Rows
+    for day_idx, day in enumerate(DAYS):
+        row_data = [day]
+        slot_idx = 0
+        for i in range(1, len(time_slots_row)):
+            col_idx = i + 1
+            if col_idx in lunch_cols:
+                row_data.append("") # Lunch gap
+                continue
+            
+            slot_name = slots[slot_idx]
+            match = next((a for a in assignments if a.get('teacher') == teacher_name and a.get('day') == day and a.get('slot') == slot_name), None)
+            
+            if match:
+                code_display = match.get('code') or match.get('subject')
+                val = f"{code_display}\n({match.get('room')})\n[{match.get('section') or 'Auto'}]"
+                row_data.append(val)
+            else:
+                row_data.append("")
+            slot_idx += 1
+        ws.append(row_data)
+
+    # Style the grid
+    for r in range(4, 4 + len(DAYS)):
+        for c in range(1, len(time_slots_row) + 1):
+            cell = ws.cell(row=r, column=c)
+            cell.border = border
+            cell.alignment = alignment
+            if c == 1: # Day column
+                cell.font = Font(bold=True)
+                cell.fill = sub_header_fill
+
+    # Handle vertical Lunch merges
+    for col_idx in lunch_cols:
+        ws.merge_cells(start_row=3, start_column=col_idx, end_row=3 + len(DAYS), end_column=col_idx)
+        cell = ws.cell(row=3, column=col_idx)
+        cell.alignment = Alignment(horizontal="center", vertical="center", text_rotation=90)
+
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 15
+    for c in range(2, len(time_slots_row) + 1):
+        char = chr(64 + c) if c <= 26 else f"{chr(64 + (c-1)//26)}{chr(64 + (c-1)%26 + 1)}"
+        ws.column_dimensions[char].width = 18
+
+    # Save to buffer
+    output = io.BytesIO()
+    wb.save(output)
+    return base64.b64encode(output.getvalue()).decode('utf-8')
+
+
 @app.post("/n8n/email-all")
 async def trigger_bulk_emails():
     """
-    Triggers the n8n workflow to fetch all teachers and email their 
-    individual timetables as attachments.
+    Triggers the n8n workflow with full teacher data, including individual 
+    timetable Excel files as base64 attachments.
     """
+    if not LAST_TIMETABLE or not LAST_REQUEST:
+        raise HTTPException(
+            status_code=400, 
+            detail="Generate a timetable before sending emails."
+        )
+
+    # Collect unique teachers and their details
+    teachers_data = []
+    teacher_names = {t.name for t in LAST_REQUEST.teachers}
+    
+    for teacher in LAST_REQUEST.teachers:
+        excel_base64 = create_teacher_excel(
+            teacher.name, 
+            LAST_TIMETABLE["time_slots"], 
+            LAST_TIMETABLE["assignments"]
+        )
+        
+        teachers_data.append({
+            "name": teacher.name,
+            "email": teacher.email or "",
+            "phone": teacher.phone or "",
+            "filename": f"Timetable_{teacher.name.replace(' ', '_')}.xlsx",
+            "excel_base64": excel_base64,
+            "is_proxy_alert": False # Can be expanded in future
+        })
+
     result = notify_n8n("bulk_email_trigger", {
         "action": "distribute_timetables",
         "priority": "high",
+        "teacher_count": len(teachers_data),
+        "teachers": teachers_data,
         "requested_at": datetime.now(timezone.utc).isoformat()
     })
     
@@ -134,7 +281,7 @@ async def trigger_bulk_emails():
     
     return {
         "status": "triggered",
-        "message": "Bulk email workflow initiated in n8n.",
+        "message": f"Bulk email workflow initiated for {len(teachers_data)} teachers.",
         "n8n_response": result
     }
 
@@ -144,12 +291,14 @@ LAST_TIMETABLE: Optional[dict] = None
 
 
 def notify_n8n(event: str, data: dict) -> dict:
-    webhook_url = os.getenv("N8N_WEBHOOK_URL", "").strip()
+    # Handle common 'n9n' typo in env or user request
+    webhook_url = (os.getenv("N8N_WEBHOOK_URL") or os.getenv("N9N_WEBHOOK_URL") or "").strip()
+    
     if not webhook_url:
         return {
             "enabled": False,
             "delivered": False,
-            "message": "Set N8N_WEBHOOK_URL in .env to enable n8n webhooks.",
+            "message": "Set N8N_WEBHOOK_URL in your .env to enable n8n automation workflows.",
         }
 
     payload = {
@@ -160,7 +309,8 @@ def notify_n8n(event: str, data: dict) -> dict:
     }
 
     try:
-        response = requests.post(webhook_url, json=payload, timeout=8)
+        # Increased timeout to 15s as n8n workflows can be slow to respond
+        response = requests.post(webhook_url, json=payload, timeout=15)
         response.raise_for_status()
         return {
             "enabled": True,
@@ -171,7 +321,8 @@ def notify_n8n(event: str, data: dict) -> dict:
         return {
             "enabled": True,
             "delivered": False,
-            "message": str(exc),
+            "message": f"n8n delivery failed: {str(exc)}",
+            "webhook_url": webhook_url
         }
 
 
@@ -410,9 +561,6 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
                 [", ".join(unknown_sections)],
             )
 
-    # (Auto-library period enforcement removed as requested)
-
-
     teacher_names = {t.name for t in teachers}
     unknown_teachers = sorted(
         {subject.teacher for subject in subjects} - teacher_names)
@@ -470,7 +618,6 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
                 ],
             )
 
-    # (Strict section lecture count validation removed to allow for free periods)
     pass
 
     return GenerateRequest(
@@ -920,9 +1067,6 @@ def solve_timetable(request: GenerateRequest):
         ai_desc = f"Great schedule! A score of {score} across {len(request.subjects)} subject-section blocks means only minor compromises were needed for teacher gaps or subject spread."
     elif score_ratio <= 3:
         ai_desc = f"Good schedule. We had to make a few trade-offs, such as some back-to-back classes for teachers or uneven subject distribution across days."
-    else:
-        ai_desc = f"Feasible but tight schedule. The higher score indicates several teacher overloads or idle gaps were necessary. Consider adding more resources if possible."
-
     ai_suggestions = build_schedule_suggestions(request, assignments, score)
 
     return {
@@ -944,12 +1088,13 @@ def health_check():
 
 @app.get("/n8n/status")
 def n8n_status():
-    webhook_url = os.getenv("N8N_WEBHOOK_URL", "").strip()
+    webhook_url = (os.getenv("N8N_WEBHOOK_URL") or os.getenv("N9N_WEBHOOK_URL") or "").strip()
     webhook_host = urlparse(webhook_url).netloc if webhook_url else None
     return {
         "enabled": bool(webhook_url),
         "webhook_configured": bool(webhook_url),
         "webhook_host": webhook_host,
+        "provider": "n8n.cloud" if "n8n.cloud" in (webhook_host or "") else "Self-Hosted",
         "events": [
             "timetable.generated",
             "timetable.rescheduled",
