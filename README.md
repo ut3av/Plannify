@@ -18,7 +18,7 @@
 
 ## ✨ Overview
 
-Planify.exe (ai-timetablex) is a high-performance, premium academic scheduling engine designed to solve the "Timetable NP-Hard" problem with elegance and speed. Built for modern educational institutions, it combines the mathematical precision of **Constraint Programming (CP-SAT)** with the intuitive assistance of **Large Language Models (Groq AI)**.
+Planify.exe (ai-timetablex) is a high-performance, premium academic scheduling engine designed to solve the "Timetable NP-Hard" problem with elegance and speed. Built for modern educational institutions, it combines the mathematical precision of **Constraint Programming (CP-SAT)** with the intuitive assistance of **Large Language Models (Groq Ai)**.
 
 > [!TIP]
 > **Planify isn't just a scheduler—it's an Academic OS.** It manages teachers, sections, labs, and rooms with real-time cloud synchronization and automated workflow triggers.
