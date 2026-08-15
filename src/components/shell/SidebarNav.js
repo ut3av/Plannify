@@ -31,17 +31,10 @@ const NAV_GROUPS = [
       { id: "integrations", label: "Automation & n8n", icon: "zap", badge: null },
       { id: "logs", label: "System Logs", icon: "terminal", badge: null },
     ],
-  },
-  {
+  },  {
     title: "REPORTS",
     items: [
       { id: "reports", label: "Reports Center", icon: "file-text", badge: "Excel" },
-    ],
-  },
-  {
-    title: "SYSTEM",
-    items: [
-      { id: "settings", label: "System Settings", icon: "settings", badge: null },
     ],
   },
 ];
@@ -74,7 +67,7 @@ export default function SidebarNav({
   isOpen,
   activePage,
   onSelectPage,
-  userRole = "Super Admin",
+  userRole = "Admin",
 }) {
   return (
     <aside
@@ -84,8 +77,7 @@ export default function SidebarNav({
     >
       <div className="flex-1 overflow-y-auto py-4 px-2 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
         {NAV_GROUPS.map((group, groupIdx) => {
-          // Filter out System settings for non-admins if role is Faculty
-          if (userRole === "Faculty" && (group.title === "SYSTEM" || group.title === "ACADEMIC SETUP")) {
+          if (userRole === "Faculty" && group.title === "ACADEMIC SETUP") {
             return null;
           }
 

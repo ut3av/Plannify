@@ -25,7 +25,6 @@ import AppShell from "./components/shell/AppShell";
 import InstitutionalDashboard from "./components/dashboard/InstitutionalDashboard";
 import SectionsManagement from "./components/sections/SectionsManagement";
 import ReportsCenter from "./components/reports/ReportsCenter";
-import SystemSettings from "./components/settings/SystemSettings";
 import DepartmentAnalyticsView from "./components/faculty/DepartmentAnalyticsView";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
@@ -370,14 +369,13 @@ const getBreadcrumbsForPage = (page) => {
     case "integrations": return ["Operations", "Automation & n8n"];
     case "logs": return ["Operations", "System Logs"];
     case "reports": return ["Reports", "Centralized Reports Hub"];
-    case "settings": return ["System", "Institutional Settings"];
     default: return ["Main", page];
   }
 };
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState("Super Admin");
+  const [userRole, setUserRole] = useState("Admin");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedFaculty, setSelectedFaculty] = useState(null);
 
@@ -1055,6 +1053,10 @@ export default function App() {
       {activeTab === "departments" && (
         <DepartmentAnalyticsView
           rangeKey="30d"
+          sections={sections}
+          teachers={teachers}
+          subjects={subjects}
+          onNavigate={(p) => setActiveTab(p)}
           onSelectFaculty={(f) => { setSelectedFaculty(f); setActiveTab("faculty"); }}
         />
       )}
@@ -1066,7 +1068,14 @@ export default function App() {
 
       {/* 10. ACADEMIC SETUP: SECTIONS */}
       {activeTab === "sections" && (
-        <SectionsManagement sections={sections} rooms={rooms} onChange={setSections} onNavigate={(p) => setActiveTab(p)} />
+        <SectionsManagement
+          sections={sections}
+          rooms={rooms}
+          subjects={subjects}
+          teachers={teachers}
+          onChange={setSections}
+          onNavigate={(p) => setActiveTab(p)}
+        />
       )}
 
       {/* 11. ACADEMIC SETUP: ROOMS */}
@@ -1102,11 +1111,6 @@ export default function App() {
       {/* 17. REPORTS CENTER */}
       {activeTab === "reports" && (
         <ReportsCenter />
-      )}
-
-      {/* 18. SYSTEM SETTINGS */}
-      {activeTab === "settings" && (
-        <SystemSettings userRole={userRole} />
       )}
 
       {/* AIChatBot Floating Assistant */}

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export default function LoginPage({ onLogin }) {
+export default function LoginPage() {
+  const [portalRole, setPortalRole] = useState("admin"); // "admin" | "teacher"
   const [isSignUp, setIsSignUp] = useState(false);
-  const [role, setRole] = useState("admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -22,22 +22,29 @@ export default function LoginPage({ onLogin }) {
           password,
           options: {
             data: {
-              role,
+              role: portalRole,
               name: name || email.split('@')[0]
             }
           }
         });
         if (signUpError) throw signUpError;
         if (data?.user?.identities?.length === 0) {
-            throw new Error("This email is already registered.");
+          throw new Error("This email is already registered.");
         }
-        setError("Success! If you aren't automatically logged in, check your email for a confirmation link.");
+        setError("Success! Account created. If auto-signin is pending, please verify your email.");
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (signInError) throw signInError;
+
+        // Optionally update metadata if portalRole was explicitly chosen
+        if (signInData?.user) {
+          await supabase.auth.updateUser({
+            data: { role: portalRole, name: name || signInData.user.user_metadata?.name || email.split('@')[0] }
+          });
+        }
       }
     } catch (e) {
       setError(e.message);
@@ -47,132 +54,149 @@ export default function LoginPage({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Mesh */}
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-950 text-slate-100">
+      {/* Background Mesh & Glow */}
       <div className="glow-mesh" />
-      
-      {/* Animated Shapes */}
-      <div className="absolute top-1/4 -left-20 w-64 h-64 bg-indigo-600/20 rounded-full blur-[100px] animate-float" />
-      <div className="absolute bottom-1/4 -right-20 w-64 h-64 bg-purple-600/20 rounded-full blur-[100px] animate-float" style={{ animationDelay: '-3s' }} />
+      <div className="absolute top-1/4 -left-20 w-80 h-80 bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-violet-600/15 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative w-full max-w-[1000px] grid lg:grid-cols-2 gap-0 overflow-hidden glass-panel rounded-[32px] shadow-2xl border-white/10">
+      <div className="relative w-full max-w-[1020px] grid lg:grid-cols-12 gap-0 overflow-hidden bg-slate-900/90 rounded-[32px] shadow-2xl border border-slate-800 backdrop-blur-xl">
         
-        {/* Left Side: Brand & Hero */}
-        <div className="hidden lg:flex flex-col justify-center p-12 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border-r border-white/10">
-          <div className="mb-8">
-            <div className="flex items-center gap-0.5 mb-8 group">
-              <img 
-                src="https://see.fontimg.com/api/rf5/DYgy0/OTc3MzU3MmZhOGI2NGE4ODg0OTFhNjIyZTU1MDc1Y2Yub3Rm/UGxhbmlmeQ/qurovademo-regular.png?r=fs&h=81&w=1250&fg=FFFFFF&bg=transparent&tb=1&s=65" 
-                alt="Planify" 
-                className="h-10 md:h-12 object-contain" 
-              />
-              <span className="text-exe-glossy text-3xl md:text-4xl mt-1 tracking-tighter">.exe</span>
+        {/* LEFT COLUMN: BRAND HERO (5 cols) */}
+        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-950 border-r border-slate-800">
+          <div>
+            <div className="flex items-center gap-3 mb-8">
+              <img src="/favicon.png" alt="Planify" className="w-10 h-10 object-contain drop-shadow-md" />
+              <span className="font-black text-xl tracking-tight text-white">
+                Planify<span className="text-indigo-400">.exe</span>
+              </span>
             </div>
-            <h1 className="text-5xl font-black tracking-tight text-white mb-4 leading-tight">
-              Schedule the <span className="text-gradient">Future.</span>
+
+            <h1 className="text-3xl font-black tracking-tight text-white mb-3 leading-snug">
+              Smart Academic <br />
+              <span className="text-gradient">Operations Platform</span>
             </h1>
-            <p className="text-slate-400 text-lg leading-relaxed max-w-sm">
-              The world's first AI-powered academic operating system. Effortless scheduling, intelligent automation.
+            <p className="text-slate-400 text-xs leading-relaxed">
+              University-grade automated scheduling, real-time timetable optimization, and operational faculty analytics.
             </p>
           </div>
-          
-          <div className="space-y-4">
-            {[
-              "Conflict-free OR-Tools Engine",
-              "Groq AI Logic Validation",
-              "Real-time Cloud Sync",
-              "n8n Workflow Automation"
-            ].map((feature, i) => (
-              <div key={i} className="flex items-center gap-3 text-slate-300">
-                <div className="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
-                  <svg className="w-3 h-3 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-sm font-semibold">{feature}</span>
-              </div>
-            ))}
+
+          <div className="space-y-3 pt-6 border-t border-slate-800/80 text-xs text-slate-300">
+            <div className="flex items-center gap-2.5">
+              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px]">✓</div>
+              <span>OR-Tools AI Constraint Solver</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-[10px]">✓</div>
+              <span>Role-Based Portal Access</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-[10px]">✓</div>
+              <span>Supabase Cloud Integration</span>
+            </div>
           </div>
         </div>
 
-        {/* Right Side: Auth Form */}
-        <div className="p-8 lg:p-12 flex flex-col justify-center bg-slate-900/40">
-          <div className="text-center lg:text-left mb-8">
-            <h2 className="text-3xl font-black text-white mb-2">
-              {isSignUp ? "Create Account" : "Welcome Back"}
+        {/* RIGHT COLUMN: 2 PORTAL LOGIN SECTIONS (7 cols) */}
+        <div className="lg:col-span-7 p-8 lg:p-10 flex flex-col justify-center space-y-6">
+          
+          {/* Header & Title */}
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">
+              {isSignUp ? "Registration Portal" : "Authentication Portal"}
+            </span>
+            <h2 className="text-2xl font-black text-white mt-1">
+              {isSignUp ? "Create OS Identity" : "Sign In to Planify"}
             </h2>
-            <p className="text-slate-400 font-medium">
-              {isSignUp ? "Start your academic revolution today." : "Log in to your Academic OS dashboard."}
+            <p className="text-xs text-slate-400 mt-1">
+              Select your role portal to access your designated workspace.
             </p>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-5">
-            {isSignUp && (
-              <div className="flex bg-white/5 p-1 rounded-2xl mb-2 border border-white/5">
-                <button
-                  type="button"
-                  onClick={() => setRole("admin")}
-                  className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${
-                    role === "admin" ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
-                  }`}
-                >
-                  Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole("teacher")}
-                  className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${
-                    role === "teacher" ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
-                  }`}
-                >
-                  Teacher
-                </button>
+          {/* TWO LOGIN PORTAL SECTIONS SWITCHER */}
+          <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-950 border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setPortalRole("admin")}
+              className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${
+                portalRole === "admin"
+                  ? "bg-indigo-600/20 border-indigo-500/50 text-white shadow-lg shadow-indigo-500/10"
+                  : "bg-transparent border-transparent text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold">🛡️ Admin / HOD</span>
+                {portalRole === "admin" && <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />}
               </div>
-            )}
+              <p className="text-[10px] text-slate-400 mt-1 leading-tight">
+                Full institutional operations, timetable solver, & settings
+              </p>
+            </button>
 
+            <button
+              type="button"
+              onClick={() => setPortalRole("teacher")}
+              className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${
+                portalRole === "teacher"
+                  ? "bg-indigo-600/20 border-indigo-500/50 text-white shadow-lg shadow-indigo-500/10"
+                  : "bg-transparent border-transparent text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold">👨‍🏫 Faculty Member</span>
+                {portalRole === "teacher" && <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1 leading-tight">
+                Personal timetable schedule, workload, & leaves
+              </p>
+            </button>
+          </div>
+
+          {/* AUTH FORM */}
+          <form onSubmit={handleAuth} className="space-y-4 text-xs">
             {isSignUp && (
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500 ml-1">Full Name</label>
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Full Name *</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="input-premium"
-                  placeholder="Enter your name"
+                  className="w-full px-3.5 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  placeholder="e.g. Dr. Arvind Kumar"
                 />
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500 ml-1">Email Address</label>
+            <div>
+              <label className="block font-bold text-slate-300 mb-1">Email Address *</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-premium"
-                placeholder="name@university.edu"
+                className="w-full px-3.5 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder={portalRole === "admin" ? "admin@planify.edu" : "faculty@planify.edu"}
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500 ml-1">Password</label>
+            <div>
+              <label className="block font-bold text-slate-300 mb-1">Password *</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-premium"
+                className="w-full px-3.5 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="••••••••"
               />
             </div>
 
             {error && (
-              <div className={`p-4 rounded-xl text-xs font-bold border ${
-                error.includes("Success") 
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                  : "bg-red-500/10 border-red-500/20 text-red-400"
+              <div className={`p-3 rounded-xl font-semibold border ${
+                error.includes("Success")
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                  : "bg-rose-500/10 border-rose-500/30 text-rose-300"
               }`}>
                 {error}
               </div>
@@ -181,19 +205,20 @@ export default function LoginPage({ onLogin }) {
             <button
               type="submit"
               disabled={loading}
-              className="btn-premium w-full mt-4"
+              className="btn-primary w-full py-3 text-xs font-bold gap-2 justify-center shadow-lg shadow-indigo-500/20 mt-2"
             >
-              {loading ? "Authenticating..." : (isSignUp ? "Initialize Account" : "Access OS")}
+              {loading ? "Authenticating..." : (isSignUp ? `Initialize ${portalRole === 'admin' ? 'Admin' : 'Faculty'} Account` : `Sign In to ${portalRole === 'admin' ? 'Admin OS' : 'Faculty Portal'}`)}
             </button>
-            
-            <button 
-              type="button" 
+
+            <button
+              type="button"
               onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
-              className="w-full text-center text-sm font-bold text-slate-500 hover:text-indigo-400 transition-colors mt-6"
+              className="w-full text-center text-xs font-semibold text-slate-400 hover:text-indigo-300 transition-colors pt-2"
             >
-              {isSignUp ? "Already part of the network? Sign In" : "New here? Create your identity"}
+              {isSignUp ? "Already registered? Sign In" : "Need an account? Register new identity"}
             </button>
           </form>
+
         </div>
       </div>
     </div>

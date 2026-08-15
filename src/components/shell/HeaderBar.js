@@ -135,11 +135,11 @@ export default function HeaderBar({
 
         {/* Role Switcher Selector */}
         <select
-          value={userRole || "Super Admin"}
+          value={userRole || "Admin"}
           onChange={(e) => onRoleChange && onRoleChange(e.target.value)}
           className="px-2.5 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 hidden sm:block"
         >
-          <option value="Super Admin">🛡️ Super Admin</option>
+          <option value="Admin">🛡️ Admin</option>
           <option value="HOD">🎓 HOD View</option>
           <option value="Faculty">👨‍🏫 Faculty View</option>
         </select>
@@ -155,7 +155,7 @@ export default function HeaderBar({
             </div>
             <div className="text-left hidden xl:block leading-none pr-1">
               <p className="text-xs font-bold text-slate-200">{user?.email?.split('@')[0] || 'Administrator'}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">{userRole || 'Super Admin'}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">{userRole || 'Admin'}</p>
             </div>
           </button>
 
@@ -165,15 +165,6 @@ export default function HeaderBar({
                 <p className="font-bold text-white truncate">{user?.email || 'admin@planify.edu'}</p>
                 <p className="text-[10px] text-indigo-400 mt-0.5">Academic OS Admin</p>
               </div>
-              <button
-                onClick={() => {
-                  setShowProfileMenu(false);
-                  if (onSelectPage) onSelectPage("settings");
-                }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-300 flex items-center gap-2 mt-1 transition-colors"
-              >
-                ⚙️ Account Settings
-              </button>
               <button
                 onClick={() => {
                   setShowProfileMenu(false);
