@@ -52,9 +52,11 @@ export default function HeaderBar({
           onClick={() => onSelectPage && onSelectPage("dashboard")}
           className="flex items-center gap-2.5 shrink-0 pr-2 border-r border-slate-800 text-left cursor-pointer hover:opacity-90 transition-opacity"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-indigo-500/20">
-            P
-          </div>
+          <img
+            src="/favicon.png"
+            alt="Planify Logo"
+            className="w-8 h-8 rounded-xl object-cover shadow-lg shadow-indigo-500/20"
+          />
           <span className="font-black text-sm tracking-tight text-white hidden sm:inline-block">
             Planify<span className="text-indigo-400">.exe</span>
           </span>
