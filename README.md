@@ -1,10 +1,10 @@
 <div align="center">
-  <img src="public/readme_assets/hero.png" width="800" alt="Planify.exe Hero Banner">
+  <img src="public/readme_assets/hero.png" width="850" alt="Plannify.exe Hero Banner" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
   
-  # 🚀 Planify.exe | Academic OS
+  # 🎓 Plannify.exe | Academic Operations & Faculty OS
   
-  **The ultimate AI-powered academic scheduling platform.**  
-  *Generate conflict-free, optimized timetables in seconds using Google OR-Tools and LLM-assisted logic.*
+  **An enterprise-grade B2B platform combining mathematical timetable scheduling with complete Faculty Management.**  
+  *Designed for university, college, and school ERP portals.*
 
   [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
   [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
@@ -16,108 +16,96 @@
 
 ---
 
-## ✨ Overview
+## 🌟 Overview
 
-Planify.exe (ai-timetablex) is a high-performance, premium academic scheduling engine designed to solve the "Timetable NP-Hard" problem with elegance and speed. Built for modern educational institutions, it combines the mathematical precision of **Constraint Programming (CP-SAT)** with the intuitive assistance of **Large Language Models (Groq Ai)**.
+**Plannify.exe** is a comprehensive **Smart Academic Operations Platform**. It solves institutional academic scheduling via **Google OR-Tools CP-SAT constraint solver** and provides a full-fledged **Faculty Management System (FMS)** for university admin portals.
 
-> [!TIP]
-> **Planify isn't just a scheduler—it's an Academic OS.** It manages teachers, sections, labs, and rooms with real-time cloud synchronization and automated workflow triggers.
+> [!NOTE]
+> Detailed technical specifications, database DDLs, and n8n integration blueprints are documented in [`PRD.md`](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/PRD.md).
 
 ---
 
-## 🔥 Key Features
+## 🔥 Key System Capabilities
 
-- **🧠 AI-Optimized Solver**: Powered by **Google OR-Tools**, our engine handles hundreds of constraints (room capacity, teacher free periods, back-to-back limits) to find the absolute mathematical optimum.
-- **⚡ "Genius" Error Handling**: When a schedule is logically impossible, **Groq AI (Llama 3)** analyzes the bottlenecks and provides human-readable suggestions to fix your inputs.
-- **🧪 Lab-Aware Logic**: Automatically schedules continuous 2-period lab blocks with specialized room requirements.
-- **☁️ Real-time Cloud Sync**: Integrated with **Supabase** for instant auto-saving, multi-device persistence, and secure authentication.
-- **📊 Interactive Analytics**: Visualize teacher loads, room utilization, and scheduling efficiency through a sleek **Recharts** dashboard.
-- **📥 Professional Exports**: One-click **Excel Export** generates multi-sheet workbooks formatted for both class sections and individual teacher schedules.
-- **🤖 AI Chat Assistant**: An integrated AI companion to help you navigate constraints and manage your academic data.
-- **🔗 n8n Automation**: Webhook support to trigger external workflows (Email/Slack/Discord) whenever a schedule is finalized or changed.
+### 1. 🎓 Faculty Management System (FMS)
+- **Central Directory**: Complete faculty profiles, employee IDs, designations, and department mappings.
+- **Digital Leave Workflow**: Multi-level leave applications (CL, EL, ML, Comp-Off, OD) with auto-deduct balance tracking.
+- **Biometric Attendance Integration**: Universal CSV & REST API parser for hardware punch machines (ZKTeco, eSSL, BioMax) with late-minutes calculation.
+- **AI Substitution Engine**: Automatic substitute faculty suggestions based on timetable availability and workload balancing.
+
+### 2. 🗓️ Smart Timetable Scheduler
+- **Mathematical Constraint Engine**: Google OR-Tools CP-SAT model for conflict-free room, teacher, section, and slot allocation.
+- **Lab-Block Aware**: Continuous 2-period lab block placement with dedicated room assignment.
+- **"Genius" AI Failure Analysis**: Groq AI (Llama 3.3 70B) analyzes bottlenecks when schedules are mathematically constrained.
+- **OCR Timetable Extraction**: Gemini 2.5 Flash OCR extracts structured data directly from uploaded timetable images.
+
+### 3. ⚡ Cloud Sync & Automation
+- **Supabase Cloud Sync**: Real-time relational database persistence for institutions.
+- **n8n Webhook Integration**: Automated notifications (Email, WhatsApp) and personalized Excel timetable distribution.
+- **Multi-Sheet Excel Export**: One-click professional exports for class sections and individual teacher schedules.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React 19, Tailwind CSS, Spline 3D (Interactive UI)
-- **Backend**: FastAPI (Python 3.10+), Uvicorn
-- **Constraint Solver**: Google OR-Tools (CP-SAT)
-- **Database/Auth**: Supabase (PostgreSQL)
-- **AI Engine**: Groq API (Llama-3.3-70B)
+- **Frontend**: React 19, Tailwind CSS, Recharts, File-Saver, Axios
+- **Backend**: FastAPI (Python 3.10+), Uvicorn, Pydantic v2
+- **Optimization Engine**: Google OR-Tools (CP-SAT)
+- **Database & Auth**: Supabase (PostgreSQL 15+, Row Level Security)
+- **AI Engines**: Groq API (Llama-3.3-70B), Gemini 2.5 Flash
 - **Automation**: n8n Webhooks
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start Guide
 
-### 1. Prerequisites
-- Node.js (v18+)
-- Python (v3.10+)
-- Supabase Account (Optional, for Cloud Sync)
-- Groq API Key (Optional, for AI Suggestions)
+### 1. Setup Environment Variables
 
-### 2. Installation
+Copy `.env.example` to root `.env` and `backend/.env`:
 
-Clone the repository:
-```bash
-git clone https://github.com/your-repo/ai-timetablex.git
-cd ai-timetablex
+**Frontend `.env` (Root):**
+```env
+REACT_APP_API_URL=http://localhost:8080
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-**Frontend Setup:**
+**Backend `backend/.env`:**
+```env
+PORT=8080
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+GROQ_API_KEY=your_groq_api_key
+GEMINI_API_KEY=your_gemini_api_key
+N8N_WEBHOOK_URL=your_n8n_webhook_url
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your_supabase_service_role_key
+```
+
+### 2. Database Initialization (Supabase)
+
+Execute [supabase-faculty-migration.sql](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/supabase-faculty-migration.sql) in your Supabase **SQL Editor** to create all 13 core relational tables and RLS security policies.
+
+### 3. Install & Run
+
+**Backend (FastAPI):**
+```bash
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8080
+```
+
+**Frontend (React):**
 ```bash
 npm install
-```
-
-**Backend Setup:**
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
-pip install -r requirements.txt
-cd ..
-```
-
-### 3. Configuration
-Copy `.env.example` to `.env` and fill in your credentials:
-```bash
-cp .env.example .env
-```
-
-### 4. Run the Application
-
-**Start the API Server:**
-```bash
-npm run api
-```
-
-**Start the Frontend Dashboard:**
-```bash
 npm start
 ```
-*Access the dashboard at `http://localhost:3000`*
+*Open `http://localhost:3000` in your browser.*
 
 ---
 
-## 📸 Dashboard Preview
+## 📄 Documentation & Resources
 
-| **Section Management** | **AI Timetable Grid** |
-|:---:|:---:|
-| Interactive forms for Teachers & Rooms | Drag-and-drop logic & Conflict highlights |
-| *Visualizing high-fidelity dark mode* | *Powered by OR-Tools* |
-
----
-
-## 🤝 Contributing
-
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- [Product Requirement Document (PRD)](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/PRD.md)
+- [Supabase Migration SQL Script](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/supabase-faculty-migration.sql)
+- [n8n Automation Guide](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/n8n_integration_guide.md)
 
 ---
 
@@ -126,7 +114,6 @@ Contributions are what make the open-source community such an amazing place to l
 Distributed under the MIT License. See `LICENSE` for more information.
 
 <div align="center">
-  <p>Built with Excessive 💖 by the Plannify Team</p>
+  <p>Engineered with 💖 by the Plannify Engineering Team</p>
   <p><i>"Scheduling the future, one period at a time."</i></p>
 </div>
-
