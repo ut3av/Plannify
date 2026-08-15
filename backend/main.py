@@ -52,7 +52,24 @@ except ImportError:
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 DEFAULT_SLOTS = ["9-10", "10-11", "11-12", "12-1", "2-3"]
 
-app = FastAPI(title="AI-Powered Timetable Scheduler", version="1.0.0")
+app = FastAPI(title="Plannify — Academic Operations Platform", version="2.0.0")
+
+# --- Faculty Management System Routers ---
+try:
+    from .faculty_routes import router as faculty_router
+    from .leave_routes import router as leave_router
+    from .attendance_routes import router as attendance_router
+    from .substitution_routes import router as substitution_router
+except ImportError:
+    from faculty_routes import router as faculty_router
+    from leave_routes import router as leave_router
+    from attendance_routes import router as attendance_router
+    from substitution_routes import router as substitution_router
+
+app.include_router(faculty_router)
+app.include_router(leave_router)
+app.include_router(attendance_router)
+app.include_router(substitution_router)
 
 # --- Middleware & Error Handling ---
 origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")

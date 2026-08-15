@@ -5,3 +5,5 @@ groq
 python-dotenv
 openpyxl
 requests
+supabase
+python-multipart
