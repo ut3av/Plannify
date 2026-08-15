@@ -126,6 +126,6 @@ Contributions are what make the open-source community such an amazing place to l
 Distributed under the MIT License. See `LICENSE` for more information.
 
 <div align="center">
-  <p>Built with ❤️ by the Planify Team</p>
+  <p>Built with Excessive 💖 by the Plannify Team</p>
   <p><i>"Scheduling the future, one period at a time."</i></p>
 </div>
