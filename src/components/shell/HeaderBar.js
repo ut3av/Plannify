@@ -4,6 +4,7 @@ export default function HeaderBar({
   isSidebarOpen,
   onToggleSidebar,
   activePage,
+  onSelectPage,
   pageTitle,
   breadcrumbs = [],
   userRole,
@@ -14,6 +15,7 @@ export default function HeaderBar({
   onSaveCloud,
   isCloudSaving,
   user,
+  onLogout,
 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -46,18 +48,26 @@ export default function HeaderBar({
         </button>
 
         {/* Brand logo in header */}
-        <div className="flex items-center gap-2.5 shrink-0 pr-2 border-r border-slate-800">
+        <button
+          onClick={() => onSelectPage && onSelectPage("dashboard")}
+          className="flex items-center gap-2.5 shrink-0 pr-2 border-r border-slate-800 text-left cursor-pointer hover:opacity-90 transition-opacity"
+        >
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-indigo-500/20">
             P
           </div>
           <span className="font-black text-sm tracking-tight text-white hidden sm:inline-block">
             Planify<span className="text-indigo-400">.exe</span>
           </span>
-        </div>
+        </button>
 
         {/* Dynamic Breadcrumbs */}
         <nav className="flex items-center gap-2 text-xs text-slate-400 min-w-0 overflow-hidden">
-          <span className="hover:text-slate-200 cursor-pointer font-medium">Home</span>
+          <span
+            onClick={() => onSelectPage && onSelectPage("dashboard")}
+            className="hover:text-slate-200 cursor-pointer font-medium"
+          >
+            Home
+          </span>
           {breadcrumbs.map((crumb, idx) => (
             <React.Fragment key={idx}>
               <span className="text-slate-600">/</span>
@@ -150,18 +160,24 @@ export default function HeaderBar({
           {showProfileMenu && (
             <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50 text-xs text-slate-200 animate-fade-in">
               <div className="px-3 py-2 border-b border-slate-800">
-                <p className="font-bold text-white">{user?.email || 'admin@planify.edu'}</p>
+                <p className="font-bold text-white truncate">{user?.email || 'admin@planify.edu'}</p>
                 <p className="text-[10px] text-indigo-400 mt-0.5">Academic OS Admin</p>
               </div>
               <button
-                onClick={() => { setShowProfileMenu(false); }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-300 flex items-center gap-2 mt-1"
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  if (onSelectPage) onSelectPage("settings");
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-300 flex items-center gap-2 mt-1 transition-colors"
               >
                 ⚙️ Account Settings
               </button>
               <button
-                onClick={() => { setShowProfileMenu(false); window.location.reload(); }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-500/20 text-red-400 flex items-center gap-2 mt-1 font-semibold"
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  if (onLogout) onLogout();
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-500/20 text-red-400 flex items-center gap-2 mt-1 font-semibold transition-colors"
               >
                 🚪 Sign Out
               </button>

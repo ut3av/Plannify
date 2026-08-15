@@ -911,12 +911,21 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error("Sign out error:", e);
+    }
+    setUser(null);
+  };
+
   if (!user) {
     return <LoginPage />;
   }
 
   if (user.role === "teacher") {
-    return <TeacherDashboard user={user} result={result} onLogout={() => setUser(null)} />;
+    return <TeacherDashboard user={user} result={result} onLogout={handleLogout} />;
   }
 
   return (
@@ -933,6 +942,7 @@ export default function App() {
       onSaveCloud={saveToCloud}
       isCloudSaving={loading}
       user={user}
+      onLogout={handleLogout}
     >
       {/* Global Alerts */}
       <ErrorAlert error={error} />

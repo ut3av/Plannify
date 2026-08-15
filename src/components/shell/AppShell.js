@@ -13,6 +13,7 @@ export default function AppShell({
   onSaveCloud,
   isCloudSaving,
   user,
+  onLogout,
   children,
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -32,6 +33,7 @@ export default function AppShell({
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         activePage={activePage}
+        onSelectPage={onSelectPage}
         pageTitle={pageTitle}
         breadcrumbs={breadcrumbs}
         userRole={userRole}
@@ -42,6 +44,7 @@ export default function AppShell({
         onSaveCloud={onSaveCloud}
         isCloudSaving={isCloudSaving}
         user={user}
+        onLogout={onLogout}
       />
 
       <div className="flex flex-1 relative">
