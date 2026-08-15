@@ -3,7 +3,7 @@
   
   # 🎓 Plannify.exe | Academic Operations & Faculty OS
   
-  **An enterprise-grade B2B platform combining mathematical timetable scheduling with complete Faculty Management.**  
+  **An `SEXY` enterprise-grade B2B platform combining mathematical timetable scheduling with complete Faculty Management.**  
   *Designed for university, college, and school ERP portals.*
 
   [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
