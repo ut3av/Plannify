@@ -12,11 +12,16 @@ import HistorySection from "./components/HistorySection";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import AIChatBot from "./components/AIChatBot";
 import LoginPage from "./components/LoginPage";
-import TeacherDashboard from "./components/TeacherDashboard";
 import LogsSection from "./components/LogsSection";
 import { saveAs } from "file-saver";
 import { supabase } from "./supabaseClient";
 import { syncRelationalData } from "./services/supabaseService";
+import FacultyDirectory from "./components/faculty/FacultyDirectory";
+import FacultyProfile from "./components/faculty/FacultyProfile";
+import LeaveManagement from "./components/faculty/LeaveManagement";
+import AttendanceDashboard from "./components/faculty/AttendanceDashboard";
+import SubstitutionPanel from "./components/faculty/SubstitutionPanel";
+import FacultyDashboardStats from "./components/faculty/FacultyDashboardStats";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
@@ -60,6 +65,7 @@ const buildLegacyCloudPayload = ({ teachers, sections, subjects, rooms, timeSlot
 });
 
 const TABS = [
+  { id: "faculty", label: "Faculty System", icon: "users" },
   { id: "teachers", label: "Teachers", icon: "users" },
   { id: "sections", label: "Sections", icon: "book" },
   { id: "subjects", label: "Subjects", icon: "book" },
@@ -342,7 +348,8 @@ function buildApiPayload(data) {
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("teachers");
+  const [activeTab, setActiveTab] = useState("faculty");
+  const [selectedFaculty, setSelectedFaculty] = useState(null);
 
   const [teachers, setTeachers] = useState([]);
   const [sections, setSections] = useState([]);
@@ -1087,6 +1094,21 @@ export default function App() {
 
         {/* ── Tab Content ── */}
         <div className="animate-fade-in-delay-2">
+          <div className={activeTab === "faculty" ? "block" : "hidden"}>
+            <FacultyDashboardStats />
+            {selectedFaculty ? (
+              <FacultyProfile faculty={selectedFaculty} onBack={() => setSelectedFaculty(null)} />
+            ) : (
+              <div className="space-y-8">
+                <FacultyDirectory onSelectFaculty={(f) => setSelectedFaculty(f)} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <LeaveManagement />
+                  <SubstitutionPanel />
+                </div>
+                <AttendanceDashboard />
+              </div>
+            )}
+          </div>
           <div className={activeTab === "teachers" ? "block" : "hidden"}>
             <TeachersSection teachers={teachers} onChange={setTeachers} />
           </div>

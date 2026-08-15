@@ -129,3 +129,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
   <p>Built with Excessive 💖 by the Plannify Team</p>
   <p><i>"Scheduling the future, one period at a time."</i></p>
 </div>
+
