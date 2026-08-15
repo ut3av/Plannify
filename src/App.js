@@ -16,6 +16,7 @@ import LogsSection from "./components/LogsSection";
 import { saveAs } from "file-saver";
 import { supabase } from "./supabaseClient";
 import { syncRelationalData } from "./services/supabaseService";
+import TeacherDashboard from "./components/TeacherDashboard";
 import FacultyDirectory from "./components/faculty/FacultyDirectory";
 import FacultyProfile from "./components/faculty/FacultyProfile";
 import LeaveManagement from "./components/faculty/LeaveManagement";
