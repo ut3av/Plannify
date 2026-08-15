@@ -55,7 +55,7 @@ export default function HeaderBar({
           <img
             src="/favicon.png"
             alt="Planify Logo"
-            className="w-8 h-8 rounded-xl object-cover shadow-lg shadow-indigo-500/20"
+            className="w-8 h-8 object-contain drop-shadow-md"
           />
           <span className="font-black text-sm tracking-tight text-white hidden sm:inline-block">
             Planify<span className="text-indigo-400">.exe</span>
