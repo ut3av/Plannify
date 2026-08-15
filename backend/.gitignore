@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment configuration
+.env
+
+# Logs
+*.log
+backend.log
+server.log
+server.err.log
+
+# SQLite Database
+*.db
+timetables.db

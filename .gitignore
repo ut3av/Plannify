@@ -13,23 +13,26 @@
 
 # misc
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+backend.log
+frontend-server.log
 
-# python
+# python & backend
 __pycache__/
 *.py[cod]
 *$py.class
 .venv/
 backend/.venv/
-backend.log
-frontend-server.log
+*.db
+backend/*.db
 
 # env
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
