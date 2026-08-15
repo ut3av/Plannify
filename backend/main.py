@@ -60,16 +60,19 @@ try:
     from .leave_routes import router as leave_router
     from .attendance_routes import router as attendance_router
     from .substitution_routes import router as substitution_router
+    from .analytics_routes import router as analytics_router
 except ImportError:
     from faculty_routes import router as faculty_router
     from leave_routes import router as leave_router
     from attendance_routes import router as attendance_router
     from substitution_routes import router as substitution_router
+    from analytics_routes import router as analytics_router
 
 app.include_router(faculty_router)
 app.include_router(leave_router)
 app.include_router(attendance_router)
 app.include_router(substitution_router)
+app.include_router(analytics_router)
 
 # --- Middleware & Error Handling ---
 origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")

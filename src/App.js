@@ -23,6 +23,7 @@ import LeaveManagement from "./components/faculty/LeaveManagement";
 import AttendanceDashboard from "./components/faculty/AttendanceDashboard";
 import SubstitutionPanel from "./components/faculty/SubstitutionPanel";
 import FacultyDashboardStats from "./components/faculty/FacultyDashboardStats";
+import FacultyAnalyticsModule from "./components/faculty/FacultyAnalyticsModule";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
