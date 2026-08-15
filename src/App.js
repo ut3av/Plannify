@@ -1,15 +1,12 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import axios from "axios";
-import TeachersSection from "./components/TeachersSection";
 import SubjectsSection from "./components/SubjectsSection";
 import RoomsSection from "./components/RoomsSection";
-import SectionsSection from "./components/SectionsSection";
 import TimeSlotsSection from "./components/TimeSlotsSection";
 import ReschedulePanel from "./components/ReschedulePanel";
 import TimetableGrid from "./components/TimetableGrid";
 import IntegrationsSection from "./components/IntegrationsSection";
 import HistorySection from "./components/HistorySection";
-import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import AIChatBot from "./components/AIChatBot";
 import LoginPage from "./components/LoginPage";
 import LogsSection from "./components/LogsSection";
@@ -24,6 +21,12 @@ import AttendanceDashboard from "./components/faculty/AttendanceDashboard";
 import SubstitutionPanel from "./components/faculty/SubstitutionPanel";
 import FacultyDashboardStats from "./components/faculty/FacultyDashboardStats";
 import FacultyAnalyticsModule from "./components/faculty/FacultyAnalyticsModule";
+import AppShell from "./components/shell/AppShell";
+import InstitutionalDashboard from "./components/dashboard/InstitutionalDashboard";
+import SectionsManagement from "./components/sections/SectionsManagement";
+import ReportsCenter from "./components/reports/ReportsCenter";
+import SystemSettings from "./components/settings/SystemSettings";
+import DepartmentAnalyticsView from "./components/faculty/DepartmentAnalyticsView";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
@@ -348,9 +351,34 @@ function buildApiPayload(data) {
   };
 }
 
+const getBreadcrumbsForPage = (page) => {
+  switch (page) {
+    case "dashboard": return ["Dashboard"];
+    case "timetable": return ["Main", "Timetable Workspace"];
+    case "faculty": return ["Main", "Faculty Directory"];
+    case "attendance": return ["Main", "Attendance Tracking"];
+    case "leave": return ["Main", "Leave Management"];
+    case "substitutions": return ["Main", "Substitution Center"];
+    case "analytics": return ["Main", "Operational Analytics 360°"];
+    case "departments": return ["Academic Setup", "Departments"];
+    case "subjects": return ["Academic Setup", "Subjects Catalog"];
+    case "sections": return ["Academic Setup", "Sections & Classes"];
+    case "rooms": return ["Academic Setup", "Classrooms & Labs"];
+    case "slots": return ["Academic Setup", "Daily Time Slots"];
+    case "reschedule": return ["Operations", "Reschedule Engine"];
+    case "history": return ["Operations", "Audit History Logs"];
+    case "integrations": return ["Operations", "Automation & n8n"];
+    case "logs": return ["Operations", "System Logs"];
+    case "reports": return ["Reports", "Centralized Reports Hub"];
+    case "settings": return ["System", "Institutional Settings"];
+    default: return ["Main", page];
+  }
+};
+
 export default function App() {
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("faculty");
+  const [userRole, setUserRole] = useState("Super Admin");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedFaculty, setSelectedFaculty] = useState(null);
 
   const [teachers, setTeachers] = useState([]);
@@ -892,280 +920,186 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen text-slate-100 selection:bg-indigo-500/30 selection:text-white">
-      {/* Background Mesh */}
-      <div className="glow-mesh" />
+    <AppShell
+      activePage={activeTab}
+      onSelectPage={(page, id) => {
+        setActiveTab(page);
+        if (id) setSelectedFaculty({ id });
+      }}
+      pageTitle={getBreadcrumbsForPage(activeTab).slice(-1)[0]}
+      breadcrumbs={getBreadcrumbsForPage(activeTab)}
+      userRole={userRole}
+      onRoleChange={setUserRole}
+      onSaveCloud={saveToCloud}
+      isCloudSaving={loading}
+      user={user}
+    >
+      {/* Global Alerts */}
+      <ErrorAlert error={error} />
+      {rescheduleNote && (
+        <div className="animate-slide-down flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm px-5 py-4 text-sm text-emerald-200 mb-4">
+          <svg className="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          <span>{rescheduleNote}</span>
+        </div>
+      )}
 
-      <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-0 px-4 py-6 sm:px-6 lg:px-8">
-        {/* ── Header ── */}
-        <header className="animate-fade-in glass-card p-6 mb-6">
-          <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-violet-500/60 to-transparent rounded-full" />
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/20">
-                <TabIcon
-                  icon="sparkles"
-                  className="w-6 h-6 text-white"
-                />
-              </div>
-              <div>
-                <h1 className="flex items-center gap-0.5 group">
-                  <img 
-                    src="https://see.fontimg.com/api/rf5/DYgy0/OTc3MzU3MmZhOGI2NGE4ODg0OTFhNjIyZTU1MDc1Y2Yub3Rm/UGxhbmlmeQ/qurovademo-regular.png?r=fs&h=81&w=1250&fg=FFFFFF&bg=transparent&tb=1&s=65" 
-                    alt="Planify" 
-                    className="h-7 md:h-8 object-contain" 
-                  />
-                  <span className="text-exe-glossy text-xl md:text-2xl mt-1 tracking-tighter">.exe</span>
-                  <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full border border-indigo-500/30 ml-3">ADMIN OS</span>
-                </h1>
-                <div className="flex flex-col gap-1">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Active Environment: <span className="text-slate-300">Optimized Core</span>
-                  </p>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter flex items-center gap-2">
-                    <span className={`w-1.5 h-1.5 rounded-full ${isCloudLoaded ? 'bg-indigo-400' : 'bg-slate-600'} ${isCloudLoaded && 'animate-pulse'}`} />
-                    Supabase Cloud: <span className={isCloudLoaded ? 'text-indigo-300' : 'text-slate-500'}>{isCloudLoaded ? 'Linked & Syncing' : 'Disconnected'}</span>
-                  </p>
-                </div>
-              </div>
+      {/* ── Active Module Rendering ── */}
+      {/* 1. DASHBOARD */}
+      {activeTab === "dashboard" && (
+        <InstitutionalDashboard
+          teachersCount={teachers.length}
+          sectionsCount={sections.length}
+          subjectsCount={subjects.length}
+          roomsCount={rooms.length}
+          hasResult={!!result}
+          onNavigate={(page) => setActiveTab(page)}
+        />
+      )}
+
+      {/* 2. TIMETABLE WORKSPACE */}
+      {activeTab === "timetable" && (
+        <div className="space-y-6">
+          {/* Solver Controls Header Bar */}
+          <div className="card p-5 bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-white">Academic Timetable Solver Workspace</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Generate, optimize, view, and export constraint-validated timetable grids.</p>
             </div>
 
-            {/* Quick stats & generate button */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="hidden sm:flex items-center gap-4 mr-2">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {teachers.length}
-                  </p>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                    Teachers
-                  </p>
-                </div>
-                <div className="w-px h-8 bg-slate-200 dark:bg-white/10" />
-                <div className="text-center">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {subjects.length}
-                  </p>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                    Subjects
-                  </p>
-                </div>
-                <div className="w-px h-8 bg-slate-200 dark:bg-white/10" />
-                <div className="text-center">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {totalSlots}
-                  </p>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                    Slots
-                  </p>
-                </div>
-              </div>
-
-
-
               <button
-                onClick={async () => { await supabase.auth.signOut(); }}
-                className="btn-outline flex items-center gap-2 px-4 border border-rose-500/40 text-rose-400 hover:bg-rose-500/10"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-                Logout
-              </button>
-
-              <button
-                onClick={saveToCloud}
-                disabled={loading}
-                className="btn-outline flex items-center gap-2 px-4 border border-blue-500/40 text-blue-400 hover:bg-blue-500/10"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save to Cloud
-              </button>
-
-
-
-              <button
-                className="btn-gradient flex items-center gap-2 px-6"
-                disabled={
-                  loading || teachers.length === 0 || subjects.length === 0
-                }
+                className="btn-gradient text-xs py-2.5 px-5 font-bold flex items-center gap-2"
+                disabled={loading || teachers.length === 0 || subjects.length === 0}
                 onClick={generateTimetable}
               >
-                {loading ? (
-                  <>
-                    <svg
-                      className="w-4 h-4 animate-spin"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    Solving...
-                  </>
-                ) : (
-                  <>
-                    <TabIcon icon="sparkles" className="w-4 h-4" />
-                    Generate Timetable
-                  </>
-                )}
+                {loading ? "Solving..." : "✨ Generate AI Timetable"}
               </button>
-
             </div>
           </div>
 
-          {/* Solver status bar */}
           {result && (
-            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/[0.06] flex flex-wrap items-center gap-3">
+            <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center gap-4 text-xs">
               <div className="flex items-center gap-2">
-                <span className="status-dot status-dot-active" />
-                <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                  {result.solver_status}
-                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-semibold text-slate-300">Status: {result.solver_status}</span>
               </div>
-              <div className="flex items-center gap-2 rounded-lg bg-violet-500/10 border border-violet-500/20 px-2.5 py-1">
-                <span className="text-[11px] text-violet-300">Score</span>
-                <span className="text-xs font-bold text-violet-200">
-                  {result.objective_score}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1">
-                <span className="text-[11px] text-emerald-300">Classes</span>
-                <span className="text-xs font-bold text-emerald-200">
-                  {result.assignments?.length || 0}
-                </span>
-              </div>
+              <div className="text-violet-300">Score: <strong className="text-white">{result.objective_score}</strong></div>
+              <div className="text-emerald-300">Scheduled Classes: <strong className="text-white">{result.assignments?.length || 0}</strong></div>
             </div>
           )}
-        </header>
 
-        {/* ── Alerts ── */}
-        <ErrorAlert error={error} />
-        {rescheduleNote && (
-          <div className="animate-slide-down flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm px-5 py-4 text-sm text-emerald-200 mb-4">
-            <svg
-              className="w-4 h-4 flex-shrink-0 mt-0.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-            <span>{rescheduleNote}</span>
-          </div>
-        )}
+          <TimetableGrid result={result} subjects={subjects} loading={loading} onExport={exportToExcel} onSaveDb={saveToDatabase} />
+        </div>
+      )}
 
-        {/* ── Tab Navigation ── */}
-        <nav className="animate-fade-in-delay-1 mb-6">
-          <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  flex items-center gap-2 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest
-                  transition-all duration-300 whitespace-nowrap border
-                  ${
-                    activeTab === tab.id
-                      ? "bg-indigo-500/20 text-indigo-200 border-indigo-500/40 shadow-xl shadow-indigo-500/10"
-                      : "text-slate-500 border-transparent hover:text-slate-300 hover:bg-white/5"
-                  }
-                `}
-              >
-                <TabIcon icon={tab.icon} />
-                {tab.label}
-                {tab.id === "timetable" && result && (
-                  <span className="ml-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                )}
-              </button>
-            ))}
-          </div>
-        </nav>
-
-        {/* ── Tab Content ── */}
-        <div className="animate-fade-in-delay-2">
-          <div className={activeTab === "faculty" ? "block" : "hidden"}>
-            <FacultyDashboardStats />
-            {selectedFaculty ? (
-              <FacultyProfile faculty={selectedFaculty} onBack={() => setSelectedFaculty(null)} />
-            ) : (
-              <div className="space-y-8">
-                <FacultyDirectory onSelectFaculty={(f) => setSelectedFaculty(f)} />
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <LeaveManagement />
-                  <SubstitutionPanel />
-                </div>
-                <AttendanceDashboard />
+      {/* 3. FACULTY SYSTEM */}
+      {activeTab === "faculty" && (
+        <div>
+          <FacultyDashboardStats />
+          {selectedFaculty ? (
+            <FacultyProfile faculty={selectedFaculty} onBack={() => setSelectedFaculty(null)} />
+          ) : (
+            <div className="space-y-8">
+              <FacultyDirectory onSelectFaculty={(f) => setSelectedFaculty(f)} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <LeaveManagement />
+                <SubstitutionPanel />
               </div>
-            )}
-          </div>
-          <div className={activeTab === "teachers" ? "block" : "hidden"}>
-            <TeachersSection teachers={teachers} onChange={setTeachers} />
-          </div>
-          <div className={activeTab === "sections" ? "block" : "hidden"}>
-            <SectionsSection sections={sections} rooms={rooms} onChange={setSections} />
-          </div>
-          <div className={activeTab === "subjects" ? "block" : "hidden"}>
-            <SubjectsSection subjects={subjects} teachers={teachers} sections={sections} rooms={rooms} onChange={setSubjects} />
-          </div>
-          <div className={activeTab === "rooms" ? "block" : "hidden"}>
-            <RoomsSection rooms={rooms} onChange={setRooms} />
-          </div>
-          <div className={activeTab === "slots" ? "block" : "hidden"}>
-            <TimeSlotsSection timeSlots={timeSlots} onChange={setTimeSlots} />
-          </div>
-          <div className={activeTab === "timetable" ? "block" : "hidden"}>
-            <TimetableGrid result={result} subjects={subjects} loading={loading} onExport={exportToExcel} onSaveDb={saveToDatabase} />
-          </div>
-          <div className={activeTab === "reschedule" ? "block" : "hidden"}>
-            <ReschedulePanel teachers={teachers} days={result?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]} slots={result?.time_slots || timeSlots} hasResult={!!result} loading={loading} onReschedule={rescheduleTimetable} onAssignProxy={assignProxy} />
-          </div>
-          <div className={activeTab === "history" ? "block" : "hidden"}>
-            <HistorySection onSelectTimetable={(data) => { setResult(data); setActiveTab("timetable"); setRescheduleNote("Loaded saved timetable from database."); }} />
-          </div>
-          <div className={activeTab === "integrations" ? "block" : "hidden"}>
-            <IntegrationsSection />
-          </div>
-          <div className={activeTab === "logs" ? "block" : "hidden"}>
-            <LogsSection />
-          </div>
-          <div className={activeTab === "analytics" ? "block" : "hidden"}>
-            <FacultyAnalyticsModule />
-          </div>
+              <AttendanceDashboard />
+            </div>
+          )}
         </div>
-      </div>
-      
+      )}
 
-
-      {/* ── Footer ── */}
-      <footer className="mt-16 mb-8 text-center animate-fade-in">
-        <div className="flex items-center justify-center gap-6 mb-6">
-          <div className="w-12 h-px bg-gradient-to-r from-transparent to-indigo-500/30" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
-            Academic OS Status: <span className="text-emerald-400">Stable Build</span>
-          </p>
-          <div className="w-12 h-px bg-gradient-to-l from-transparent to-indigo-500/30" />
+      {/* 4. ATTENDANCE WORKSPACE */}
+      {activeTab === "attendance" && (
+        <div className="space-y-6">
+          <FacultyDashboardStats />
+          <AttendanceDashboard />
         </div>
-        <p className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">
-          Planify.exe • Enterprise AI Core • v1.0.0-PREMIUM
-        </p>
-        <p className="mt-2 text-[9px] text-slate-700 font-medium">
-          &copy; 2026 Planify AI. Engineered for Mathematical Perfection.
-        </p>
-      </footer>
+      )}
 
+      {/* 5. LEAVE MANAGEMENT WORKSPACE */}
+      {activeTab === "leave" && (
+        <div className="space-y-6">
+          <LeaveManagement />
+        </div>
+      )}
+
+      {/* 6. SUBSTITUTION WORKSPACE */}
+      {activeTab === "substitutions" && (
+        <div className="space-y-6">
+          <SubstitutionPanel />
+        </div>
+      )}
+
+      {/* 7. OPERATIONAL ANALYTICS 360° */}
+      {activeTab === "analytics" && (
+        <FacultyAnalyticsModule initialFacultyId={selectedFaculty?.id} />
+      )}
+
+      {/* 8. ACADEMIC SETUP: DEPARTMENTS */}
+      {activeTab === "departments" && (
+        <DepartmentAnalyticsView
+          rangeKey="30d"
+          onSelectFaculty={(f) => { setSelectedFaculty(f); setActiveTab("faculty"); }}
+        />
+      )}
+
+      {/* 9. ACADEMIC SETUP: SUBJECTS */}
+      {activeTab === "subjects" && (
+        <SubjectsSection subjects={subjects} teachers={teachers} sections={sections} rooms={rooms} onChange={setSubjects} />
+      )}
+
+      {/* 10. ACADEMIC SETUP: SECTIONS */}
+      {activeTab === "sections" && (
+        <SectionsManagement sections={sections} rooms={rooms} onChange={setSections} onNavigate={(p) => setActiveTab(p)} />
+      )}
+
+      {/* 11. ACADEMIC SETUP: ROOMS */}
+      {activeTab === "rooms" && (
+        <RoomsSection rooms={rooms} onChange={setRooms} />
+      )}
+
+      {/* 12. ACADEMIC SETUP: SLOTS */}
+      {activeTab === "slots" && (
+        <TimeSlotsSection timeSlots={timeSlots} onChange={setTimeSlots} />
+      )}
+
+      {/* 13. OPERATIONS: RESCHEDULE */}
+      {activeTab === "reschedule" && (
+        <ReschedulePanel teachers={teachers} days={result?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]} slots={result?.time_slots || timeSlots} hasResult={!!result} loading={loading} onReschedule={rescheduleTimetable} onAssignProxy={assignProxy} />
+      )}
+
+      {/* 14. OPERATIONS: HISTORY */}
+      {activeTab === "history" && (
+        <HistorySection onSelectTimetable={(data) => { setResult(data); setActiveTab("timetable"); setRescheduleNote("Loaded saved timetable from database."); }} />
+      )}
+
+      {/* 15. OPERATIONS: INTEGRATIONS */}
+      {activeTab === "integrations" && (
+        <IntegrationsSection />
+      )}
+
+      {/* 16. OPERATIONS: LOGS */}
+      {activeTab === "logs" && (
+        <LogsSection />
+      )}
+
+      {/* 17. REPORTS CENTER */}
+      {activeTab === "reports" && (
+        <ReportsCenter />
+      )}
+
+      {/* 18. SYSTEM SETTINGS */}
+      {activeTab === "settings" && (
+        <SystemSettings userRole={userRole} />
+      )}
+
+      {/* AIChatBot Floating Assistant */}
       <AIChatBot 
         result={result} 
         onLoadDemo={generateDemoTimetable}
@@ -1188,7 +1122,7 @@ export default function App() {
         }}
       />
 
-      {/* ── Global Loading Overlay ── */}
+      {/* Global Loading Overlay */}
       {loading && activeTab !== "timetable" && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 backdrop-blur-md animate-fade-in">
           <div className="glass-card flex flex-col items-center gap-6 p-10 animate-scale-in">
@@ -1205,6 +1139,6 @@ export default function App() {
           </div>
         </div>
       )}
-    </main>
+    </AppShell>
   );
 }
