@@ -1142,7 +1142,7 @@ export default function App() {
             <LogsSection />
           </div>
           <div className={activeTab === "analytics" ? "block" : "hidden"}>
-            <AnalyticsDashboard result={result} teachers={teachers} subjects={subjects} />
+            <FacultyAnalyticsModule />
           </div>
         </div>
       </div>
