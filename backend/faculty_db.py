@@ -19,9 +19,12 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("REACT_APP_SUPABAS
 
 
 def get_supabase() -> Client:
-    if not SUPABASE_URL or not SUPABASE_KEY:
+    raw_url = os.getenv("SUPABASE_URL") or os.getenv("REACT_APP_SUPABASE_URL", "")
+    key = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("REACT_APP_SUPABASE_ANON_KEY", "")
+    if not raw_url or not key:
         raise RuntimeError("Supabase URL and Key must be configured in backend/.env")
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
+    url = raw_url.split("/rest/v1")[0].rstrip("/")
+    return create_client(url, key)
 
 
 # ── Departments ─────────────────────────────────────────────
