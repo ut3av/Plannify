@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
@@ -61,8 +61,6 @@ export default function FacultyAnalyticsProfile({ facultyId, rangeKey, startDate
     if (classification === "High") return "bg-amber-500/20 text-amber-300 border-amber-500/30";
     return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
   };
-
-  const COLORS = ['#3b82f6', '#0d9488', '#dc2626', '#d97706', '#6366f1'];
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-100">
@@ -219,7 +217,7 @@ export default function FacultyAnalyticsProfile({ facultyId, rangeKey, startDate
                     <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all"
-                        style={{ width: `${Math.min(100, (lb.used / max(1, lb.allowed)) * 100)}%`, backgroundColor: lb.color || '#3b82f6' }}
+                        style={{ width: `${Math.min(100, (lb.used / Math.max(1, lb.allowed)) * 100)}%`, backgroundColor: lb.color || '#3b82f6' }}
                       />
                     </div>
                   </div>

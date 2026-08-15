@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FacultyAnalyticsProfile from './FacultyAnalyticsProfile';
 import DepartmentAnalyticsView from './DepartmentAnalyticsView';
