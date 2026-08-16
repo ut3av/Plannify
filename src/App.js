@@ -592,35 +592,10 @@ export default function App() {
     setResult(DEMO_RESULT);
     setRescheduleNote("⚡ LNCT University Bhopal BCA (Sections A-F) Official Timetable & Faculty Dataset Loaded!");
 
-    // Post LNCT Faculty Members & punch logs to backend API for Attendance & Analytics sections
-    if (demoData.teachers && demoData.teachers.length > 0) {
-      const todayDate = new Date().toISOString().split("T")[0];
-      demoData.teachers.forEach(async (t) => {
-        try {
-          const facRes = await axios.post(`${API_BASE_URL}/faculty/`, {
-            teacher_name: t.name,
-            employee_id: `EMP-LNCT-${Math.floor(1000 + Math.random() * 9000)}`,
-            designation: "Faculty Member",
-            employment_type: "full-time",
-            status: "active",
-            phone: t.phone
-          });
-          const facId = facRes.data?.id;
-          if (facId) {
-            await axios.post(`${API_BASE_URL}/attendance/record`, {
-              faculty_id: facId,
-              date: todayDate,
-              punch_in: `${todayDate}T09:00:00`,
-              punch_out: `${todayDate}T15:30:00`,
-              status: "present",
-              remarks: "LNCT University Class Session Punch"
-            }).catch(() => null);
-          }
-        } catch (err) {
-          // Ignore duplicate creation
-        }
-      });
-    }
+    // Automatically seed 30-day rich LNCT attendance, half-day, leave, and substitution records in background
+    axios.post(`${API_BASE_URL}/analytics/seed-demo-history`).catch((err) => {
+      console.warn("Silent demo analytics seed notice:", err);
+    });
 
     try {
       await generateFromPayload(

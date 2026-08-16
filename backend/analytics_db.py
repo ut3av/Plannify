@@ -715,3 +715,254 @@ def get_operational_insights(start_date: Optional[str] = None, end_date: Optiona
         })
 
     return insights
+
+
+def seed_30day_demo_history() -> dict:
+    """
+    Generates rich 30-day operational analytics, attendance punches, half-days,
+    leaves, and substitution history for all LNCT University faculty members.
+    Works seamlessly across Supabase and local SQLite.
+    """
+    from datetime import date, datetime, timedelta
+    import random
+    import uuid
+
+    try:
+        from .faculty_db import create_faculty, list_faculty, initialize_leave_balances
+        from .db import get_connection
+    except ImportError:
+        from faculty_db import create_faculty, list_faculty, initialize_leave_balances
+        from db import get_connection
+
+    sb = get_supabase()
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    LNCT_FACULTY = [
+        {"teacher_name": "Prof Ripusoodan Sharma", "employee_id": "EMP-LNCT-001", "designation": "Professor", "phone": "+91-7869543871", "email": "ripusoodan.sharma@lnctu.ac.in"},
+        {"teacher_name": "Prof Anshu Gangwar", "employee_id": "EMP-LNCT-002", "designation": "Professor", "phone": "+91-8519064890", "email": "anshu.gangwar@lnctu.ac.in"},
+        {"teacher_name": "Dr Satish Manwani", "employee_id": "EMP-LNCT-003", "designation": "Associate Professor", "phone": "+91-9893724144", "email": "satish.manwani@lnctu.ac.in"},
+        {"teacher_name": "Prof Pragya Shastri", "employee_id": "EMP-LNCT-004", "designation": "Assistant Professor", "phone": "+91-9589952503", "email": "pragya.shastri@lnctu.ac.in"},
+        {"teacher_name": "Prof Mohit Kubade", "employee_id": "EMP-LNCT-005", "designation": "Assistant Professor", "phone": "+91-7804817594", "email": "mohit.kubade@lnctu.ac.in"},
+        {"teacher_name": "Dr Sonal Sharma", "employee_id": "EMP-LNCT-006", "designation": "Professor", "phone": "+91-9425644974", "email": "sonal.sharma@lnctu.ac.in"},
+        {"teacher_name": "Mr. Aniket Satpute", "employee_id": "EMP-LNCT-007", "designation": "Assistant Professor", "phone": "+91-7028467010", "email": "aniket.satpute@lnctu.ac.in"},
+        {"teacher_name": "Prof Jagruti Durugkar", "employee_id": "EMP-LNCT-008", "designation": "Assistant Professor", "phone": "+91-8964877562", "email": "jagruti.durugkar@lnctu.ac.in"},
+        {"teacher_name": "Mr Kaiwalya Zankar", "employee_id": "EMP-LNCT-009", "designation": "Lecturer", "phone": "+91-9834921305", "email": "kaiwalya.zankar@lnctu.ac.in"},
+        {"teacher_name": "Ms. Swarupa Waghmare", "employee_id": "EMP-LNCT-010", "designation": "Lecturer", "phone": "+91-8482894207", "email": "swarupa.waghmare@lnctu.ac.in"},
+        {"teacher_name": "Prof Dipanshu Jha", "employee_id": "EMP-LNCT-011", "designation": "Assistant Professor", "phone": "+91-8462821467", "email": "dipanshu.jha@lnctu.ac.in"},
+        {"teacher_name": "Dr Alka Gulati", "employee_id": "EMP-LNCT-012", "designation": "Associate Professor", "phone": "+91-9826722264", "email": "alka.gulati@lnctu.ac.in"},
+        {"teacher_name": "Prof Neha Swanakar", "employee_id": "EMP-LNCT-013", "designation": "Assistant Professor", "phone": "+91-9300787622", "email": "neha.swanakar@lnctu.ac.in"},
+        {"teacher_name": "Dr Swagatika Lenka", "employee_id": "EMP-LNCT-014", "designation": "Associate Professor", "phone": "+91-8637248598", "email": "swagatika.lenka@lnctu.ac.in"},
+        {"teacher_name": "Mr Jitendra Maind", "employee_id": "EMP-LNCT-015", "designation": "Assistant Professor", "phone": "+91-7875492545", "email": "jitendra.maind@lnctu.ac.in"},
+        {"teacher_name": "Prof Pramod Kumar Saket", "employee_id": "EMP-LNCT-016", "designation": "Assistant Professor", "phone": "+91-9039371123", "email": "pramod.saket@lnctu.ac.in"},
+        {"teacher_name": "Prof Atul Verma", "employee_id": "EMP-LNCT-017", "designation": "Assistant Professor", "phone": "+91-9569455529", "email": "atul.verma@lnctu.ac.in"}
+    ]
+
+    # 1. Ensure faculty exist
+    active_faculty = []
+    for f_data in LNCT_FACULTY:
+        try:
+            created = create_faculty(f_data)
+            if created and created.get("id"):
+                initialize_leave_balances(created["id"])
+                active_faculty.append(created)
+        except Exception:
+            pass
+
+    if not active_faculty:
+        active_faculty = list_faculty()
+
+    today = date.today()
+    start_date = today - timedelta(days=30)
+    
+    total_punches = 0
+    total_leaves = 0
+    total_subs = 0
+
+    # 2. Generate 30 days of realistic attendance
+    for f in active_faculty:
+        fid = f.get("id")
+        fname = f.get("teacher_name", "")
+        if not fid:
+            continue
+
+        # Deterministic seed per teacher
+        t_hash = sum(ord(c) for c in fname)
+        
+        cur = start_date
+        day_idx = 0
+        while cur <= today:
+            # Skip Sundays
+            if cur.weekday() != 6:
+                day_idx += 1
+                date_str = cur.isoformat()
+                
+                # Deterministic pattern
+                is_leave_day = (day_idx + t_hash) % 23 == 0
+                is_half_day = (day_idx + t_hash) % 19 == 0
+                is_late_day = (day_idx + t_hash) % 11 == 0
+
+                if is_leave_day:
+                    status = "on-leave"
+                    p_in = None
+                    p_out = None
+                    late_min = 0
+                    remarks = "Approved Academic / Casual Leave"
+                elif is_half_day:
+                    status = "half-day"
+                    p_in = f"{date_str}T08:55:00"
+                    p_out = f"{date_str}T12:45:00"
+                    late_min = 0
+                    remarks = "Half Day Approved Leave"
+                elif is_late_day:
+                    status = "late"
+                    late_min = 15 + ((t_hash + day_idx) % 20)
+                    p_in = f"{date_str}T09:{15 + ((t_hash + day_idx) % 20):02d}:00"
+                    p_out = f"{date_str}T15:35:00"
+                    remarks = f"Late Punch-In ({late_min}m)"
+                else:
+                    status = "present"
+                    late_min = 0
+                    min_offset = (t_hash + day_idx) % 12
+                    p_in = f"{date_str}T08:{48 + min_offset:02d}:00"
+                    p_out = f"{date_str}T15:{30 + min_offset:02d}:00"
+                    remarks = "On-time Biometric Punch"
+
+                # Insert into Supabase
+                if sb:
+                    try:
+                        sb.table("attendance_records").upsert({
+                            "faculty_id": fid,
+                            "date": date_str,
+                            "punch_in": p_in,
+                            "punch_out": p_out,
+                            "status": status,
+                            "late_minutes": late_min,
+                            "remarks": remarks
+                        }, on_conflict="faculty_id,date").execute()
+                    except Exception:
+                        pass
+
+                # Insert into SQLite
+                try:
+                    cursor.execute("""
+                        INSERT OR REPLACE INTO attendance_records (id, faculty_id, date, punch_in, punch_out, status, late_minutes, remarks)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (f"att-{fid}-{date_str}", fid, date_str, p_in, p_out, status, late_min, remarks))
+                    total_punches += 1
+                except Exception:
+                    pass
+
+            cur += timedelta(days=1)
+
+    # Fetch or create leave types
+    cursor.execute("SELECT id, code FROM leave_types")
+    ltypes = {row["code"]: row["id"] for row in cursor.fetchall()}
+    if not ltypes:
+        try:
+            from .db import init_db
+        except ImportError:
+            from db import init_db
+        init_db()
+        cursor.execute("SELECT id, code FROM leave_types")
+        ltypes = {row["code"]: row["id"] for row in cursor.fetchall()}
+
+    cl_id = ltypes.get("CL", "CL")
+    ml_id = ltypes.get("ML", "ML")
+    dl_id = ltypes.get("DL", "DL")
+
+    # 3. Seed Realistic Leave Applications
+    leave_samples = [
+        ("Prof Ripusoodan Sharma", cl_id, 2, "University Syllabus Revision Meeting", "approved"),
+        ("Prof Anshu Gangwar", ml_id, 10, "Viral Fever & Medical Rest", "approved"),
+        ("Dr Satish Manwani", dl_id, 14, "National Commerce & Management Conference", "approved"),
+        ("Prof Mohit Kubade", cl_id, 18, "Personal Family Event", "approved"),
+        ("Prof Jagruti Durugkar", cl_id, 5, "Personal Errand / Half Day", "approved"),
+        ("Dr Alka Gulati", dl_id, 8, "PhD Thesis Defense External Examiner", "approved"),
+        ("Prof Dipanshu Jha", ml_id, 22, "Doctor Appointment", "approved"),
+        ("Mr. Aniket Satpute", cl_id, 12, "Family Function", "approved"),
+    ]
+
+    for tname, ltype_id, days_ago, reason, st in leave_samples:
+        f_match = next((f for f in active_faculty if f.get("teacher_name") == tname), None)
+        if f_match:
+            fid = f_match.get("id")
+            f_date = (today - timedelta(days=days_ago)).isoformat()
+            t_date = (today - timedelta(days=max(0, days_ago - 1))).isoformat()
+            lid = f"leave-{uuid.uuid4().hex[:8]}"
+
+            if sb:
+                try:
+                    sb.table("leave_applications").insert({
+                        "id": lid,
+                        "faculty_id": fid,
+                        "leave_type_id": ltype_id,
+                        "from_date": f_date,
+                        "to_date": t_date,
+                        "reason": reason,
+                        "status": st
+                    }).execute()
+                except Exception:
+                    pass
+
+            try:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO leave_applications (id, faculty_id, leave_type_id, from_date, to_date, reason, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (lid, fid, ltype_id, f_date, t_date, reason, st))
+                total_leaves += 1
+            except Exception as e:
+                logger.warning(f"Error inserting demo leave: {e}")
+
+    # 4. Seed Realistic Substitution Logs
+    subs_samples = [
+        ("Prof Ripusoodan Sharma", "Prof Mohit Kubade", 2, "Programming Lab in C++", "Lab Room No. 006", "02:40 PM - 03:30 PM", "Section A (BCA-III)"),
+        ("Prof Anshu Gangwar", "Prof Dipanshu Jha", 10, "Programming Lab in DBMS", "Lab Room No. 007", "02:40 PM - 03:30 PM", "Section A (BCA-III)"),
+        ("Prof Jagruti Durugkar", "Mr. Aniket Satpute", 5, "Discrete Maths", "401/MCA", "10:30 AM - 11:20 AM", "Section B (BCA-III)"),
+        ("Prof Pragya Shastri", "Dr Satish Manwani", 12, "Soft Skills & Entrepreneurship", "308/MCA", "11:20 AM - 12:10 PM", "Section A (BCA-III)"),
+        ("Prof Mohit Kubade", "Prof Pramod Kumar Saket", 18, "Linux & Shell Programming", "308/MCA", "01:00 PM - 01:50 PM", "Section A (BCA-III)"),
+    ]
+
+    for orig_name, sub_name, days_ago, subj, rm, slt, sec in subs_samples:
+        orig_fac = next((f for f in active_faculty if f.get("teacher_name") == orig_name), None)
+        sub_fac = next((f for f in active_faculty if f.get("teacher_name") == sub_name), None)
+        if orig_fac and sub_fac:
+            s_date = (today - timedelta(days=days_ago)).isoformat()
+            sid = f"sub-{uuid.uuid4().hex[:8]}"
+
+            if sb:
+                try:
+                    sb.table("substitution_log").insert({
+                        "id": sid,
+                        "original_faculty_id": orig_fac.get("id"),
+                        "substitute_faculty_id": sub_fac.get("id"),
+                        "date": s_date,
+                        "slot": slt,
+                        "section": sec,
+                        "subject": subj,
+                        "room": rm,
+                        "status": "completed"
+                    }).execute()
+                except Exception:
+                    pass
+
+            try:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO substitution_log (id, original_faculty_id, substitute_faculty_id, date, slot, section, subject, room, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (sid, orig_fac.get("id"), sub_fac.get("id"), s_date, slt, sec, subj, rm, "completed"))
+                total_subs += 1
+            except Exception as e:
+                logger.warning(f"Error inserting demo sub: {e}")
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "status": "success",
+        "message": "30-Day LNCT Operational Demo Dataset successfully seeded across database.",
+        "faculty_count": len(active_faculty),
+        "attendance_punches": total_punches,
+        "leave_records": total_leaves,
+        "substitution_logs": total_subs
+    }

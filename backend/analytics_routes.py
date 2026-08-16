@@ -22,6 +22,7 @@ try:
         get_operational_insights,
         get_workload_config,
         update_workload_config,
+        seed_30day_demo_history,
     )
 except ImportError:
     from analytics_db import (
@@ -32,9 +33,19 @@ except ImportError:
         get_operational_insights,
         get_workload_config,
         update_workload_config,
+        seed_30day_demo_history,
     )
 
 router = APIRouter(prefix="/analytics", tags=["Faculty Analytics"])
+
+
+@router.post("/seed-demo-history")
+def seed_analytics_demo_history():
+    """Seeds 30 days of rich LNCT operational history (attendance, half days, substitutions, leaves)."""
+    try:
+        return seed_30day_demo_history()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 class WorkloadConfigInput(BaseModel):

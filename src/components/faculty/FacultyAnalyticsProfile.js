@@ -264,6 +264,57 @@ export default function FacultyAnalyticsProfile({ facultyId, rangeKey, startDate
             </div>
           </div>
 
+          {/* 30-Day Attendance Heatmap Matrix */}
+          <div className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700/60">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  📅 30-Day Operational Biometric Punch Matrix
+                </h4>
+                <p className="text-xs text-slate-400">Chronological daily check-in records, punch times, and leave events</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-300">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"/> Present</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-amber-500 inline-block"/> Late Arrival</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-blue-500 inline-block"/> Half-Day</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-purple-500 inline-block"/> Leave</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-2">
+              {attendance.timeline && attendance.timeline.map((row, i) => {
+                const isLate = row.status === 'late' || (row.late_minutes > 0);
+                const isHalfDay = row.status === 'half-day';
+                const isLeave = row.status === 'on-leave' || row.status === 'absent';
+                
+                let bgClass = "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:border-emerald-400";
+                let statusIcon = "✓";
+                if (isLate) {
+                  bgClass = "bg-amber-500/20 border-amber-500/40 text-amber-300 hover:border-amber-400";
+                  statusIcon = "⏱️";
+                } else if (isHalfDay) {
+                  bgClass = "bg-blue-500/20 border-blue-500/40 text-blue-300 hover:border-blue-400";
+                  statusIcon = "½";
+                } else if (isLeave) {
+                  bgClass = "bg-purple-500/20 border-purple-500/40 text-purple-300 hover:border-purple-400";
+                  statusIcon = "🏖️";
+                }
+
+                return (
+                  <div 
+                    key={i} 
+                    title={`${row.date} | ${row.status?.toUpperCase()} | In: ${row.punch_in || 'N/A'} | Late: ${row.late_minutes || 0}m`}
+                    className={`p-2 rounded-xl border flex flex-col items-center justify-between text-center transition-all hover:scale-105 hover:shadow-lg cursor-pointer ${bgClass}`}
+                  >
+                    <span className="text-[10px] font-mono text-slate-300 font-bold">{row.date?.slice(5)}</span>
+                    <span className="text-base font-black my-0.5">{statusIcon}</span>
+                    <span className="text-[9px] font-bold uppercase truncate max-w-full">{row.status}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/60">
             <h4 className="text-sm font-bold text-slate-300 mb-3">Daily Attendance Logs</h4>
             {attendance.timeline && attendance.timeline.length > 0 ? (

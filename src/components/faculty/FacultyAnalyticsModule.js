@@ -127,6 +127,24 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
     }
   };
 
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeedDemo = async () => {
+    try {
+      setSeeding(true);
+      const res = await axios.post(`${API}/analytics/seed-demo-history`);
+      alert("✅ " + (res.data?.message || "30-Day LNCT Operational Demo Dataset successfully seeded!"));
+      fetchDashboard();
+      fetchInsights();
+      fetchDirectory();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to seed 30-day demo data.");
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   const handleExport = () => {
     window.open(`${API}/analytics/export?range_key=${rangeKey}&format_type=excel`, '_blank');
   };
@@ -158,6 +176,24 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
 
         {/* Global Date Range Selector Controls */}
         <div className="flex flex-wrap items-center gap-3">
+          <button 
+            onClick={handleSeedDemo} 
+            disabled={seeding} 
+            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/30 transition-all flex items-center gap-1.5"
+          >
+            {seeding ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Seeding...</span>
+              </>
+            ) : (
+              <>
+                <span>⚡</span>
+                <span>Seed 30-Day LNCT Demo</span>
+              </>
+            )}
+          </button>
+
           <div className="flex items-center bg-slate-800 border border-slate-700 rounded-xl p-1 text-xs">
             {[
               { id: "7d", label: "7 Days" },
