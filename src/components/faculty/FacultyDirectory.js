@@ -12,6 +12,7 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
   const [filterStatus, setFilterStatus] = useState("");
   const [viewMode, setViewMode] = useState("grid"); // grid | table
   const [showAddForm, setShowAddForm] = useState(false);
+  const [deletedKeys, setDeletedKeys] = useState(new Set());
   const [form, setForm] = useState({
     teacher_name: "", employee_id: "", department_id: "",
     designation: "Lecturer", qualification: "", employment_type: "full-time",
@@ -45,27 +46,47 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
     }
   };
 
+  const handleDelete = async (e, f) => {
+    e.stopPropagation();
+    const facultyName = f.teacher_name || f.name;
+    if (!window.confirm(`Are you sure you want to remove ${facultyName} from the faculty directory?`)) {
+      return;
+    }
+
+    try {
+      if (f.id && !f.id.toString().startsWith("ocr-")) {
+        await axios.delete(`${API}/faculty/${f.id}?hard_delete=true`).catch(() => null);
+      }
+      setDeletedKeys(prev => new Set([...prev, f.id, facultyName?.trim().toLowerCase()]));
+      setFaculty(prev => prev.filter(item => item.id !== f.id && item.teacher_name !== facultyName));
+    } catch (err) {
+      console.error("Failed to delete faculty:", err);
+    }
+  };
+
   // Merge backend faculty with active state teachers, AI OCR teachers, and subject assignments
   const allFaculty = useMemo(() => {
-    const list = faculty.map(f => {
-      // Enrich existing backend faculty if missing email/phone from teachers prop
-      const matchingTeacher = Array.isArray(teachers)
-        ? teachers.find(t => (typeof t === 'string' ? t : t?.name)?.trim().toLowerCase() === f.teacher_name?.trim().toLowerCase())
-        : null;
-      return {
-        ...f,
-        email: f.email || (typeof matchingTeacher === 'object' ? matchingTeacher?.email : null) || `${f.teacher_name?.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
-        phone: f.phone || (typeof matchingTeacher === 'object' ? matchingTeacher?.phone : null) || "+91-9876543210",
-        department_name: f.department_name || (typeof matchingTeacher === 'object' ? matchingTeacher?.department : null) || "Academic Operations"
-      };
-    });
+    const list = faculty
+      .filter(f => !deletedKeys.has(f.id) && !deletedKeys.has(f.teacher_name?.trim().toLowerCase()))
+      .map(f => {
+        // Enrich existing backend faculty if missing email/phone from teachers prop
+        const matchingTeacher = Array.isArray(teachers)
+          ? teachers.find(t => (typeof t === 'string' ? t : t?.name)?.trim().toLowerCase() === f.teacher_name?.trim().toLowerCase())
+          : null;
+        return {
+          ...f,
+          email: f.email || (typeof matchingTeacher === 'object' ? matchingTeacher?.email : null) || `${f.teacher_name?.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
+          phone: f.phone || (typeof matchingTeacher === 'object' ? matchingTeacher?.phone : null) || "+91-9876543210",
+          department_name: f.department_name || (typeof matchingTeacher === 'object' ? matchingTeacher?.department : null) || "Academic Operations"
+        };
+      });
 
     const existingNames = new Set(list.map(f => f.teacher_name?.trim().toLowerCase()));
 
     const addIfMissing = (tObj) => {
       const name = typeof tObj === 'string' ? tObj : tObj?.name;
       const trimmed = name?.trim();
-      if (!trimmed || existingNames.has(trimmed.toLowerCase())) return;
+      if (!trimmed || existingNames.has(trimmed.toLowerCase()) || deletedKeys.has(trimmed.toLowerCase())) return;
 
       const hash = Math.abs(trimmed.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0));
       const newFacultyObj = {
@@ -96,7 +117,7 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
     }
 
     return list;
-  }, [faculty, teachers, subjects]);
+  }, [faculty, teachers, subjects, deletedKeys]);
 
   // Auto-sync unsynced teachers to backend DB so they persist permanently
   useEffect(() => {
@@ -292,7 +313,16 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
                     <p className="font-bold text-slate-900 dark:text-white truncate text-sm">{f.teacher_name}</p>
-                    <span className={`badge ${statusColor(f.status)} shrink-0`}>{f.status}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className={`badge ${statusColor(f.status)}`}>{f.status}</span>
+                      <button 
+                        title="Remove Faculty Member" 
+                        onClick={(e) => handleDelete(e, f)}
+                        className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-indigo-400/90 font-semibold mt-0.5">{f.designation}</p>
                   
@@ -339,6 +369,7 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
                 <th>Email Address</th>
                 <th>Phone Number</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -358,6 +389,15 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
                   <td><span className="text-slate-400 font-mono text-xs">{f.email || "—"}</span></td>
                   <td><span className="text-slate-400 text-xs">{f.phone || "—"}</span></td>
                   <td><span className={`badge ${statusColor(f.status)}`}>{f.status}</span></td>
+                  <td>
+                    <button 
+                      title="Remove Faculty Member"
+                      onClick={(e) => handleDelete(e, f)}
+                      className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

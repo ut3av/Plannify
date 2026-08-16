@@ -68,6 +68,22 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
     }
   };
 
+  const handleDelete = async () => {
+    const facultyName = detail?.teacher_name || faculty?.teacher_name || "this faculty member";
+    if (!window.confirm(`Are you sure you want to permanently remove ${facultyName} from the faculty directory?`)) {
+      return;
+    }
+    try {
+      if (faculty?.id && !faculty.id.toString().startsWith('ocr-')) {
+        await axios.delete(`${API}/faculty/${faculty.id}?hard_delete=true`).catch(() => null);
+      }
+      if (onUpdate) onUpdate();
+      if (onBack) onBack();
+    } catch (e) {
+      alert("Failed to remove faculty member.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-20 text-slate-400">
@@ -122,9 +138,14 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
               </span>
             </div>
           </div>
-          <button onClick={() => setEditing(!editing)} className={editing ? "btn-secondary text-xs px-4 py-2" : "btn-primary text-xs px-4 py-2 font-bold"}>
-            {editing ? "Cancel" : "✏️ Edit Profile"}
-          </button>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button onClick={() => setEditing(!editing)} className={editing ? "btn-secondary text-xs px-4 py-2" : "btn-primary text-xs px-4 py-2 font-bold"}>
+              {editing ? "Cancel" : "✏️ Edit Profile"}
+            </button>
+            <button onClick={handleDelete} className="px-3.5 py-2 text-xs font-bold rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/30 transition-all">
+              🗑️ Remove
+            </button>
+          </div>
         </div>
       </div>
 

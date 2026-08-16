@@ -383,6 +383,30 @@ def deactivate_faculty(faculty_id: str) -> dict:
     return update_faculty(faculty_id, {"status": "resigned"})
 
 
+def delete_faculty(faculty_id: str) -> dict:
+    sb = get_supabase()
+    if sb:
+        try:
+            sb.table("leave_balances").delete().eq("faculty_id", faculty_id).execute()
+            sb.table("attendance_records").delete().eq("faculty_id", faculty_id).execute()
+            sb.table("substitution_log").delete().eq("original_teacher_id", faculty_id).execute()
+            res = sb.table("faculty_profiles").delete().eq("id", faculty_id).execute()
+            return {"deleted": True, "id": faculty_id}
+        except Exception as e:
+            logger.warning(f"Supabase delete_faculty failed: {e}. Using SQLite fallback.")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM leave_balances WHERE faculty_id = ?", (faculty_id,))
+        cursor.execute("DELETE FROM attendance_records WHERE faculty_id = ?", (faculty_id,))
+        cursor.execute("DELETE FROM faculty_profiles WHERE id = ?", (faculty_id,))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"deleted": True, "id": faculty_id}
+
+
 # ── Leave Types ─────────────────────────────────────────────
 
 def list_leave_types() -> List[dict]:

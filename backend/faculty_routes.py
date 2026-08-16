@@ -10,7 +10,7 @@ try:
         DepartmentCreate, DepartmentOut,
     )
     from .faculty_db import (
-        list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty,
+        list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty, delete_faculty,
         list_departments, create_department, update_department, delete_department,
         get_leave_balances, get_attendance_summary, initialize_leave_balances,
         get_dashboard_stats,
@@ -21,7 +21,7 @@ except ImportError:
         DepartmentCreate, DepartmentOut,
     )
     from faculty_db import (
-        list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty,
+        list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty, delete_faculty,
         list_departments, create_department, update_department, delete_department,
         get_leave_balances, get_attendance_summary, initialize_leave_balances,
         get_dashboard_stats,
@@ -171,9 +171,13 @@ def edit_faculty(faculty_id: str, data: FacultyUpdate):
 
 
 @router.delete("/{faculty_id}")
-def remove_faculty(faculty_id: str):
+def remove_faculty(faculty_id: str, hard_delete: bool = True):
     try:
-        result = deactivate_faculty(faculty_id)
-        return {"message": "Faculty deactivated", "data": result}
+        if hard_delete:
+            result = delete_faculty(faculty_id)
+            return {"message": "Faculty deleted successfully", "data": result}
+        else:
+            result = deactivate_faculty(faculty_id)
+            return {"message": "Faculty deactivated", "data": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
