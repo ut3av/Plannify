@@ -71,11 +71,11 @@ export default function HeaderBar({
             alt="Planify Logo"
             className="w-8 h-8 object-contain drop-shadow-md"
           />
-          <span className={`font-black text-base tracking-normal hidden sm:inline-block ${
-            isWarm ? 'text-[#2c1810]' : 'text-white'
-          }`}>
-            ρℓαɳɳเƒყ<span className={isWarm ? 'text-amber-600' : 'text-indigo-400'}>.exe</span>
-          </span>
+          <img
+            src={isWarm ? "/brand-logo-dark.png" : "/brand-logo-white.png"}
+            alt="Plannify.exe"
+            className="h-6 md:h-7 object-contain drop-shadow hidden sm:inline-block"
+          />
         </button>
 
         {/* Dynamic Breadcrumbs */}

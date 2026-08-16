@@ -142,9 +142,7 @@ export default function LoginPage() {
           <div>
             <div className="flex items-center gap-3 mb-8">
               <img src="/favicon.png" alt="Planify" className="w-10 h-10 object-contain drop-shadow-md" />
-              <span className="font-black text-2xl tracking-normal text-white">
-                ρℓαɳɳเƒყ<span className="text-indigo-400">.exe</span>
-              </span>
+              <img src="/brand-logo-white.png" alt="Plannify.exe" className="h-8 object-contain drop-shadow-md" />
             </div>
 
             <h1 className="text-3xl font-black tracking-tight text-white mb-3 leading-snug">
