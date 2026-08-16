@@ -365,11 +365,13 @@ export default function App() {
     loadCloudState();
   }, []);
 
-  // Manual Save to Cloud function
-  const saveToCloud = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setRescheduleNote("");
+  // Cloud Save function (supports silent background sync)
+  const saveToCloud = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+      setError(null);
+      setRescheduleNote("");
+    }
     try {
       const stateToSave = { teachers, sections, subjects, rooms, timeSlots };
       
@@ -388,29 +390,35 @@ export default function App() {
       // 2. Relational Sync (Structured Tables for n8n/Analytics)
       await syncRelationalData({ ...stateToSave, result });
 
-      setRescheduleNote("Saved successfully to Supabase Cloud & Relational Tables!");
+      if (!isSilent) {
+        setRescheduleNote("Saved successfully to Supabase Cloud & Relational Tables!");
+      }
     } catch (e) {
       console.error(e);
-      setError({
-        title: "Failed to save to Supabase Cloud.",
-        suggestions: [e?.message || "Check the Supabase table schema, URL, and anon key, then try again."],
-        facts: [],
-      });
+      if (!isSilent) {
+        setError({
+          title: "Failed to save to Supabase Cloud.",
+          suggestions: [e?.message || "Check the Supabase table schema, URL, and anon key, then try again."],
+          facts: [],
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   }, [teachers, sections, subjects, rooms, timeSlots, result]);
 
-  // --- Periodic Auto-sync (1 min interval) ---
+  // --- Periodic Background Auto-sync (1 min interval, completely silent) ---
   useEffect(() => {
     if (!user || !isCloudLoaded) return;
     
-    // Auto-save every 60 seconds
+    // Auto-save silently every 60 seconds
     const saveInterval = setInterval(() => {
-      saveToCloud();
+      saveToCloud(true);
     }, 60000); 
 
-    // Auto-refresh (pull) every 60 seconds to stay in sync
+    // Auto-refresh (pull) silently every 60 seconds to stay in sync
     const refreshInterval = setInterval(async () => {
       try {
         const { data, error } = await supabase
@@ -419,7 +427,7 @@ export default function App() {
           .eq('id', 'draft')
           .single();
         
-        if (data && !error && !loading) {
+        if (data && !error) {
           const cloudState = readCloudState(data);
           // Compare strings to avoid unnecessary state updates
           if (cloudState.teachers && JSON.stringify(cloudState.teachers) !== JSON.stringify(teachers)) setTeachers(cloudState.teachers);
@@ -429,7 +437,7 @@ export default function App() {
           if (cloudState.timeSlots && JSON.stringify(cloudState.timeSlots) !== JSON.stringify(timeSlots)) setTimeSlots(cloudState.timeSlots);
         }
       } catch (e) {
-        console.warn("Periodic refresh failed", e);
+        console.warn("Background refresh failed silently", e);
       }
     }, 60000);
 
@@ -437,7 +445,7 @@ export default function App() {
       clearInterval(saveInterval);
       clearInterval(refreshInterval);
     };
-  }, [teachers, sections, subjects, rooms, timeSlots, user, saveToCloud, isCloudLoaded, loading]);
+  }, [teachers, sections, subjects, rooms, timeSlots, user, saveToCloud, isCloudLoaded]);
 
   const payload = useMemo(
     () => buildApiPayload({ teachers, subjects, rooms, sections, timeSlots }),
