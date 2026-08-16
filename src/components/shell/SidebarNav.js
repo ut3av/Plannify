@@ -26,10 +26,10 @@ const NAV_GROUPS = [
   {
     title: "OPERATIONS",
     items: [
-      { id: "reschedule", label: "Reschedule Engine", icon: "refresh-cw", badge: null },
-      { id: "history", label: "History & Audit Logs", icon: "history", badge: null },
-      { id: "integrations", label: "Automation & Make", icon: "zap", badge: null },
-      { id: "logs", label: "System Logs", icon: "terminal", badge: null },
+      { id: "reschedule", label: "Reschedule Engine", icon: "refresh-cw", badge: "AI" },
+      { id: "integrations", label: "Automation & Broadcast", icon: "zap", badge: "Live" },
+      { id: "history", label: "Version Control & Audit", icon: "history", badge: null },
+      { id: "logs", label: "System Mission Control", icon: "terminal", badge: null },
     ],
   }, {
     title: "REPORTS",
