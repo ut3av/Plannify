@@ -15,11 +15,15 @@ export default function AppShell({
   onLoadDemo,
   user,
   onLogout,
+  theme = 'dark',
+  onToggleTheme,
   children,
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showNotificationDrawer, setShowNotificationDrawer] = useState(false);
+
+  const isWarm = theme === 'warm-white';
 
   const notifications = [
     { id: 1, title: "Leave Application Received", text: "Dr. Arvind Kumar requested 2 days Casual Leave.", time: "10 mins ago", type: "leave" },
@@ -28,7 +32,11 @@ export default function AppShell({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col antialiased">
+    <div className={`min-h-screen font-sans flex flex-col antialiased transition-colors duration-300 ${
+      isWarm
+        ? 'bg-[#faf7f2] text-[#2c1810]'
+        : 'bg-slate-950 text-slate-100'
+    }`}>
       {/* Top Header Bar */}
       <HeaderBar
         isSidebarOpen={isSidebarOpen}
@@ -47,6 +55,8 @@ export default function AppShell({
         onLoadDemo={onLoadDemo}
         user={user}
         onLogout={onLogout}
+        theme={theme}
+        onToggleTheme={onToggleTheme}
       />
 
       <div className="flex flex-1 relative">
@@ -56,6 +66,7 @@ export default function AppShell({
           activePage={activePage}
           onSelectPage={onSelectPage}
           userRole={userRole}
+          theme={theme}
         />
 
         {/* Main Content Workspace */}
@@ -82,19 +93,31 @@ export default function AppShell({
 
       {/* Notification Drawer */}
       {showNotificationDrawer && (
-        <div className="fixed right-4 top-20 w-80 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-4 z-50 text-xs text-slate-200 animate-fade-in">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
-            <h3 className="font-bold text-white text-sm">Notifications</h3>
-            <button onClick={() => setShowNotificationDrawer(false)} className="text-slate-400 hover:text-white font-bold text-xs">✕</button>
+        <div className={`fixed right-4 top-20 w-80 rounded-2xl border shadow-2xl p-4 z-50 text-xs animate-fade-in ${
+          isWarm
+            ? 'bg-[#fffdf8] border-[#e8ddd0] text-[#2c1810]'
+            : 'bg-slate-900 border-slate-700 text-slate-200'
+        }`}>
+          <div className={`flex items-center justify-between border-b pb-3 mb-3 ${
+            isWarm ? 'border-[#e8ddd0]' : 'border-slate-800'
+          }`}>
+            <h3 className={`font-bold text-sm ${isWarm ? 'text-[#2c1810]' : 'text-white'}`}>Notifications</h3>
+            <button onClick={() => setShowNotificationDrawer(false)} className={`font-bold text-xs ${
+              isWarm ? 'text-[#a08b7a] hover:text-[#2c1810]' : 'text-slate-400 hover:text-white'
+            }`}>✕</button>
           </div>
           <div className="space-y-3">
             {notifications.map((n) => (
-              <div key={n.id} className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 space-y-1">
-                <div className="flex justify-between items-start font-semibold text-white">
-                  <span>{n.title}</span>
-                  <span className="text-[10px] text-slate-400 font-normal">{n.time}</span>
+              <div key={n.id} className={`p-3 rounded-xl border space-y-1 ${
+                isWarm
+                  ? 'bg-[#f3ede4] border-[#e8ddd0]'
+                  : 'bg-slate-800/80 border-slate-700/60'
+              }`}>
+                <div className="flex justify-between items-start font-semibold">
+                  <span className={isWarm ? 'text-[#2c1810]' : 'text-white'}>{n.title}</span>
+                  <span className={`text-[10px] font-normal ${isWarm ? 'text-[#a08b7a]' : 'text-slate-400'}`}>{n.time}</span>
                 </div>
-                <p className="text-slate-300 text-[11px] leading-relaxed">{n.text}</p>
+                <p className={`text-[11px] leading-relaxed ${isWarm ? 'text-[#6b5344]' : 'text-slate-300'}`}>{n.text}</p>
               </div>
             ))}
           </div>

@@ -56,6 +56,36 @@
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
   }
 
+  .warm-white {
+    --bg-main: #faf7f2;
+    --bg-surface: #fffdf8;
+    --bg-subtle: #f3ede4;
+    --text-primary: #2c1810;
+    --text-secondary: #6b5344;
+    --text-muted: #a08b7a;
+    --border-default: #e8ddd0;
+    --border-subtle: #f3ede4;
+    --primary: #b45309;
+    --primary-light: #fef3c7;
+    --primary-hover: #a16207;
+    --accent-teal: #0d7377;
+    --accent-teal-light: #ccfbf1;
+    --accent-amber: #b45309;
+    --accent-amber-light: #fef3c7;
+    --accent-red: #c2410c;
+    --accent-red-light: #ffedd5;
+    --accent-green: #15803d;
+    --accent-green-light: #dcfce7;
+    --shadow-sm: 0 1px 3px 0 rgba(120, 80, 40, 0.06);
+    --shadow-md: 0 4px 8px -1px rgba(120, 80, 40, 0.08), 0 2px 4px -2px rgba(120, 80, 40, 0.04);
+    --shadow-lg: 0 10px 20px -3px rgba(120, 80, 40, 0.10), 0 4px 6px -4px rgba(120, 80, 40, 0.05);
+    /* Warm-white sidebar & header overrides */
+    --ww-sidebar-bg: #2c1810;
+    --ww-sidebar-border: #3d2a1e;
+    --ww-header-bg: #fffdf8;
+    --ww-header-border: #e8ddd0;
+  }
+
   body {
     margin: 0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -445,6 +475,236 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: transparent;
   font-family: 'Inter', sans-serif;
   font-weight: 900;
+}
+
+/* ── Warm White Theme Overrides ─────────────────────────── */
+.warm-white .text-exe-glossy {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #0d7377 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.warm-white .text-gradient {
+  background-image: linear-gradient(135deg, #b45309 0%, #d97706 50%, #0d7377 100%);
+}
+
+.warm-white .btn-gradient {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+}
+
+.warm-white .btn-gradient:hover {
+  background: linear-gradient(135deg, #a16207 0%, #b45309 100%);
+}
+
+.warm-white .btn-premium {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+}
+
+.warm-white .btn-premium:hover {
+  background: linear-gradient(135deg, #a16207 0%, #b45309 100%);
+}
+
+/* ══════════════════════════════════════════════════════════
+   WARM WHITE — Global Tailwind Class Overrides
+   Remaps all hardcoded dark utility classes to warm tones
+   so every component renders correctly without per-file edits.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Background Colors ──────────────────────────────────── */
+.warm-white .bg-slate-950      { background-color: #faf7f2 !important; }
+.warm-white .bg-slate-950\/90  { background-color: rgba(250,247,242,0.90) !important; }
+.warm-white .bg-slate-950\/80  { background-color: rgba(250,247,242,0.80) !important; }
+.warm-white .bg-slate-950\/40  { background-color: rgba(250,247,242,0.40) !important; }
+.warm-white .bg-slate-950\/30  { background-color: rgba(250,247,242,0.30) !important; }
+.warm-white .bg-slate-900      { background-color: #fffdf8 !important; }
+.warm-white .bg-slate-900\/95  { background-color: rgba(255,253,248,0.95) !important; }
+.warm-white .bg-slate-900\/90  { background-color: rgba(255,253,248,0.90) !important; }
+.warm-white .bg-slate-900\/80  { background-color: rgba(255,253,248,0.80) !important; }
+.warm-white .bg-slate-900\/70  { background-color: rgba(255,253,248,0.70) !important; }
+.warm-white .bg-slate-900\/60  { background-color: rgba(255,253,248,0.60) !important; }
+.warm-white .bg-slate-900\/40  { background-color: rgba(255,253,248,0.40) !important; }
+.warm-white .bg-slate-800      { background-color: #f3ede4 !important; }
+.warm-white .bg-slate-800\/90  { background-color: rgba(243,237,228,0.90) !important; }
+.warm-white .bg-slate-800\/80  { background-color: rgba(243,237,228,0.80) !important; }
+.warm-white .bg-slate-800\/60  { background-color: rgba(243,237,228,0.60) !important; }
+.warm-white .bg-slate-800\/50  { background-color: rgba(243,237,228,0.50) !important; }
+.warm-white .bg-slate-800\/40  { background-color: rgba(243,237,228,0.40) !important; }
+.warm-white .bg-slate-800\/30  { background-color: rgba(243,237,228,0.30) !important; }
+.warm-white .bg-slate-700      { background-color: #e8ddd0 !important; }
+.warm-white .bg-slate-700\/60  { background-color: rgba(232,221,208,0.60) !important; }
+.warm-white .bg-slate-700\/50  { background-color: rgba(232,221,208,0.50) !important; }
+.warm-white .bg-slate-600      { background-color: #d4c4b0 !important; }
+.warm-white .bg-slate-200      { background-color: #f3ede4 !important; }
+.warm-white .bg-slate-100      { background-color: #faf7f2 !important; }
+.warm-white .bg-slate-50       { background-color: #fffdf8 !important; }
+
+/* ── Text Colors ────────────────────────────────────────── */
+/* Override text-white ONLY on elements that sit on light backgrounds.
+   Exclude buttons, badges, FAB, and elements on colored/dark backgrounds. */
+.warm-white [class~="text-white"]  { color: #2c1810 !important; }
+.warm-white .btn-primary [class~="text-white"],
+.warm-white .btn-primary[class~="text-white"],
+.warm-white .btn-gradient [class~="text-white"],
+.warm-white .btn-gradient[class~="text-white"],
+.warm-white .btn-premium [class~="text-white"],
+.warm-white .btn-premium[class~="text-white"],
+.warm-white .btn-danger [class~="text-white"],
+.warm-white .btn-danger[class~="text-white"],
+.warm-white .btn-primary { color: #ffffff !important; }
+.warm-white .btn-gradient { color: #ffffff !important; }
+.warm-white .btn-premium { color: #ffffff !important; }
+.warm-white .btn-danger { color: #ffffff !important; }
+/* Keep white text on colored/dark backgrounds */
+.warm-white .bg-indigo-600 [class~="text-white"],
+.warm-white .bg-indigo-500 [class~="text-white"],
+.warm-white .bg-amber-600 [class~="text-white"],
+.warm-white .bg-emerald-600 [class~="text-white"],
+.warm-white .bg-red-500 [class~="text-white"],
+.warm-white .bg-purple-600 [class~="text-white"],
+.warm-white [class*="bg-gradient"] [class~="text-white"],
+.warm-white [class*="bg-gradient"][class~="text-white"] { color: #ffffff !important; }
+/* Notification badge - keep white on colored dot */
+.warm-white .animate-pulse[class~="text-white"],
+.warm-white span.bg-amber-600[class~="text-white"],
+.warm-white span.bg-indigo-500[class~="text-white"] { color: #ffffff !important; }
+.warm-white .text-slate-100 { color: #2c1810 !important; }
+.warm-white .text-slate-200 { color: #3d2a1e !important; }
+.warm-white .text-slate-300 { color: #6b5344 !important; }
+.warm-white .text-slate-400 { color: #8b7262 !important; }
+.warm-white .text-slate-500 { color: #a08b7a !important; }
+.warm-white .text-slate-600 { color: #b8a494 !important; }
+.warm-white .text-slate-700 { color: #6b5344 !important; }
+.warm-white .text-slate-900 { color: #2c1810 !important; }
+
+/* ── Border Colors ──────────────────────────────────────── */
+.warm-white .border-slate-900  { border-color: #e8ddd0 !important; }
+.warm-white .border-slate-800  { border-color: #e8ddd0 !important; }
+.warm-white .border-slate-800\/80 { border-color: rgba(232,221,208,0.80) !important; }
+.warm-white .border-slate-700  { border-color: #e8ddd0 !important; }
+.warm-white .border-slate-700\/80 { border-color: rgba(232,221,208,0.80) !important; }
+.warm-white .border-slate-700\/60 { border-color: rgba(232,221,208,0.60) !important; }
+.warm-white .border-slate-400  { border-color: #d4c4b0 !important; }
+.warm-white .border-slate-300  { border-color: #e8ddd0 !important; }
+.warm-white .border-slate-200  { border-color: #e8ddd0 !important; }
+
+/* ── Hover Background ───────────────────────────────────── */
+.warm-white .hover\:bg-slate-800:hover   { background-color: #f3ede4 !important; }
+.warm-white .hover\:bg-slate-800\/80:hover { background-color: rgba(243,237,228,0.80) !important; }
+.warm-white .hover\:bg-slate-800\/60:hover { background-color: rgba(243,237,228,0.60) !important; }
+.warm-white .hover\:bg-slate-800\/40:hover { background-color: rgba(243,237,228,0.40) !important; }
+.warm-white .hover\:bg-slate-800\/30:hover { background-color: rgba(243,237,228,0.30) !important; }
+.warm-white .hover\:bg-slate-700:hover   { background-color: #e8ddd0 !important; }
+.warm-white .hover\:bg-slate-700\/60:hover { background-color: rgba(232,221,208,0.60) !important; }
+.warm-white .hover\:bg-slate-100:hover   { background-color: #faf7f2 !important; }
+.warm-white .hover\:bg-slate-50:hover    { background-color: #fffdf8 !important; }
+
+/* ── Hover Text ─────────────────────────────────────────── */
+.warm-white .hover\:text-slate-100:hover { color: #2c1810 !important; }
+.warm-white .hover\:text-slate-200:hover { color: #3d2a1e !important; }
+.warm-white .hover\:text-slate-300:hover { color: #6b5344 !important; }
+.warm-white .hover\:text-slate-600:hover { color: #8b7262 !important; }
+
+/* ── Hover Border ───────────────────────────────────────── */
+.warm-white .hover\:border-slate-700:hover { border-color: #d4c4b0 !important; }
+.warm-white .hover\:border-slate-300:hover { border-color: #e8ddd0 !important; }
+
+/* ── Gradient Stops (from / via / to) ───────────────────── */
+.warm-white .from-slate-900     { --tw-gradient-from: #fffdf8 !important; }
+.warm-white .from-slate-900\/40 { --tw-gradient-from: rgba(255,253,248,0.40) !important; }
+.warm-white .via-slate-800      { --tw-gradient-via: #f3ede4 !important; }
+.warm-white .to-slate-900       { --tw-gradient-to: #fffdf8 !important; }
+.warm-white .to-slate-950       { --tw-gradient-to: #faf7f2 !important; }
+.warm-white .to-slate-800\/40   { --tw-gradient-to: rgba(243,237,228,0.40) !important; }
+.warm-white .to-slate-400       { --tw-gradient-to: #d4c4b0 !important; }
+
+/* ── Indigo → Amber Accent Remapping ────────────────────── */
+.warm-white .bg-indigo-400      { background-color: #d97706 !important; }
+.warm-white .bg-indigo-500      { background-color: #d97706 !important; }
+.warm-white .bg-indigo-500\/10  { background-color: rgba(217,119,6,0.10) !important; }
+.warm-white .bg-indigo-500\/15  { background-color: rgba(217,119,6,0.15) !important; }
+.warm-white .bg-indigo-500\/20  { background-color: rgba(217,119,6,0.20) !important; }
+.warm-white .bg-indigo-500\/30  { background-color: rgba(217,119,6,0.30) !important; }
+.warm-white .bg-indigo-600      { background-color: #b45309 !important; }
+.warm-white .bg-indigo-600\/15  { background-color: rgba(180,83,9,0.15) !important; }
+.warm-white .bg-indigo-600\/20  { background-color: rgba(180,83,9,0.20) !important; }
+.warm-white .bg-indigo-600\/30  { background-color: rgba(180,83,9,0.30) !important; }
+.warm-white .text-indigo-100    { color: #92400e !important; }
+.warm-white .text-indigo-200    { color: #92400e !important; }
+.warm-white .text-indigo-300    { color: #b45309 !important; }
+.warm-white .text-indigo-400    { color: #b45309 !important; }
+.warm-white .text-indigo-600    { color: #92400e !important; }
+.warm-white .border-indigo-400\/30 { border-color: rgba(217,119,6,0.30) !important; }
+.warm-white .border-indigo-400\/40 { border-color: rgba(217,119,6,0.40) !important; }
+.warm-white .border-indigo-500\/20 { border-color: rgba(217,119,6,0.20) !important; }
+.warm-white .border-indigo-500\/30 { border-color: rgba(217,119,6,0.30) !important; }
+.warm-white .border-indigo-500\/40 { border-color: rgba(217,119,6,0.40) !important; }
+.warm-white .border-indigo-500\/50 { border-color: rgba(217,119,6,0.50) !important; }
+.warm-white .border-indigo-600     { border-color: #b45309 !important; }
+
+/* Indigo gradient stops → Amber */
+.warm-white .from-indigo-500       { --tw-gradient-from: #d97706 !important; }
+.warm-white .from-indigo-600       { --tw-gradient-from: #b45309 !important; }
+.warm-white .from-indigo-600\/10   { --tw-gradient-from: rgba(180,83,9,0.10) !important; }
+.warm-white .from-indigo-600\/15   { --tw-gradient-from: rgba(180,83,9,0.15) !important; }
+.warm-white .from-indigo-600\/20   { --tw-gradient-from: rgba(180,83,9,0.20) !important; }
+.warm-white .to-indigo-500         { --tw-gradient-to: #d97706 !important; }
+.warm-white .to-indigo-500\/20     { --tw-gradient-to: rgba(217,119,6,0.20) !important; }
+.warm-white .to-indigo-950\/80     { --tw-gradient-to: rgba(120,53,0,0.80) !important; }
+.warm-white .via-indigo-950\/40    { --tw-gradient-via: rgba(120,53,0,0.40) !important; }
+.warm-white .via-indigo-950\/60    { --tw-gradient-via: rgba(120,53,0,0.60) !important; }
+
+/* Indigo shadows → Amber */
+.warm-white .shadow-indigo-500\/5  { --tw-shadow-color: rgba(217,119,6,0.05) !important; }
+.warm-white .shadow-indigo-500\/10 { --tw-shadow-color: rgba(217,119,6,0.10) !important; }
+.warm-white .shadow-indigo-500\/20 { --tw-shadow-color: rgba(217,119,6,0.20) !important; }
+.warm-white .shadow-indigo-500\/25 { --tw-shadow-color: rgba(217,119,6,0.25) !important; }
+.warm-white .shadow-indigo-500\/40 { --tw-shadow-color: rgba(217,119,6,0.40) !important; }
+.warm-white .shadow-indigo-500\/60 { --tw-shadow-color: rgba(217,119,6,0.60) !important; }
+.warm-white .shadow-indigo-600\/20 { --tw-shadow-color: rgba(180,83,9,0.20) !important; }
+
+/* ── Violet → Amber (loading spinner, etc.) ─────────────── */
+.warm-white .border-violet-500     { border-color: #d97706 !important; }
+.warm-white .border-violet-500\/20 { border-color: rgba(217,119,6,0.20) !important; }
+.warm-white .bg-violet-500\/10     { background-color: rgba(217,119,6,0.10) !important; }
+
+/* ── Purple → Amber ─────────────────────────────────────── */
+.warm-white .bg-purple-500\/20  { background-color: rgba(217,119,6,0.15) !important; }
+.warm-white .text-purple-300    { color: #b45309 !important; }
+
+/* ── Emerald (keep green but adjust for warm background) ── */
+.warm-white .text-emerald-300  { color: #15803d !important; }
+.warm-white .text-emerald-400  { color: #16a34a !important; }
+.warm-white .bg-emerald-500\/10 { background-color: rgba(22,163,74,0.08) !important; }
+.warm-white .bg-emerald-500\/20 { background-color: rgba(22,163,74,0.12) !important; }
+.warm-white .border-emerald-500\/30 { border-color: rgba(22,163,74,0.25) !important; }
+
+/* ── Red (keep red but adjust for warm background) ──────── */
+.warm-white .text-red-100   { color: #991b1b !important; }
+.warm-white .text-red-50    { color: #7f1d1d !important; }
+.warm-white .text-red-100\/90 { color: rgba(153,27,27,0.90) !important; }
+
+/* ── Amber text adjustments for warm bg ─────────────────── */
+.warm-white [class~="text-amber-200"] { color: #92400e !important; }
+.warm-white [class~="text-amber-300"] { color: #92400e !important; }
+.warm-white [class~="text-amber-400"] { color: #92400e !important; }
+
+/* Keep amber text bright inside the dark sidebar */
+.warm-white aside [class~="text-amber-200"] { color: #fde68a !important; }
+.warm-white aside [class~="text-amber-300"] { color: #fcd34d !important; }
+.warm-white aside [class~="text-amber-400"] { color: #fbbf24 !important; }
+.warm-white aside .text-amber-200\/60 { color: rgba(253, 230, 138, 0.6) !important; }
+
+/* ── Scrollbar for warm theme ───────────────────────────── */
+.warm-white ::-webkit-scrollbar-thumb {
+  background: #d4c4b0;
+}
+.warm-white ::-webkit-scrollbar-thumb:hover {
+  background: #a08b7a;
+}
+
+/* ── Blur overlay fix ───────────────────────────────────── */
+.warm-white .bg-indigo-500\/10.blur-3xl {
+  background-color: rgba(217,119,6,0.06) !important;
 }
 
 /* ── Screen / Print Visibility Helpers ──────────────────── */

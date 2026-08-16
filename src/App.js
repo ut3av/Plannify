@@ -364,10 +364,28 @@ export default function App() {
   const [rescheduleNote, setRescheduleNote] = useState("");
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);
 
-  // Load from Supabase on mount
+  // Theme state: 'dark' | 'warm-white'
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem('planify-theme') || 'dark'; } catch { return 'dark'; }
+  });
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'warm-white' : 'dark';
+      try { localStorage.setItem('planify-theme', next); } catch {}
+      return next;
+    });
+  }, []);
+
+  // Apply theme class to document root
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.add("dark");
+    root.classList.remove('dark', 'warm-white');
+    root.classList.add(theme);
+  }, [theme]);
+
+  // Load from Supabase on mount
+  useEffect(() => {
 
     const loadCloudState = async () => {
       setLoading(true);
@@ -953,6 +971,8 @@ export default function App() {
       onLoadDemo={generateDemoTimetable}
       user={user}
       onLogout={handleLogout}
+      theme={theme}
+      onToggleTheme={toggleTheme}
     >
       {/* Global Alerts */}
       <ErrorAlert error={error} />
