@@ -1,7 +1,7 @@
 <div align="center">
   <img src="public/readme_assets/hero.png" width="850" alt="Plannify.exe Hero Banner" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
   
-  # 🎓 Plannify.exe | Academic Operations & Faculty OS
+  # 🎓 Plannify.exe | Academic Operations & Faculty OS.
   
   **Next-generation enterprise-grade academic operations platform combining mathematical timetable scheduling with complete Faculty Management.**  
   *Designed for universities, engineering colleges, and institutional ERP portals.*
