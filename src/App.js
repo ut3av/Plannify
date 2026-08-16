@@ -1,28 +1,33 @@
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
-import SubjectsSection from "./components/SubjectsSection";
-import RoomsSection from "./components/RoomsSection";
-import TimeSlotsSection from "./components/TimeSlotsSection";
-import ReschedulePanel from "./components/ReschedulePanel";
-import TimetableGrid from "./components/TimetableGrid";
-import IntegrationsSection from "./components/IntegrationsSection";
-import HistorySection from "./components/HistorySection";
-import AIChatBot from "./components/AIChatBot";
-import LoginPage from "./components/LoginPage";
-import LogsSection from "./components/LogsSection";
 import { saveAs } from "file-saver";
 import { supabase } from "./supabaseClient";
 import { syncRelationalData } from "./services/supabaseService";
-import TeacherDashboard from "./components/TeacherDashboard";
-import FacultyDirectory from "./components/faculty/FacultyDirectory";
-import FacultyProfile from "./components/faculty/FacultyProfile";
-import AttendanceDashboard from "./components/faculty/AttendanceDashboard";
-import FacultyDashboardStats from "./components/faculty/FacultyDashboardStats";
-import FacultyAnalyticsModule from "./components/faculty/FacultyAnalyticsModule";
 import AppShell from "./components/shell/AppShell";
-import InstitutionalDashboard from "./components/dashboard/InstitutionalDashboard";
-import SectionsManagement from "./components/sections/SectionsManagement";
-import ReportsCenter from "./components/reports/ReportsCenter";
+
+// Dynamic Section / View Imports (React.lazy)
+const LoginPage = lazy(() => import("./components/LoginPage"));
+const TeacherDashboard = lazy(() => import("./components/TeacherDashboard"));
+const InstitutionalDashboard = lazy(() => import("./components/dashboard/InstitutionalDashboard"));
+const TimetableGrid = lazy(() => import("./components/TimetableGrid"));
+const FacultyDashboardStats = lazy(() => import("./components/faculty/FacultyDashboardStats"));
+const FacultyDirectory = lazy(() => import("./components/faculty/FacultyDirectory"));
+const FacultyProfile = lazy(() => import("./components/faculty/FacultyProfile"));
+const AttendanceDashboard = lazy(() => import("./components/faculty/AttendanceDashboard"));
+const FacultyAnalyticsModule = lazy(() => import("./components/faculty/FacultyAnalyticsModule"));
+const LeaveManagement = lazy(() => import("./components/faculty/LeaveManagement"));
+const SubstitutionPanel = lazy(() => import("./components/faculty/SubstitutionPanel"));
+const SubjectsSection = lazy(() => import("./components/SubjectsSection"));
+const SectionsManagement = lazy(() => import("./components/sections/SectionsManagement"));
+const RoomsSection = lazy(() => import("./components/RoomsSection"));
+const TimeSlotsSection = lazy(() => import("./components/TimeSlotsSection"));
+const ReschedulePanel = lazy(() => import("./components/ReschedulePanel"));
+const HistorySection = lazy(() => import("./components/HistorySection"));
+const IntegrationsSection = lazy(() => import("./components/IntegrationsSection"));
+const LogsSection = lazy(() => import("./components/LogsSection"));
+const ReportsCenter = lazy(() => import("./components/reports/ReportsCenter"));
+const AIChatBot = lazy(() => import("./components/AIChatBot"));
+
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
@@ -91,6 +96,33 @@ function getErrorMessage(error) {
     suggestions: ["Make sure the FastAPI backend is running on port 8080."],
     facts: [],
   };
+}
+
+function ModuleLoadingFallback() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[380px] w-full p-12 animate-fade-in">
+      <div className="relative mb-4">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center animate-pulse">
+          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+      <p className="text-xs font-semibold text-slate-400 tracking-wide">Loading module...</p>
+    </div>
+  );
+}
+
+function PageLoadingFallback() {
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-100">
+      <div className="relative mb-5">
+        <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 flex items-center justify-center shadow-2xl shadow-indigo-500/20">
+          <div className="w-8 h-8 border-3 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+      <h2 className="text-sm font-bold text-slate-200 tracking-wider uppercase">Loading Planify</h2>
+      <p className="text-xs text-slate-500 mt-1">Initializing academic workspace...</p>
+    </div>
+  );
 }
 
 function ErrorAlert({ error }) {
@@ -890,11 +922,19 @@ export default function App() {
   };
 
   if (!user) {
-    return <LoginPage />;
+    return (
+      <Suspense fallback={<PageLoadingFallback />}>
+        <LoginPage />
+      </Suspense>
+    );
   }
 
   if (user.role === "teacher") {
-    return <TeacherDashboard user={user} result={result} onLogout={handleLogout} />;
+    return (
+      <Suspense fallback={<PageLoadingFallback />}>
+        <TeacherDashboard user={user} result={result} onLogout={handleLogout} />
+      </Suspense>
+    );
   }
 
   return (
@@ -927,192 +967,206 @@ export default function App() {
       )}
 
       {/* ── Active Module Rendering ── */}
-      {/* 1. DASHBOARD */}
-      {activeTab === "dashboard" && (
-        <InstitutionalDashboard
-          teachersCount={teachers.length}
-          sectionsCount={sections.length}
-          subjectsCount={subjects.length}
-          roomsCount={rooms.length}
-          hasResult={!!result}
-          onNavigate={(page) => setActiveTab(page)}
-        />
-      )}
+      <Suspense fallback={<ModuleLoadingFallback />}>
+        {/* 1. DASHBOARD */}
+        {activeTab === "dashboard" && (
+          <InstitutionalDashboard
+            teachersCount={teachers.length}
+            sectionsCount={sections.length}
+            subjectsCount={subjects.length}
+            roomsCount={rooms.length}
+            hasResult={!!result}
+            onNavigate={(page) => setActiveTab(page)}
+          />
+        )}
 
-      {/* 2. TIMETABLE WORKSPACE */}
-      {activeTab === "timetable" && (
-        <div className="space-y-6">
-          {/* Solver Controls Header Bar */}
-          <div className="card p-5 bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-white">Academic Timetable Solver Workspace</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Generate, optimize, view, and export constraint-validated timetable grids.</p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                className="btn-gradient text-xs py-2.5 px-5 font-bold flex items-center gap-2"
-                disabled={loading || teachers.length === 0 || subjects.length === 0}
-                onClick={generateTimetable}
-              >
-                {loading ? "Solving..." : "✨ Generate AI Timetable"}
-              </button>
-            </div>
-          </div>
-
-          {result && (
-            <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-semibold text-slate-300">Status: {result.solver_status}</span>
+        {/* 2. TIMETABLE WORKSPACE */}
+        {activeTab === "timetable" && (
+          <div className="space-y-6">
+            {/* Solver Controls Header Bar */}
+            <div className="card p-5 bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-white">Academic Timetable Solver Workspace</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Generate, optimize, view, and export constraint-validated timetable grids.</p>
               </div>
-              <div className="text-violet-300">Score: <strong className="text-white">{result.objective_score}</strong></div>
-              <div className="text-emerald-300">Scheduled Classes: <strong className="text-white">{result.assignments?.length || 0}</strong></div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  className="btn-gradient text-xs py-2.5 px-5 font-bold flex items-center gap-2"
+                  disabled={loading || teachers.length === 0 || subjects.length === 0}
+                  onClick={generateTimetable}
+                >
+                  {loading ? "Solving..." : "✨ Generate AI Timetable"}
+                </button>
+              </div>
             </div>
-          )}
 
-          <TimetableGrid result={result} subjects={subjects} loading={loading} onExport={exportToExcel} onSaveDb={saveToDatabase} />
-        </div>
-      )}
+            {result && (
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center gap-4 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-semibold text-slate-300">Status: {result.solver_status}</span>
+                </div>
+                <div className="text-violet-300">Score: <strong className="text-white">{result.objective_score}</strong></div>
+                <div className="text-emerald-300">Scheduled Classes: <strong className="text-white">{result.assignments?.length || 0}</strong></div>
+              </div>
+            )}
 
-      {/* 3. FACULTY SYSTEM */}
-      {activeTab === "faculty" && (
-        <div>
-          <FacultyDashboardStats />
-          {selectedFaculty ? (
-            <FacultyProfile faculty={selectedFaculty} onBack={() => setSelectedFaculty(null)} />
-          ) : (
-            <div className="space-y-8">
-              <FacultyDirectory teachers={teachers} subjects={subjects} onSelectFaculty={(f) => setSelectedFaculty(f)} />
-              <AttendanceDashboard />
-            </div>
-          )}
-        </div>
-      )}
+            <TimetableGrid result={result} subjects={subjects} loading={loading} onExport={exportToExcel} onSaveDb={saveToDatabase} />
+          </div>
+        )}
 
-      {/* 4. ATTENDANCE WORKSPACE */}
-      {activeTab === "attendance" && (
-        <div className="space-y-6">
-          <FacultyDashboardStats />
-          <AttendanceDashboard />
-        </div>
-      )}
+        {/* 3. FACULTY SYSTEM */}
+        {activeTab === "faculty" && (
+          <div>
+            <FacultyDashboardStats />
+            {selectedFaculty ? (
+              <FacultyProfile faculty={selectedFaculty} onBack={() => setSelectedFaculty(null)} />
+            ) : (
+              <div className="space-y-8">
+                <FacultyDirectory teachers={teachers} subjects={subjects} onSelectFaculty={(f) => setSelectedFaculty(f)} />
+                <AttendanceDashboard />
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* 5. OPERATIONAL ANALYTICS 360° */}
-      {activeTab === "analytics" && (
-        <FacultyAnalyticsModule initialFacultyId={selectedFaculty?.id} />
-      )}
+        {/* 4. ATTENDANCE WORKSPACE */}
+        {activeTab === "attendance" && (
+          <div className="space-y-6">
+            <FacultyDashboardStats />
+            <AttendanceDashboard />
+          </div>
+        )}
 
-      {/* 9. ACADEMIC SETUP: SUBJECTS */}
-      {activeTab === "subjects" && (
-        <SubjectsSection subjects={subjects} teachers={teachers} sections={sections} rooms={rooms} onChange={setSubjects} />
-      )}
+        {/* 5. OPERATIONAL ANALYTICS 360° */}
+        {activeTab === "analytics" && (
+          <FacultyAnalyticsModule initialFacultyId={selectedFaculty?.id} />
+        )}
 
-      {/* 10. ACADEMIC SETUP: SECTIONS */}
-      {activeTab === "sections" && (
-        <SectionsManagement
-          sections={sections}
-          rooms={rooms}
-          subjects={subjects}
-          teachers={teachers}
-          onChange={setSections}
-          onNavigate={(p) => setActiveTab(p)}
-        />
-      )}
+        {/* 6. LEAVE MANAGEMENT */}
+        {activeTab === "leave" && (
+          <LeaveManagement isAdmin={true} />
+        )}
 
-      {/* 11. ACADEMIC SETUP: ROOMS */}
-      {activeTab === "rooms" && (
-        <RoomsSection rooms={rooms} onChange={setRooms} result={result} timeSlots={timeSlots} />
-      )}
+        {/* 7. SUBSTITUTION CENTER */}
+        {activeTab === "substitutions" && (
+          <SubstitutionPanel />
+        )}
 
-      {/* 12. ACADEMIC SETUP: SLOTS */}
-      {activeTab === "slots" && (
-        <TimeSlotsSection timeSlots={timeSlots} onChange={setTimeSlots} />
-      )}
+        {/* 8. ACADEMIC SETUP: SUBJECTS */}
+        {activeTab === "subjects" && (
+          <SubjectsSection subjects={subjects} teachers={teachers} sections={sections} rooms={rooms} onChange={setSubjects} />
+        )}
 
-      {/* 13. OPERATIONS: RESCHEDULE */}
-      {activeTab === "reschedule" && (
-        <ReschedulePanel teachers={teachers} days={result?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]} slots={result?.time_slots || timeSlots} hasResult={!!result} loading={loading} onReschedule={rescheduleTimetable} onAssignProxy={assignProxy} />
-      )}
+        {/* 9. ACADEMIC SETUP: SECTIONS */}
+        {activeTab === "sections" && (
+          <SectionsManagement
+            sections={sections}
+            rooms={rooms}
+            subjects={subjects}
+            teachers={teachers}
+            onChange={setSections}
+            onNavigate={(p) => setActiveTab(p)}
+          />
+        )}
 
-      {/* 14. OPERATIONS: HISTORY */}
-      {activeTab === "history" && (
-        <HistorySection onSelectTimetable={(data) => { setResult(data); setActiveTab("timetable"); setRescheduleNote("Loaded saved timetable from database."); }} />
-      )}
+        {/* 10. ACADEMIC SETUP: ROOMS */}
+        {activeTab === "rooms" && (
+          <RoomsSection rooms={rooms} onChange={setRooms} result={result} timeSlots={timeSlots} />
+        )}
 
-      {/* 15. OPERATIONS: INTEGRATIONS */}
-      {activeTab === "integrations" && (
-        <IntegrationsSection />
-      )}
+        {/* 11. ACADEMIC SETUP: SLOTS */}
+        {activeTab === "slots" && (
+          <TimeSlotsSection timeSlots={timeSlots} onChange={setTimeSlots} />
+        )}
 
-      {/* 16. OPERATIONS: LOGS */}
-      {activeTab === "logs" && (
-        <LogsSection />
-      )}
+        {/* 12. OPERATIONS: RESCHEDULE */}
+        {activeTab === "reschedule" && (
+          <ReschedulePanel teachers={teachers} days={result?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]} slots={result?.time_slots || timeSlots} hasResult={!!result} loading={loading} onReschedule={rescheduleTimetable} onAssignProxy={assignProxy} />
+        )}
 
-      {/* 17. REPORTS CENTER */}
-      {activeTab === "reports" && (
-        <ReportsCenter />
-      )}
+        {/* 13. OPERATIONS: HISTORY */}
+        {activeTab === "history" && (
+          <HistorySection onSelectTimetable={(data) => { setResult(data); setActiveTab("timetable"); setRescheduleNote("Loaded saved timetable from database."); }} />
+        )}
+
+        {/* 14. OPERATIONS: INTEGRATIONS */}
+        {activeTab === "integrations" && (
+          <IntegrationsSection />
+        )}
+
+        {/* 15. OPERATIONS: LOGS */}
+        {activeTab === "logs" && (
+          <LogsSection />
+        )}
+
+        {/* 16. REPORTS CENTER */}
+        {activeTab === "reports" && (
+          <ReportsCenter />
+        )}
+      </Suspense>
 
       {/* AIChatBot Floating Assistant */}
-      <AIChatBot 
-        result={result} 
-        onLoadDemo={generateDemoTimetable}
-        onExtractedData={(data) => {
-          const teacherMap = new Map();
+      <Suspense fallback={null}>
+        <AIChatBot 
+          result={result} 
+          onLoadDemo={generateDemoTimetable}
+          onExtractedData={(data) => {
+            const teacherMap = new Map();
 
-          // 1. Process explicit teacher list
-          if (data.teachers && data.teachers.length > 0) {
-            data.teachers.forEach(t => {
-              if (t.name && t.name.trim()) {
-                let parsedFP = parseInt(t.free_periods);
-                teacherMap.set(t.name.trim(), {
-                  name: t.name.trim(),
-                  free_periods: isNaN(parsedFP) ? 1 : Math.max(0, parsedFP)
-                });
-              }
-            });
-          }
+            // 1. Process explicit teacher list
+            if (data.teachers && data.teachers.length > 0) {
+              data.teachers.forEach(t => {
+                if (t.name && t.name.trim()) {
+                  let parsedFP = parseInt(t.free_periods);
+                  teacherMap.set(t.name.trim(), {
+                    name: t.name.trim(),
+                    free_periods: isNaN(parsedFP) ? 1 : Math.max(0, parsedFP)
+                  });
+                }
+              });
+            }
 
-          // 2. Process subjects to extract any assigned teacher names
-          if (data.subjects && data.subjects.length > 0) {
-            data.subjects.forEach(s => {
-              if (s.teacher && s.teacher.trim() && !teacherMap.has(s.teacher.trim())) {
-                teacherMap.set(s.teacher.trim(), {
-                  name: s.teacher.trim(),
-                  free_periods: 1
-                });
-              }
-            });
-            setSubjects(data.subjects);
-          }
+            // 2. Process subjects to extract any assigned teacher names
+            if (data.subjects && data.subjects.length > 0) {
+              data.subjects.forEach(s => {
+                if (s.teacher && s.teacher.trim() && !teacherMap.has(s.teacher.trim())) {
+                  teacherMap.set(s.teacher.trim(), {
+                    name: s.teacher.trim(),
+                    free_periods: 1
+                  });
+                }
+              });
+              setSubjects(data.subjects);
+            }
 
-          const cleanTeachers = Array.from(teacherMap.values());
-          if (cleanTeachers.length > 0) {
-            setTeachers(cleanTeachers);
-            // Auto-sync extracted teachers to backend Faculty Directory
-            cleanTeachers.forEach(async (t) => {
-              try {
-                await axios.post(`${API_BASE_URL}/faculty/`, {
-                  teacher_name: t.name,
-                  employee_id: `EMP-AI-${Math.floor(1000 + Math.random() * 9000)}`,
-                  designation: "Lecturer",
-                  employment_type: "full-time",
-                  status: "active"
-                });
-              } catch (err) {
-                // Ignore duplicate creation
-              }
-            });
-          }
+            const cleanTeachers = Array.from(teacherMap.values());
+            if (cleanTeachers.length > 0) {
+              setTeachers(cleanTeachers);
+              // Auto-sync extracted teachers to backend Faculty Directory
+              cleanTeachers.forEach(async (t) => {
+                try {
+                  await axios.post(`${API_BASE_URL}/faculty/`, {
+                    teacher_name: t.name,
+                    employee_id: `EMP-AI-${Math.floor(1000 + Math.random() * 9000)}`,
+                    designation: "Lecturer",
+                    employment_type: "full-time",
+                    status: "active"
+                  });
+                } catch (err) {
+                  // Ignore duplicate creation
+                }
+              });
+            }
 
-          if (data.sections && data.sections.length > 0) setSections(data.sections);
-          if (data.rooms && data.rooms.length > 0) setRooms(data.rooms);
-          if (data.timeSlots && data.timeSlots.length > 0) setTimeSlots(data.timeSlots);
-          setRescheduleNote("AI OCR successfully extracted timetable data and synced faculty with Faculty Directory!");
-        }}
-      />
+            if (data.sections && data.sections.length > 0) setSections(data.sections);
+            if (data.rooms && data.rooms.length > 0) setRooms(data.rooms);
+            if (data.timeSlots && data.timeSlots.length > 0) setTimeSlots(data.timeSlots);
+            setRescheduleNote("AI OCR successfully extracted timetable data and synced faculty with Faculty Directory!");
+          }}
+        />
+      </Suspense>
 
       {/* Global Loading Overlay */}
       {loading && activeTab !== "timetable" && (
