@@ -130,11 +130,24 @@ else:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
-        allow_origin_regex=r"https://.*\.vercel\.app",
+        allow_origin_regex=r"https://.*\.(vercel\.app|netlify\.app|onrender\.com)",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+@app.get("/")
+def root():
+    return {
+        "status": "healthy",
+        "service": "Planify Academic Operations Platform",
+        "version": "2.0.0",
+        "docs": "/docs"
+    }
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
