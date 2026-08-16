@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import AIChatBot from './AIChatBot';
 import LeaveManagement from './faculty/LeaveManagement';
 import AttendanceDashboard from './faculty/AttendanceDashboard';
+import BrandLogo from './common/BrandLogo';
 
 export default function TeacherDashboard({ user, result, onLogout }) {
   const [activeTab, setActiveTab] = useState("timetable"); // "timetable" | "attendance" | "analytics" | "leave"
@@ -46,17 +47,13 @@ export default function TeacherDashboard({ user, result, onLogout }) {
             </svg>
           </div>
           <div className="flex flex-col">
-            <h1 className="flex items-center gap-0.5 group">
+            <h1 className="flex items-center gap-2 group">
               <img 
                 src="/favicon.png" 
-                alt="Planify" 
+                alt="Plannify" 
                 className="h-7 md:h-8 object-contain" 
               />
-              <img 
-                src="/brand-logo-white.png" 
-                alt="Plannify.exe" 
-                className="h-7 md:h-8 object-contain drop-shadow ml-1" 
-              />
+              <BrandLogo size="md" />
             </h1>
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-400/80">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

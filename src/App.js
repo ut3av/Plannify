@@ -4,6 +4,7 @@ import { saveAs } from "file-saver";
 import { supabase } from "./supabaseClient";
 import { syncRelationalData } from "./services/supabaseService";
 import { API_BASE_URL } from "./apiConfig";
+import BrandLogo from "./components/common/BrandLogo";
 import AppShell from "./components/shell/AppShell";
 
 // Dynamic Section / View Imports (React.lazy)
@@ -121,8 +122,11 @@ function PageLoadingFallback() {
           <div className="w-8 h-8 border-3 border-indigo-400 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
-      <h2 className="text-sm font-bold text-slate-200 tracking-normal">Loading ρℓαɳɳเƒყ.exe</h2>
-      <p className="text-xs text-slate-500 mt-1">Initializing academic workspace...</p>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">INITIALIZING</span>
+        <BrandLogo size="md" />
+      </div>
+      <p className="text-xs text-slate-500 mt-1">Preparing academic workspace...</p>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { supabase } from "../supabaseClient";
-
 import { API_BASE_URL } from "../apiConfig";
+import BrandLogo from "./common/BrandLogo";
 
 export default function LoginPage() {
   const [portalRole, setPortalRole] = useState("teacher"); // "admin" | "teacher"
@@ -141,8 +141,8 @@ export default function LoginPage() {
         <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-950 border-r border-slate-800">
           <div>
             <div className="flex items-center gap-3 mb-8">
-              <img src="/favicon.png" alt="Planify" className="w-10 h-10 object-contain drop-shadow-md" />
-              <img src="/brand-logo-white.png" alt="Plannify.exe" className="h-8 object-contain drop-shadow-md" />
+              <img src="/favicon.png" alt="Plannify" className="w-10 h-10 object-contain drop-shadow-md" />
+              <BrandLogo size="lg" />
             </div>
 
             <h1 className="text-3xl font-black tracking-tight text-white mb-3 leading-snug">

@@ -4,8 +4,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 import { compressImage } from '../utils/imageOptimizer';
-
 import { API_BASE_URL } from '../apiConfig';
+import BrandLogo from './common/BrandLogo';
 
 export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -157,7 +157,7 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 p-3.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-500 text-white shadow-2xl shadow-indigo-500/40 hover:scale-105 hover:shadow-indigo-500/60 transition-all duration-300 border border-indigo-400/30"
-          title="Open ρℓαɳɳเƒყ AI Co-Pilot"
+          title="Open Plannify.exe AI Co-Pilot"
         >
           <div className="relative flex items-center justify-center w-7 h-7 rounded-full bg-white/20 backdrop-blur-md">
             <svg className="w-4 h-4 text-white animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -165,7 +165,8 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
             </svg>
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900" />
           </div>
-          <span className="text-xs font-black tracking-normal pr-1 hidden sm:inline">ρℓαɳɳเƒყ AI</span>
+          <BrandLogo size="xs" className="pr-1 hidden sm:inline-flex" />
+          <span className="text-[10px] font-black uppercase text-indigo-300 hidden sm:inline">AI</span>
         </button>
       )}
 
@@ -186,7 +187,8 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-black text-sm text-white tracking-normal">ρℓαɳɳเƒყ AI Co-Pilot</h3>
+                  <BrandLogo size="sm" />
+                  <span className="text-xs font-black text-white uppercase tracking-wider">AI Co-Pilot</span>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     Llama 3.3 70B

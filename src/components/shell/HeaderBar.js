@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import BrandLogo from '../common/BrandLogo';
 
 export default function HeaderBar({
   isSidebarOpen,
@@ -68,14 +69,10 @@ export default function HeaderBar({
         >
           <img
             src="/favicon.png"
-            alt="Planify Logo"
+            alt="Plannify Logo"
             className="w-8 h-8 object-contain drop-shadow-md"
           />
-          <img
-            src={isWarm ? "/brand-logo-dark.png" : "/brand-logo-white.png"}
-            alt="Plannify.exe"
-            className="h-6 md:h-7 object-contain drop-shadow hidden sm:inline-block"
-          />
+          <BrandLogo size="md" isWarm={isWarm} className="hidden sm:inline-flex" />
         </button>
 
         {/* Dynamic Breadcrumbs */}

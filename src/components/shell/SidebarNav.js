@@ -1,4 +1,5 @@
 import React from 'react';
+import BrandLogo from '../common/BrandLogo';
 
 const NAV_GROUPS = [
   {
@@ -179,12 +180,8 @@ export default function SidebarNav({
             ? 'border-[#3d2a1e] text-amber-200/40'
             : 'border-slate-800 text-slate-500'
         }`}>
-          <img
-            src={isWarm ? "/brand-logo-dark.png" : "/brand-logo-white.png"}
-            alt="Plannify.exe"
-            className="h-4 object-contain opacity-90"
-          />
-          <span className={`font-mono text-[10px] ${isWarm ? 'text-amber-400' : 'text-emerald-400'}`}>v2.0</span>
+          <BrandLogo size="xs" isWarm={isWarm} />
+          <span className={`font-mono text-[10px] font-bold ${isWarm ? 'text-amber-400' : 'text-emerald-400'}`}>v2.0</span>
         </div>
       )}
     </aside>
