@@ -27,7 +27,7 @@ const NAV_GROUPS = [
     items: [
       { id: "reschedule", label: "Reschedule Engine", icon: "refresh-cw", badge: null },
       { id: "history", label: "History & Audit Logs", icon: "history", badge: null },
-      { id: "integrations", label: "Automation & n8n", icon: "zap", badge: null },
+      { id: "integrations", label: "Automation & Make", icon: "zap", badge: null },
       { id: "logs", label: "System Logs", icon: "terminal", badge: null },
     ],
   }, {

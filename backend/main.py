@@ -163,6 +163,7 @@ class TeacherInput(BaseModel):
     free_periods: int = 1
     email: Optional[str] = None
     phone: Optional[str] = None
+    is_substitute: bool = False
 
 
 class SectionInput(BaseModel):
@@ -308,10 +309,10 @@ def create_teacher_excel(teacher_name: str, slots: List[str], assignments: List[
     return base64.b64encode(output.getvalue()).decode('utf-8')
 
 
-@app.post("/n8n/email-all")
+@app.post("/make/email-all")
 async def trigger_bulk_emails():
     """
-    Triggers the n8n workflow with full teacher data, including individual 
+    Triggers the Make workflow with full teacher data, including individual 
     timetable Excel files as base64 attachments.
     """
     if not LAST_TIMETABLE or not LAST_REQUEST:
@@ -337,10 +338,10 @@ async def trigger_bulk_emails():
             "phone": teacher.phone or "",
             "filename": f"Timetable_{teacher.name.replace(' ', '_')}.xlsx",
             "excel_base64": excel_base64,
-            "is_proxy_alert": False # Can be expanded in future
+            "is_proxy_alert": teacher.is_substitute # Can be expanded in future
         })
 
-    result = notify_n8n("bulk_email_trigger", {
+    result = notify_make("bulk_email_trigger", {
         "action": "distribute_timetables",
         "priority": "high",
         "teacher_count": len(teachers_data),
@@ -354,7 +355,7 @@ async def trigger_bulk_emails():
     return {
         "status": "triggered",
         "message": f"Bulk email workflow initiated for {len(teachers_data)} teachers.",
-        "n8n_response": result
+        "make_response": result
     }
 
 
@@ -362,15 +363,15 @@ LAST_TIMETABLE: Optional[dict] = None
 
 
 
-def notify_n8n(event: str, data: dict) -> dict:
-    # Handle common 'n9n' typo in env or user request
-    webhook_url = (os.getenv("N8N_WEBHOOK_URL") or os.getenv("N9N_WEBHOOK_URL") or "").strip()
+def notify_make(event: str, data: dict) -> dict:
+    # Handle common typo in env or user request
+    webhook_url = (os.getenv("MAKE_WEBHOOK_URL") or os.getenv("N8N_WEBHOOK_URL") or "").strip()
     
     if not webhook_url:
         return {
             "enabled": False,
             "delivered": False,
-            "message": "Set N8N_WEBHOOK_URL in your .env to enable n8n automation workflows.",
+            "message": "Set MAKE_WEBHOOK_URL in your .env to enable Make automation workflows.",
         }
 
     payload = {
@@ -381,7 +382,7 @@ def notify_n8n(event: str, data: dict) -> dict:
     }
 
     try:
-        # Increased timeout to 15s as n8n workflows can be slow to respond
+        # Increased timeout to 15s as Make workflows can be slow to respond
         response = requests.post(webhook_url, json=payload, timeout=15)
         response.raise_for_status()
         return {
@@ -393,7 +394,7 @@ def notify_n8n(event: str, data: dict) -> dict:
         return {
             "enabled": True,
             "delivered": False,
-            "message": f"n8n delivery failed: {str(exc)}",
+            "message": f"Make delivery failed: {str(exc)}",
             "webhook_url": webhook_url
         }
 
@@ -1158,15 +1159,15 @@ def health_check():
     return {"status": "ok", "service": "AI-Powered Timetable Scheduler"}
 
 
-@app.get("/n8n/status")
-def n8n_status():
-    webhook_url = (os.getenv("N8N_WEBHOOK_URL") or os.getenv("N9N_WEBHOOK_URL") or "").strip()
+@app.get("/make/status")
+def make_status():
+    webhook_url = (os.getenv("MAKE_WEBHOOK_URL") or os.getenv("N8N_WEBHOOK_URL") or "").strip()
     webhook_host = urlparse(webhook_url).netloc if webhook_url else None
     return {
         "enabled": bool(webhook_url),
         "webhook_configured": bool(webhook_url),
         "webhook_host": webhook_host,
-        "provider": "n8n.cloud" if "n8n.cloud" in (webhook_host or "") else "Self-Hosted",
+        "provider": "Make.com" if "make.com" in (webhook_host or "") else "Self-Hosted",
         "events": [
             "timetable.generated",
             "timetable.rescheduled",
@@ -1177,12 +1178,12 @@ def n8n_status():
     }
 
 
-@app.post("/n8n/test")
-def test_n8n(request: N8nTestRequest):
-    delivery = notify_n8n(
+@app.post("/make/test")
+def test_make(request: N8nTestRequest):
+    delivery = notify_make(
         request.event,
         {
-            "message": "AI TimetableX n8n test event",
+            "message": "AI TimetableX Make test event",
             "payload": request.payload,
         },
     )
@@ -1197,7 +1198,7 @@ def generate(request: GenerateRequest):
     LAST_REQUEST = validate_request(request)
     UNAVAILABILITY = defaultdict(list)
     LAST_TIMETABLE = solve_timetable(LAST_REQUEST)
-    LAST_TIMETABLE["n8n_delivery"] = notify_n8n(
+    LAST_TIMETABLE["make_delivery"] = notify_make(
         "timetable.generated",
         {
             "request": LAST_REQUEST.model_dump(),

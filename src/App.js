@@ -340,10 +340,10 @@ const getBreadcrumbsForPage = (page) => {
     case "slots": return ["Academic Setup", "Time Slots"];
     case "reschedule": return ["Operations", "Reschedule Engine"];
     case "history": return ["Operations", "History & Audit Logs"];
-    case "integrations": return ["Operations", "Automation & n8n"];
+    case "integrations": return ["Operations", "Automation & Make"];
     case "logs": return ["Operations", "System Logs"];
     case "reports": return ["Reports", "Reports Center"];
-    default: return ["Main"];
+    default: return ["Overview"];
   }
 };
 
@@ -437,9 +437,11 @@ export default function App() {
         if (legacyError) throw legacyError;
       }
 
-      // 2. Relational Sync (Structured Tables for n8n/Analytics)
-      await syncRelationalData({ ...stateToSave, result });
-
+      // 2. Relational Sync (Structured Tables for Make/Analytics)
+      if (activeTimetable) {
+        await syncRelationalData({ ...stateToSave, result });
+      }
+      
       if (!isSilent) {
         setRescheduleNote("Saved successfully to Supabase Cloud & Relational Tables!");
       }

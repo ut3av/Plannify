@@ -1,12 +1,12 @@
 import { supabase } from "../supabaseClient";
 
 /**
- * High-level service to sync the Timetable state to relational tables
- * for n8n automation and advanced analytics.
+ * High-level service that breaks the big JSON blob down into structured, relational tables
+ * for Make automation and advanced analytics.
  */
 export const syncRelationalData = async ({ teachers, sections, subjects, rooms, timeSlots, result }) => {
   try {
-    // 1. Sync Teachers (n8n needs these for WhatsApp/Email)
+    // 1. Sync Teachers (Make needs these for WhatsApp/Email)
     const { data: teacherData, error: tError } = await supabase
       .from('teachers')
       .upsert(

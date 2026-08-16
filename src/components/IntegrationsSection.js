@@ -13,7 +13,7 @@ export default function IntegrationsSection() {
     setLoading(true);
     setStatus(null);
     try {
-      const response = await axios.post(`${API_BASE_URL}/n8n/test`, {
+      const response = await axios.post(`${API_BASE_URL}/make/test`, {
         event: "manual_test",
         payload: { message: "Test from Planify.exe Premium UI" }
       });
@@ -29,8 +29,8 @@ export default function IntegrationsSection() {
     setDistributing(true);
     setDistributeStatus(null);
     try {
-      const response = await axios.post(`${API_BASE_URL}/n8n/email-all`);
-      setDistributeStatus({ success: true, message: response.data?.message || "Bulk distribution triggered! n8n is now mailing all teachers." });
+      const response = await axios.post(`${API_BASE_URL}/make/email-all`);
+      setDistributeStatus({ success: true, message: response.data?.message || "Bulk distribution triggered! Make is now mailing all teachers." });
     } catch (err) {
       setDistributeStatus({ success: false, error: err.response?.data?.detail || "Could not reach the distribution engine." });
     } finally {
@@ -53,7 +53,7 @@ export default function IntegrationsSection() {
           </div>
           <div className="text-center md:text-left flex-1">
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
-              <h2 className="text-3xl font-black tracking-tight text-white">n8n Automation</h2>
+              <h2 className="text-3xl font-black tracking-tight text-white">Make Automation</h2>
               <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Active Engine</span>
             </div>
             <p className="text-slate-400 max-w-2xl text-sm font-medium leading-relaxed">
@@ -106,7 +106,7 @@ export default function IntegrationsSection() {
               <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/5">
                 <svg className="w-8 h-8 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M13 2L3 14h9l-1 8 10-10h-9l1-8z" /></svg>
               </div>
-              <p className="text-slate-500 text-sm font-medium italic">No test performed yet. Click 'Ping n8n Instance' to verify your connection.</p>
+              <p className="text-slate-500 text-sm font-medium italic">No test performed yet. Click 'Ping Instance' to verify your connection.</p>
             </div>
           ) : (
             <div className={`p-6 rounded-2xl border transition-all animate-slide-up ${status.success ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20"}`}>
@@ -153,7 +153,7 @@ export default function IntegrationsSection() {
           <div className="glass-card p-6 rounded-[1.5rem] border border-violet-500/20 bg-violet-500/5">
             <h3 className="text-sm font-bold text-violet-300 uppercase tracking-widest mb-4">Pro Tip</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Use the <span className="text-violet-200">n8n_integration_guide.md</span> in your root folder to learn how to build individual teacher schedules from the raw system payload.
+              Use Make's iterator to learn how to build individual teacher schedules from the raw system payload.
             </p>
           </div>
         </div>

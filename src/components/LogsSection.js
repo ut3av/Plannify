@@ -61,7 +61,7 @@ export default function LogsSection() {
             </div>
             Automation Mission Control
           </h2>
-          <p className="text-slate-400 text-sm mt-1 ml-13">Monitor real-time n8n workflow executions and delivery reports.</p>
+          <p className="text-slate-400 text-sm mt-1 ml-13">Monitor real-time Make workflow executions and delivery reports.</p>
         </div>
         <button 
           onClick={fetchLogs}
