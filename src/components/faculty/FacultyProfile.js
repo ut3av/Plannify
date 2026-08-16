@@ -68,6 +68,18 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
     }
   };
 
+  const handleActivate = async () => {
+    try {
+      if (faculty?.id && !faculty.id.toString().startsWith('ocr-')) {
+        await axios.put(`${API}/faculty/${faculty.id}`, { status: "active" });
+      }
+      setDetail(prev => ({ ...prev, status: "active" }));
+      if (onUpdate) onUpdate();
+    } catch (e) {
+      alert("Failed to reinstate faculty member.");
+    }
+  };
+
   const handleDelete = async () => {
     const facultyName = detail?.teacher_name || faculty?.teacher_name || "this faculty member";
     if (!window.confirm(`Are you sure you want to permanently remove ${facultyName} from the faculty directory?`)) {
@@ -139,6 +151,14 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
             </div>
           </div>
           <div className="flex items-center gap-2.5 shrink-0">
+            {detail.status !== "active" && (
+              <button
+                onClick={handleActivate}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition-all flex items-center gap-1.5 shadow"
+              >
+                ⚡ Reinstate Active
+              </button>
+            )}
             <button onClick={() => setEditing(!editing)} className={editing ? "btn-secondary text-xs px-4 py-2" : "btn-primary text-xs px-4 py-2 font-bold"}>
               {editing ? "Cancel" : "✏️ Edit Profile"}
             </button>

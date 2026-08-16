@@ -64,6 +64,25 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
     }
   };
 
+  const handleActivate = async (e, f) => {
+    e && e.stopPropagation();
+    const facultyName = f.teacher_name || f.name;
+    try {
+      if (f.id && !f.id.toString().startsWith("ocr-")) {
+        await axios.put(`${API}/faculty/${f.id}`, { status: "active" }).catch(() => null);
+      }
+      setDeletedKeys(prev => {
+        const next = new Set(prev);
+        next.delete(f.id);
+        next.delete(facultyName?.trim().toLowerCase());
+        return next;
+      });
+      setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === facultyName) ? { ...item, status: "active" } : item));
+    } catch (err) {
+      console.error("Failed to activate faculty:", err);
+    }
+  };
+
   // Merge backend faculty with active state teachers, AI OCR teachers, and subject assignments
   const allFaculty = useMemo(() => {
     const list = faculty
@@ -315,6 +334,15 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
                     <p className="font-bold text-slate-900 dark:text-white truncate text-sm">{f.teacher_name}</p>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className={`badge ${statusColor(f.status)}`}>{f.status}</span>
+                      {f.status !== "active" && (
+                        <button
+                          title="Reinstate Faculty Member to Active"
+                          onClick={(e) => handleActivate(e, f)}
+                          className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition-all flex items-center gap-1 shadow"
+                        >
+                          ⚡ Activate
+                        </button>
+                      )}
                       <button 
                         title="Remove Faculty Member" 
                         onClick={(e) => handleDelete(e, f)}
@@ -390,13 +418,24 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
                   <td><span className="text-slate-400 text-xs">{f.phone || "—"}</span></td>
                   <td><span className={`badge ${statusColor(f.status)}`}>{f.status}</span></td>
                   <td>
-                    <button 
-                      title="Remove Faculty Member"
-                      onClick={(e) => handleDelete(e, f)}
-                      className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-colors"
-                    >
-                      Remove
-                    </button>
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      {f.status !== "active" && (
+                        <button
+                          title="Reinstate to Active"
+                          onClick={(e) => handleActivate(e, f)}
+                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 transition-colors"
+                        >
+                          ⚡ Activate
+                        </button>
+                      )}
+                      <button 
+                        title="Remove Faculty Member"
+                        onClick={(e) => handleDelete(e, f)}
+                        className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -758,12 +758,18 @@ def seed_30day_demo_history() -> dict:
         {"teacher_name": "Prof Atul Verma", "employee_id": "EMP-LNCT-017", "designation": "Assistant Professor", "phone": "+91-9569455529", "email": "atul.verma@lnctu.ac.in"}
     ]
 
-    # 1. Ensure faculty exist
+    # 1. Ensure faculty exist and are active
     active_faculty = []
     for f_data in LNCT_FACULTY:
         try:
-            created = create_faculty(f_data)
+            f_payload = {**f_data, "status": "active"}
+            created = create_faculty(f_payload)
             if created and created.get("id"):
+                try:
+                    from .faculty_db import update_faculty
+                except ImportError:
+                    from faculty_db import update_faculty
+                update_faculty(created["id"], {"status": "active"})
                 initialize_leave_balances(created["id"])
                 active_faculty.append(created)
         except Exception:
@@ -771,6 +777,14 @@ def seed_30day_demo_history() -> dict:
 
     if not active_faculty:
         active_faculty = list_faculty()
+        for f in active_faculty:
+            if f.get("id"):
+                try:
+                    from .faculty_db import update_faculty
+                except ImportError:
+                    from faculty_db import update_faculty
+                update_faculty(f["id"], {"status": "active"})
+                f["status"] = "active"
 
     today = date.today()
     start_date = today - timedelta(days=30)
