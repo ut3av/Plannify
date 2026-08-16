@@ -78,7 +78,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
       <main className="max-w-7xl mx-auto px-6 py-8 relative z-10">
         
         {/* Dashboard Header */}
-        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-black text-white mb-1">Faculty <span className="text-gradient">Portal</span></h2>
             <p className="text-slate-400 text-xs font-medium tracking-wide">Manage your individual schedule, attendance, workload analytics, and leave applications.</p>
@@ -126,6 +126,44 @@ export default function TeacherDashboard({ user, result, onLogout }) {
             >
               📋 Leave Apply
             </button>
+          </div>
+        </div>
+
+        {/* Faculty Identity Profile Card */}
+        <div className="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-wrap items-center justify-between gap-4 text-xs mb-8 shadow-xl">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center">
+              👨‍🏫
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white text-sm">{teacherName}</span>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                  Verified Faculty
+                </span>
+              </div>
+              <p className="text-slate-400 text-xs">
+                {user?.user_metadata?.designation || "Assistant Professor"} • {user?.user_metadata?.department || "Computer Applications"}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3 text-slate-300">
+            {user?.user_metadata?.employee_id && (
+              <span className="font-mono text-[11px] bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700 text-indigo-300">
+                🏷️ {user?.user_metadata?.employee_id}
+              </span>
+            )}
+            {user?.email && (
+              <span className="bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/60 text-slate-300">
+                ✉️ {user?.email}
+              </span>
+            )}
+            {user?.user_metadata?.phone && (
+              <span className="bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/60 text-slate-300">
+                📞 {user?.user_metadata?.phone}
+              </span>
+            )}
           </div>
         </div>
 

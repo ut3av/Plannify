@@ -55,11 +55,18 @@ def init_db():
             address TEXT,
             photo_url TEXT,
             status TEXT DEFAULT 'active',
+            email TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (department_id) REFERENCES departments(id)
         )
     """)
+
+    # Ensure email column exists in existing SQLite databases
+    try:
+        cursor.execute("ALTER TABLE faculty_profiles ADD COLUMN email TEXT")
+    except Exception:
+        pass
 
     # Leave types table
     cursor.execute("""

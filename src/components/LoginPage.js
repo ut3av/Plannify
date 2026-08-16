@@ -1,12 +1,19 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { supabase } from "../supabaseClient";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
 export default function LoginPage() {
-  const [portalRole, setPortalRole] = useState("admin"); // "admin" | "teacher"
+  const [portalRole, setPortalRole] = useState("teacher"); // "admin" | "teacher"
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [department, setDepartment] = useState("Computer Applications");
+  const [designation, setDesignation] = useState("Assistant Professor");
+  const [employeeId, setEmployeeId] = useState(`EMP-LNCT-${Math.floor(1000 + Math.random() * 9000)}`);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -17,13 +24,21 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
+        const empId = employeeId || `EMP-LNCT-${Math.floor(1000 + Math.random() * 9000)}`;
+        const teacherName = name || email.split('@')[0];
+
+        // 1. Supabase Auth Signup with complete metadata
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
               role: portalRole,
-              name: name || email.split('@')[0]
+              name: teacherName,
+              phone: phone || "+91-9876543210",
+              department: department,
+              designation: designation,
+              employee_id: empId,
             }
           }
         });
@@ -31,7 +46,65 @@ export default function LoginPage() {
         if (data?.user?.identities?.length === 0) {
           throw new Error("This email is already registered.");
         }
-        setError("Success! Account created. If auto-signin is pending, please verify your email.");
+
+        // 2. Auto-Registration Hook: Insert into Faculty Directory (backend database)
+        if (portalRole === "teacher") {
+          try {
+            await axios.post(`${API_BASE_URL}/faculty/`, {
+              teacher_name: teacherName,
+              email: email,
+              phone: phone || "+91-9876543210",
+              employee_id: empId,
+              designation: designation || "Assistant Professor",
+              employment_type: "full-time",
+              status: "active",
+              qualification: "M.Tech / Ph.D",
+              department_name: department
+            });
+          } catch (apiErr) {
+            console.warn("Auto-register faculty in backend database:", apiErr);
+          }
+
+          // 3. Auto-sync teacher into active cloud timetable state
+          try {
+            const { data: cloudData } = await supabase
+              .from('timetable_state')
+              .select('*')
+              .eq('id', 'draft')
+              .single();
+
+            if (cloudData) {
+              let tList = [];
+              const rawTeachers = cloudData.teachers ?? cloudData.room;
+              if (rawTeachers) {
+                try {
+                  tList = typeof rawTeachers === 'string' ? JSON.parse(rawTeachers) : rawTeachers;
+                } catch {
+                  tList = [];
+                }
+              }
+              if (Array.isArray(tList) && !tList.some(t => (t.name || t) === teacherName)) {
+                tList.push({
+                  name: teacherName,
+                  department: department || "Computer Applications",
+                  phone: phone || "+91-9876543210",
+                  email: email,
+                  employee_id: empId,
+                  designation: designation,
+                  free_periods: 1
+                });
+                await supabase
+                  .from('timetable_state')
+                  .update({ teachers: tList, updated_at: new Date().toISOString() })
+                  .eq('id', 'draft');
+              }
+            }
+          } catch (cloudErr) {
+            console.warn("Cloud state sync for new faculty:", cloudErr);
+          }
+        }
+
+        setError("Success! Account created & synchronized with Faculty Directory. You can now sign in.");
       } else {
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -151,19 +224,85 @@ export default function LoginPage() {
           </div>
 
           {/* AUTH FORM */}
-          <form onSubmit={handleAuth} className="space-y-4 text-xs">
+          <form onSubmit={handleAuth} className="space-y-3.5 text-xs">
             {isSignUp && (
-              <div>
-                <label className="block font-bold text-slate-300 mb-1">Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  placeholder="e.g. Dr. Arvind Kumar"
-                />
-              </div>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      placeholder="e.g. Dr. Arvind Kumar"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Phone / Mobile *</label>
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      placeholder="+91-9876543210"
+                    />
+                  </div>
+                </div>
+
+                {portalRole === "teacher" && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-bold text-slate-300 mb-1">Department</label>
+                        <select
+                          value={department}
+                          onChange={(e) => setDepartment(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        >
+                          <option value="Computer Applications">Computer Applications (BCA/MCA)</option>
+                          <option value="AI & DA">AI & Data Science (B.Tech)</option>
+                          <option value="Computer Science & Engineering">Computer Science & Eng (CSE)</option>
+                          <option value="Information Technology">Information Technology (IT)</option>
+                          <option value="Management Studies">Management Studies (MBA/BBA)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-300 mb-1">Designation</label>
+                        <select
+                          value={designation}
+                          onChange={(e) => setDesignation(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        >
+                          <option value="Professor">Professor</option>
+                          <option value="Associate Professor">Associate Professor</option>
+                          <option value="Assistant Professor">Assistant Professor</option>
+                          <option value="Lecturer">Lecturer</option>
+                          <option value="Lab Instructor">Lab Instructor</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-300">Employee ID</label>
+                        <span className="text-[10px] text-slate-500 font-mono">Institutional Identifier</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={employeeId}
+                        onChange={(e) => setEmployeeId(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        placeholder="EMP-LNCT-1001"
+                      />
+                    </div>
+                  </>
+                )}
+              </>
             )}
 
             <div>

@@ -148,8 +148,6 @@ def get_faculty_detail(faculty_id: str):
 def add_faculty(data: FacultyCreate):
     try:
         payload = data.model_dump(exclude_none=True)
-        # Remove email from payload (not a column in faculty_profiles)
-        email = payload.pop("email", None)
         result = create_faculty(payload)
         if result and result.get("id"):
             # Initialize leave balances

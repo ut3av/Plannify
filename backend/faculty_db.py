@@ -332,14 +332,15 @@ def create_faculty(data: dict) -> dict:
         INSERT INTO faculty_profiles (
             id, user_id, teacher_name, employee_id, department_id, designation,
             qualification, employment_type, joining_date, phone, emergency_contact,
-            address, photo_url, status, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            address, photo_url, status, email, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         fid, data.get("user_id"), data.get("teacher_name"), emp_id,
         data.get("department_id"), data.get("designation", "Lecturer"),
         data.get("qualification"), data.get("employment_type", "full-time"),
         joining_date, data.get("phone"), data.get("emergency_contact"),
         data.get("address"), data.get("photo_url"), data.get("status", "active"),
+        data.get("email"),
         now_iso, now_iso
     ))
     conn.commit()
