@@ -1,23 +1,24 @@
 """
-Attendance API routes — CSV import, daily/monthly view, manual entry, reports.
+Attendance API routes — CSV import, daily/monthly view, manual entry, simulation, reports.
 """
 import csv
 import io
-from datetime import datetime, date
-from typing import Optional
+import random
+from datetime import datetime, date, timedelta
+from typing import Optional, List
 from fastapi import APIRouter, HTTPException, UploadFile, File, Query
 
 try:
-    from .models import AttendanceManualEntry
+    from .models import AttendanceManualEntry, SimulateInfluxRequest, SimulateInfluxResponse
     from .faculty_db import (
         import_attendance_csv, get_attendance, manual_attendance,
-        get_attendance_summary, list_faculty,
+        get_attendance_summary, list_faculty, create_faculty,
     )
 except ImportError:
-    from models import AttendanceManualEntry
+    from models import AttendanceManualEntry, SimulateInfluxRequest, SimulateInfluxResponse
     from faculty_db import (
         import_attendance_csv, get_attendance, manual_attendance,
-        get_attendance_summary, list_faculty,
+        get_attendance_summary, list_faculty, create_faculty,
     )
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
@@ -33,7 +34,7 @@ def _parse_time(time_str: str, rec_date: str) -> Optional[str]:
         return None
     try:
         t = datetime.strptime(time_str.strip(), "%H:%M")
-        d = date.fromisoformat(rec_date)
+        d = date.fromisoformat(rec_date.split("T")[0])
         full = datetime(d.year, d.month, d.day, t.hour, t.minute)
         return full.isoformat()
     except Exception:
@@ -70,6 +71,113 @@ def _determine_status(punch_in: str, punch_out: str, late_minutes: int) -> str:
     return "present"
 
 
+# ── Live Biometric Influx Simulator (Hackathon Demo) ────────
+
+@router.post("/simulate-influx", response_model=SimulateInfluxResponse)
+def simulate_influx(
+    payload: Optional[SimulateInfluxRequest] = None,
+    count: int = Query(30, description="Maximum faculty records to simulate"),
+    target_date: Optional[str] = Query(None, alias="date", description="YYYY-MM-DD"),
+):
+    """
+    Simulates realistic biometric hardware check-in logs for active faculty
+    for the current date with natural variations in punch times (08:45 AM - 09:20 AM),
+    automatically calculating late_minutes and status.
+    """
+    try:
+        req_count = payload.count if payload and payload.count else count
+        sim_date = (payload.date if payload and payload.date else None) or target_date or date.today().isoformat()
+
+        active_faculty = list_faculty(status="active")
+
+        # Auto-seed mock faculty if none exist
+        if not active_faculty:
+            sample_names = [
+                ("Dr. Robert Chen", "FAC101", "Computer Science"),
+                ("Prof. Sarah Miller", "FAC102", "Mathematics"),
+                ("Dr. Alan Turing", "FAC103", "Computer Science"),
+                ("Prof. Emily Davis", "FAC104", "Physics"),
+                ("Dr. Michael Chang", "FAC105", "Electrical Eng"),
+                ("Prof. Lisa Ray", "FAC106", "Mechanical Eng"),
+                ("Dr. Vikram Malhotra", "FAC107", "Computer Science"),
+                ("Prof. Ananya Sharma", "FAC108", "Mathematics"),
+            ]
+            for name, emp_id, dept in sample_names:
+                create_faculty({
+                    "teacher_name": name,
+                    "employee_id": emp_id,
+                    "designation": "Associate Professor",
+                    "status": "active",
+                    "joining_date": "2024-01-15"
+                })
+            active_faculty = list_faculty(status="active")
+
+        faculty_to_simulate = active_faculty[:req_count]
+
+        present_count = 0
+        late_count = 0
+        absent_count = 0
+
+        # Seed pseudo-random generator with date for deterministic replay if requested
+        rng = random.Random()
+
+        for fac in faculty_to_simulate:
+            fid = fac["id"]
+            roll = rng.random()
+
+            if roll < 0.70:
+                # On-time check in: 08:45 AM - 08:59 AM
+                minute = rng.randint(45, 59)
+                punch_in = f"08:{minute:02d}"
+                out_hour = rng.randint(16, 17)
+                out_minute = rng.randint(0, 59)
+                punch_out = f"{out_hour:02d}:{out_minute:02d}"
+                late_mins = 0
+                status = "present"
+                present_count += 1
+            elif roll < 0.90:
+                # Late check in: 09:01 AM - 09:25 AM
+                minute = rng.randint(1, 25)
+                punch_in = f"09:{minute:02d}"
+                out_hour = rng.randint(16, 17)
+                out_minute = rng.randint(30, 59)
+                punch_out = f"{out_hour:02d}:{out_minute:02d}"
+                late_mins = minute
+                status = "late"
+                late_count += 1
+            else:
+                # Absent (no punch)
+                punch_in = None
+                punch_out = None
+                late_mins = 0
+                status = "absent"
+                absent_count += 1
+
+            record_payload = {
+                "faculty_id": fid,
+                "date": sim_date,
+                "punch_in": _parse_time(punch_in, sim_date) if punch_in else None,
+                "punch_out": _parse_time(punch_out, sim_date) if punch_out else None,
+                "status": status,
+                "late_minutes": late_mins,
+                "remarks": "Simulated Influx",
+                "source": "biometric_sim"
+            }
+            manual_attendance(record_payload)
+
+        return SimulateInfluxResponse(
+            message=f"Simulated {len(faculty_to_simulate)} biometric punch records for {sim_date}.",
+            simulated_count=len(faculty_to_simulate),
+            present=present_count,
+            late=late_count,
+            absent=absent_count,
+            date=sim_date
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Simulation failed: {str(e)}")
+
+
 # ── CSV Import ──────────────────────────────────────────────
 
 @router.post("/import")
@@ -90,16 +198,13 @@ async def import_csv(file: UploadFile = File(...)):
 
         records = []
         for row in reader:
-            # Normalize column names (case-insensitive, strip spaces)
             norm = {k.strip().lower().replace(" ", ""): v.strip() for k, v in row.items() if k}
 
             emp_id = norm.get("employeeid") or norm.get("empid") or norm.get("emp_id") or norm.get("id") or ""
-            name = norm.get("name") or norm.get("employeename") or ""
             date_str = norm.get("date") or norm.get("attendancedate") or ""
             punch_in = norm.get("punchin") or norm.get("punch_in") or norm.get("checkin") or norm.get("timein") or ""
             punch_out = norm.get("punchout") or norm.get("punch_out") or norm.get("checkout") or norm.get("timeout") or ""
 
-            # Parse date (support multiple formats)
             parsed_date = None
             for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%d-%m-%Y"):
                 try:
@@ -109,7 +214,7 @@ async def import_csv(file: UploadFile = File(...)):
                     continue
 
             if not parsed_date:
-                continue  # Skip rows with unparseable dates
+                continue
 
             late_minutes = _calculate_late_minutes(punch_in)
             status = _determine_status(punch_in, punch_out, late_minutes)
@@ -184,6 +289,7 @@ def add_manual_attendance(data: AttendanceManualEntry):
         }
         if data.punch_in:
             payload["punch_in"] = _parse_time(data.punch_in, str(data.date))
+            payload["late_minutes"] = _calculate_late_minutes(data.punch_in)
         if data.punch_out:
             payload["punch_out"] = _parse_time(data.punch_out, str(data.date))
 
@@ -197,7 +303,6 @@ def add_manual_attendance(data: AttendanceManualEntry):
 
 @router.get("/report/monthly")
 def monthly_report(month: int = Query(..., ge=1, le=12), year: int = Query(...)):
-    """Generate a monthly attendance summary for all active faculty."""
     try:
         faculty_list = list_faculty(status="active")
         report = []

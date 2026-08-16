@@ -90,6 +90,26 @@ export default function AttendanceDashboard() {
     }
   };
 
+  const [simulating, setSimulating] = useState(false);
+  const [simulationToast, setSimulationToast] = useState(null);
+
+  const handleSimulateInflux = async () => {
+    try {
+      setSimulating(true);
+      const res = await axios.post(`${API}/attendance/simulate-influx`, { count: 30, date: viewDate });
+      setSimulationToast(res.data);
+      if (viewMode === "daily") {
+        fetchDailyRecords();
+      } else {
+        fetchMonthlyRecords();
+      }
+    } catch (e) {
+      alert(e.response?.data?.detail || "Simulation failed");
+    } finally {
+      setSimulating(false);
+    }
+  };
+
   // Daily attendance summary
   const dailySummary = {
     total: records.length,
@@ -104,9 +124,27 @@ export default function AttendanceDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Attendance Dashboard</h2>
-          <p className="text-sm text-slate-500 mt-1">Track faculty attendance from punch machines and manual entries</p>
+          <p className="text-sm text-slate-500 mt-1">Track faculty attendance from biometric hardware punch machines and live influx simulations</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleSimulateInflux}
+            disabled={simulating}
+            className="btn-gradient gap-2 text-xs py-2 px-3.5 font-bold shadow-md hover:shadow-indigo-500/25 transition-all flex items-center"
+            title="Simulate realistic morning biometric check-ins (Hackathon Live Demo)"
+          >
+            {simulating ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Simulating Influx...
+              </>
+            ) : (
+              <>
+                <span>⚡</span>
+                Simulate Morning Influx (Live Demo)
+              </>
+            )}
+          </button>
           <button onClick={() => setShowManualForm(!showManualForm)} className="btn-secondary gap-2 text-sm">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Manual Entry
@@ -118,6 +156,26 @@ export default function AttendanceDashboard() {
           </label>
         </div>
       </div>
+
+      {/* Simulation Banner */}
+      {simulationToast && (
+        <div className="card p-4 mb-6 animate-slide-down border-l-4 border-l-amber-500 bg-amber-500/10">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">⚡</span>
+              <div>
+                <p className="font-semibold text-slate-900 dark:text-white text-sm">Live Biometric Simulation Active</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                  {simulationToast.message} (<strong>{simulationToast.present}</strong> Present, <strong>{simulationToast.late}</strong> Late, <strong>{simulationToast.absent}</strong> Absent)
+                </p>
+              </div>
+            </div>
+            <button onClick={() => setSimulationToast(null)} className="text-slate-400 hover:text-slate-600">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Import Result Banner */}
       {importResult && (

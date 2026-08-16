@@ -446,3 +446,96 @@ input:-webkit-autofill:active {
   font-family: 'Inter', sans-serif;
   font-weight: 900;
 }
+
+/* ── Screen / Print Visibility Helpers ──────────────────── */
+.print-only {
+  display: none !important;
+}
+
+/* ── Institutional Print-Ready Clean View ────────────────── */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Hide all app chrome, sidebars, navigation, FABs, and action buttons */
+  header,
+  nav,
+  aside,
+  #sidebar,
+  #navbar,
+  .no-print,
+  button,
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline,
+  .btn-gradient,
+  .tab-nav,
+  .floating-assistant,
+  #ai-chat-fab,
+  .glow-mesh,
+  .shimmer {
+    display: none !important;
+  }
+
+  /* Show print-only institutional header & approval footers */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Flatten container cards to clean borders */
+  .card,
+  .glass-card,
+  .neon-card,
+  .stat-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* High-contrast crisp printable grid table */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: avoid !important;
+  }
+
+  th, td {
+    border: 1px solid #94a3b8 !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
+    padding: 4px 6px !important;
+    font-size: 9pt !important;
+  }
+
+  th {
+    background-color: #f1f5f9 !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+  }
+
+  /* Clean up assignment cards in print */
+  .assignment-card-print {
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    padding: 3px 5px !important;
+    margin-bottom: 2px !important;
+    border-radius: 4px !important;
+  }
+
+  .assignment-card-print * {
+    color: #0f172a !important;
+  }
+}

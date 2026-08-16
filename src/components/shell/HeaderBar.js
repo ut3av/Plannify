@@ -14,6 +14,7 @@ export default function HeaderBar({
   unreadNotificationsCount = 3,
   onSaveCloud,
   isCloudSaving,
+  onLoadDemo,
   user,
   onLogout,
 }) {
@@ -113,6 +114,18 @@ export default function HeaderBar({
               <polyline points="7 3 7 8 15 8" />
             </svg>
             <span className="hidden lg:inline">{isCloudSaving ? "Saving..." : "Save Cloud"}</span>
+          </button>
+        )}
+
+        {/* Load Demo Data Quick Action */}
+        {onLoadDemo && (
+          <button
+            onClick={onLoadDemo}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold text-emerald-300 transition-all shadow-sm"
+            title="Load complete academic dummy data across all modules"
+          >
+            <span>⚡</span>
+            <span className="hidden sm:inline">Load Demo Data</span>
           </button>
         )}
 

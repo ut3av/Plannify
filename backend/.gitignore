@@ -14,6 +14,7 @@ ENV/
 
 # Logs
 *.log
+*.err.log
 backend.log
 server.log
 server.err.log

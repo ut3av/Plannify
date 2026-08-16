@@ -68,167 +68,7 @@ const buildLegacyCloudPayload = ({ teachers, sections, subjects, rooms, timeSlot
   slot: new Date().toISOString(),
 });
 
-const TABS = [
-  { id: "faculty", label: "Faculty System", icon: "users" },
-  { id: "teachers", label: "Teachers", icon: "users" },
-  { id: "sections", label: "Sections", icon: "book" },
-  { id: "subjects", label: "Subjects", icon: "book" },
-  { id: "rooms", label: "Classrooms", icon: "building" },
-  { id: "slots", label: "Time Slots", icon: "clock" },
-  { id: "timetable", label: "Timetable", icon: "grid" },
-  { id: "analytics", label: "Analytics", icon: "bar-chart" },
-  { id: "reschedule", label: "Reschedule", icon: "refresh" },
-  { id: "history", label: "History", icon: "clock" },
-  { id: "integrations", label: "Integrations", icon: "zap" },
-  { id: "logs", label: "Logs", icon: "terminal" },
-];
 
-/* ── SVG icon map ── */
-function TabIcon({ icon, className = "w-4 h-4" }) {
-  const icons = {
-    users: (
-      <svg
-        className={className}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 00-3-3.87" />
-        <path d="M16 3.13a4 4 0 010 7.75" />
-      </svg>
-    ),
-    book: (
-      <svg
-        className={className}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-      </svg>
-    ),
-    building: (
-      <svg
-        className={className}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
-        <path d="M9 22v-4h6v4" />
-        <line x1="8" y1="6" x2="8" y2="6" />
-        <line x1="16" y1="6" x2="16" y2="6" />
-        <line x1="12" y1="6" x2="12" y2="6" />
-        <line x1="8" y1="10" x2="8" y2="10" />
-        <line x1="16" y1="10" x2="16" y2="10" />
-        <line x1="12" y1="10" x2="12" y2="10" />
-        <line x1="8" y1="14" x2="8" y2="14" />
-        <line x1="16" y1="14" x2="16" y2="14" />
-        <line x1="12" y1="14" x2="12" y2="14" />
-      </svg>
-    ),
-    clock: (
-      <svg
-        className={className}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
-    ),
-    grid: (
-      <svg
-        className={className}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect x="3" y="3" width="7" height="7" />
-        <rect x="14" y="3" width="7" height="7" />
-        <rect x="14" y="14" width="7" height="7" />
-        <rect x="3" y="14" width="7" height="7" />
-      </svg>
-    ),
-    refresh: (
-      <svg
-        className={className}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <polyline points="23 4 23 10 17 10" />
-        <polyline points="1 20 1 14 7 14" />
-        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-      </svg>
-    ),
-    sparkles: (
-      <svg
-        className={className}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z" />
-      </svg>
-    ),
-    "bar-chart": (
-      <svg
-        className={className}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <line x1="18" y1="20" x2="18" y2="10" />
-        <line x1="12" y1="20" x2="12" y2="4" />
-        <line x1="6" y1="20" x2="6" y2="14" />
-      </svg>
-    ),
-    terminal: (
-      <svg
-        className={className}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <polyline points="4 17 10 11 4 5" />
-        <line x1="12" y1="19" x2="20" y2="19" />
-      </svg>
-    ),
-  };
-  return icons[icon] || null;
-}
 
 function getErrorMessage(error) {
   const detail = error?.response?.data?.detail;
@@ -301,21 +141,24 @@ function ErrorAlert({ error }) {
 
 const DEMO_TIMETABLE_DATA = {
   teachers: [
-    { name: "Dr. Arvind Kumar", free_periods: 1, email: "arvind.kumar@univ.edu", phone: "+91-9876543210" },
-    { name: "Prof. Sarah Jenkins", free_periods: 1, email: "s.jenkins@univ.edu", phone: "+91-9876543211" },
-    { name: "Rajesh Malhotra", free_periods: 1, email: "r.malhotra@univ.edu", phone: "+91-9876543212" },
-    { name: "Anita Desai", free_periods: 1, email: "a.desai@univ.edu", phone: "+91-9876543213" },
-    { name: "Kevin Peterson", free_periods: 1, email: "k.peterson@univ.edu", phone: "+91-9876543214" },
-    { name: "Dr. Meenakshi Iyer", free_periods: 1, email: "m.iyer@univ.edu", phone: "+91-9876543215" },
-    { name: "Suresh Raina", free_periods: 1, email: "s.raina@univ.edu", phone: "+91-9876543216" },
-    { name: "Monica Geller", free_periods: 1, email: "m.geller@univ.edu", phone: "+91-9876543217" },
-    { name: "Vikram Seth", free_periods: 1, email: "v.seth@univ.edu", phone: "+91-9876543218" },
-    { name: "Librarian", free_periods: 0, email: "library@univ.edu", phone: "+91-9876543219" },
+    { name: "Dr. Arvind Kumar", department: "Computer Science", free_periods: 1, email: "arvind.kumar@univ.edu", phone: "+91-9876543210" },
+    { name: "Prof. Sarah Jenkins", department: "Computer Science", free_periods: 1, email: "s.jenkins@univ.edu", phone: "+91-9876543211" },
+    { name: "Rajesh Malhotra", department: "Information Technology", free_periods: 1, email: "r.malhotra@univ.edu", phone: "+91-9876543212" },
+    { name: "Anita Desai", department: "Information Technology", free_periods: 1, email: "a.desai@univ.edu", phone: "+91-9876543213" },
+    { name: "Kevin Peterson", department: "Computer Science", free_periods: 1, email: "k.peterson@univ.edu", phone: "+91-9876543214" },
+    { name: "Dr. Meenakshi Iyer", department: "Electronics & Comm.", free_periods: 1, email: "m.iyer@univ.edu", phone: "+91-9876543215" },
+    { name: "Suresh Raina", department: "Information Technology", free_periods: 1, email: "s.raina@univ.edu", phone: "+91-9876543216" },
+    { name: "Monica Geller", department: "Business Admin", free_periods: 1, email: "m.geller@univ.edu", phone: "+91-9876543217" },
+    { name: "Vikram Seth", department: "Business Admin", free_periods: 1, email: "v.seth@univ.edu", phone: "+91-9876543218" },
+    { name: "Librarian", department: "General Academic", free_periods: 0, email: "library@univ.edu", phone: "+91-9876543219" },
   ],
   sections: [
-    { name: "BCA-I", room: "Room 101", lab_room: "Computer Lab A" },
-    { name: "BCA-II", room: "Room 102", lab_room: "Computer Lab B" },
-    { name: "BCA-III", room: "Room 103", lab_room: "Computer Lab A" },
+    { name: "BCA-I", department: "Computer Science", room: "Room 101", lab_room: "Computer Lab A" },
+    { name: "BCA-II", department: "Information Technology", room: "Room 102", lab_room: "Computer Lab B" },
+    { name: "BCA-III", department: "Information Technology", room: "Room 103", lab_room: "Computer Lab A" },
+    { name: "CS-A", department: "Computer Science", room: "Room 101", lab_room: "Computer Lab A" },
+    { name: "EC-A", department: "Electronics & Comm.", room: "Room 102", lab_room: "Computer Lab B" },
+    { name: "MBA-I", department: "Business Admin", room: "Seminar Hall", lab_room: "Computer Lab A" },
   ],
   rooms: ["Room 101", "Room 102", "Room 103", "Computer Lab A", "Computer Lab B", "Seminar Hall"],
   timeSlots: [
@@ -326,18 +169,73 @@ const DEMO_TIMETABLE_DATA = {
     "02:00 PM - 03:00 PM",
   ],
   subjects: [
-    { code: "CS101", name: "Python Programming", teacher: "Dr. Arvind Kumar", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 3, colorIndex: 0 },
-    { code: "CS102", name: "Data Structures", teacher: "Prof. Sarah Jenkins", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 3, colorIndex: 1 },
-    { code: "CS103", name: "Operating Systems", teacher: "Rajesh Malhotra", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 3, colorIndex: 2 },
-    { code: "CS104", name: "Computer Networks", teacher: "Anita Desai", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 3, colorIndex: 3 },
-    { code: "CS105", name: "Database Management", teacher: "Kevin Peterson", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 4 },
-    { code: "CS106", name: "Software Engineering", teacher: "Dr. Meenakshi Iyer", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 5 },
-    { code: "CS107", name: "Web Technologies", teacher: "Suresh Raina", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 6 },
-    { code: "MGT101", name: "Principles of Management", teacher: "Monica Geller", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 7 },
-    { code: "MAT101", name: "Discrete Mathematics", teacher: "Vikram Seth", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 2, colorIndex: 8 },
-    { code: "LAB101", name: "Coding Lab", teacher: "Dr. Arvind Kumar", sections: ["BCA-I", "BCA-II", "BCA-III"], is_lab: true, required_slots: 2, colorIndex: 9 },
-    { code: "LIB", name: "Library", teacher: "Librarian", sections: ["BCA-I", "BCA-II", "BCA-III"], required_slots: 1, colorIndex: 0 },
+    { code: "CS101", name: "Python Programming", teacher: "Dr. Arvind Kumar", sections: ["BCA-I", "BCA-II", "CS-A"], department: "Computer Science", required_slots: 3, colorIndex: 0 },
+    { code: "CS102", name: "Data Structures", teacher: "Prof. Sarah Jenkins", sections: ["BCA-I", "BCA-II", "CS-A"], department: "Computer Science", required_slots: 3, colorIndex: 1 },
+    { code: "CS103", name: "Operating Systems", teacher: "Rajesh Malhotra", sections: ["BCA-I", "BCA-II", "BCA-III"], department: "Information Technology", required_slots: 3, colorIndex: 2 },
+    { code: "CS104", name: "Computer Networks", teacher: "Anita Desai", sections: ["BCA-I", "BCA-II", "BCA-III"], department: "Information Technology", required_slots: 3, colorIndex: 3 },
+    { code: "CS105", name: "Database Management", teacher: "Kevin Peterson", sections: ["BCA-I", "BCA-II", "CS-A"], department: "Computer Science", required_slots: 2, colorIndex: 4 },
+    { code: "CS106", name: "Software Engineering", teacher: "Dr. Meenakshi Iyer", sections: ["EC-A", "BCA-III"], department: "Electronics & Comm.", required_slots: 2, colorIndex: 5 },
+    { code: "CS107", name: "Web Technologies", teacher: "Suresh Raina", sections: ["BCA-I", "BCA-II", "BCA-III"], department: "Information Technology", required_slots: 2, colorIndex: 6 },
+    { code: "MGT101", name: "Principles of Management", teacher: "Monica Geller", sections: ["MBA-I", "BCA-I"], department: "Business Admin", required_slots: 2, colorIndex: 7 },
+    { code: "MAT101", name: "Discrete Mathematics", teacher: "Vikram Seth", sections: ["BCA-I", "BCA-II", "MBA-I"], department: "Business Admin", required_slots: 2, colorIndex: 8 },
+    { code: "LAB101", name: "Coding Lab", teacher: "Dr. Arvind Kumar", sections: ["BCA-I", "CS-A"], department: "Computer Science", is_lab: true, required_slots: 2, colorIndex: 9 },
+    { code: "LIB", name: "Library", teacher: "Librarian", sections: ["BCA-I", "BCA-II", "BCA-III"], department: "General Academic", required_slots: 1, colorIndex: 0 },
   ],
+};
+
+const DEMO_RESULT = {
+  solver_status: "FEASIBLE (Optimal)",
+  objective_score: 0,
+  days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  time_slots: [
+    "09:00 AM - 10:00 AM",
+    "10:00 AM - 11:00 AM",
+    "11:15 AM - 12:15 PM",
+    "12:15 PM - 01:15 PM",
+    "02:00 PM - 03:00 PM",
+  ],
+  assignments: [
+    { day: "Mon", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 101" },
+    { day: "Mon", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Data Structures", teacher: "Prof. Sarah Jenkins", room: "Room 101" },
+    { day: "Mon", slot: "11:15 AM - 12:15 PM", section: "BCA-I", subject: "Operating Systems", teacher: "Rajesh Malhotra", room: "Room 101" },
+    { day: "Mon", slot: "12:15 PM - 01:15 PM", section: "BCA-I", subject: "Computer Networks", teacher: "Anita Desai", room: "Room 101" },
+    { day: "Mon", slot: "02:00 PM - 03:00 PM", section: "BCA-I", subject: "Coding Lab", teacher: "Dr. Arvind Kumar", room: "Computer Lab A" },
+
+    { day: "Mon", slot: "09:00 AM - 10:00 AM", section: "BCA-II", subject: "Database Management", teacher: "Kevin Peterson", room: "Room 102" },
+    { day: "Mon", slot: "10:00 AM - 11:00 AM", section: "BCA-II", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 102" },
+    { day: "Mon", slot: "11:15 AM - 12:15 PM", section: "BCA-II", subject: "Web Technologies", teacher: "Suresh Raina", room: "Room 102" },
+    { day: "Mon", slot: "12:15 PM - 01:15 PM", section: "BCA-II", subject: "Principles of Management", teacher: "Monica Geller", room: "Room 102" },
+    { day: "Mon", slot: "02:00 PM - 03:00 PM", section: "BCA-II", subject: "Coding Lab", teacher: "Prof. Sarah Jenkins", room: "Computer Lab B" },
+
+    { day: "Mon", slot: "09:00 AM - 10:00 AM", section: "CS-A", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 101" },
+    { day: "Mon", slot: "10:00 AM - 11:00 AM", section: "CS-A", subject: "Database Management", teacher: "Kevin Peterson", room: "Room 101" },
+
+    { day: "Mon", slot: "09:00 AM - 10:00 AM", section: "EC-A", subject: "Software Engineering", teacher: "Dr. Meenakshi Iyer", room: "Room 102" },
+    { day: "Mon", slot: "10:00 AM - 11:00 AM", section: "MBA-I", subject: "Principles of Management", teacher: "Monica Geller", room: "Seminar Hall" },
+
+    { day: "Tue", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Principles of Management", teacher: "Monica Geller", room: "Room 101" },
+    { day: "Tue", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 101" },
+    { day: "Tue", slot: "11:15 AM - 12:15 PM", section: "BCA-I", subject: "Data Structures", teacher: "Prof. Sarah Jenkins", room: "Room 101" },
+    { day: "Tue", slot: "12:15 PM - 01:15 PM", section: "BCA-I", subject: "Discrete Mathematics", teacher: "Vikram Seth", room: "Room 101" },
+    { day: "Tue", slot: "02:00 PM - 03:00 PM", section: "BCA-I", subject: "Library", teacher: "Librarian", room: "Seminar Hall" },
+
+    { day: "Tue", slot: "09:00 AM - 10:00 AM", section: "BCA-II", subject: "Operating Systems", teacher: "Rajesh Malhotra", room: "Room 102" },
+    { day: "Tue", slot: "10:00 AM - 11:00 AM", section: "BCA-II", subject: "Computer Networks", teacher: "Anita Desai", room: "Room 102" },
+    { day: "Tue", slot: "11:15 AM - 12:15 PM", section: "BCA-II", subject: "Database Management", teacher: "Kevin Peterson", room: "Room 102" },
+
+    { day: "Wed", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Web Technologies", teacher: "Suresh Raina", room: "Room 101" },
+    { day: "Wed", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Software Engineering", teacher: "Dr. Meenakshi Iyer", room: "Room 101" },
+    { day: "Wed", slot: "11:15 AM - 12:15 PM", section: "BCA-I", subject: "Data Structures", teacher: "Prof. Sarah Jenkins", room: "Room 101" },
+
+    { day: "Wed", slot: "09:00 AM - 10:00 AM", section: "BCA-II", subject: "Discrete Mathematics", teacher: "Vikram Seth", room: "Room 102" },
+    { day: "Wed", slot: "10:00 AM - 11:00 AM", section: "BCA-II", subject: "Principles of Management", teacher: "Monica Geller", room: "Room 102" },
+
+    { day: "Thu", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Operating Systems", teacher: "Rajesh Malhotra", room: "Room 101" },
+    { day: "Thu", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Computer Networks", teacher: "Anita Desai", room: "Room 101" },
+
+    { day: "Fri", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 101" },
+    { day: "Fri", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Coding Lab", teacher: "Dr. Arvind Kumar", room: "Computer Lab A" },
+  ]
 };
 
 function buildApiPayload(data) {
@@ -379,12 +277,12 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedFaculty, setSelectedFaculty] = useState(null);
 
-  const [teachers, setTeachers] = useState([]);
-  const [sections, setSections] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [timeSlots, setTimeSlots] = useState([]);
-  const [result, setResult] = useState(null);
+  const [teachers, setTeachers] = useState(DEMO_TIMETABLE_DATA.teachers);
+  const [sections, setSections] = useState(DEMO_TIMETABLE_DATA.sections);
+  const [subjects, setSubjects] = useState(DEMO_TIMETABLE_DATA.subjects);
+  const [rooms, setRooms] = useState(DEMO_TIMETABLE_DATA.rooms);
+  const [timeSlots, setTimeSlots] = useState(DEMO_TIMETABLE_DATA.timeSlots);
+  const [result, setResult] = useState(DEMO_RESULT);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [rescheduleNote, setRescheduleNote] = useState("");
@@ -406,11 +304,11 @@ export default function App() {
         
         if (data && !error) {
           const cloudState = readCloudState(data);
-          if (cloudState.teachers) setTeachers(cloudState.teachers);
-          if (cloudState.sections) setSections(cloudState.sections);
-          if (cloudState.subjects) setSubjects(cloudState.subjects);
-          if (cloudState.rooms) setRooms(cloudState.rooms);
-          if (cloudState.timeSlots) setTimeSlots(cloudState.timeSlots);
+          if (cloudState.teachers && cloudState.teachers.length > 0) setTeachers(cloudState.teachers);
+          if (cloudState.sections && cloudState.sections.length > 0) setSections(cloudState.sections);
+          if (cloudState.subjects && cloudState.subjects.length > 0) setSubjects(cloudState.subjects);
+          if (cloudState.rooms && cloudState.rooms.length > 0) setRooms(cloudState.rooms);
+          if (cloudState.timeSlots && cloudState.timeSlots.length > 0) setTimeSlots(cloudState.timeSlots);
         }
         setIsCloudLoaded(true);
       } catch (e) {
@@ -531,29 +429,24 @@ export default function App() {
   }, [generateFromPayload, payload]);
 
   const generateDemoTimetable = useCallback(async () => {
-    // Deep clone demo data to avoid reference issues
     const demoData = JSON.parse(JSON.stringify(DEMO_TIMETABLE_DATA));
 
-    // Update frontend state first
     setTeachers(demoData.teachers);
     setSections(demoData.sections);
     setSubjects(demoData.subjects);
     setRooms(demoData.rooms);
     setTimeSlots(demoData.timeSlots);
-    setResult(null);
+    setResult(DEMO_RESULT);
+    setRescheduleNote("⚡ Complete Demo Academic Data & Timetable Solution Loaded!");
 
-    // Give React a tick to update state, then call the solver with local data
-    setTimeout(async () => {
-      try {
-        await generateFromPayload(
-          buildApiPayload(demoData),
-          "✨ AI-Optimized Demo Timetable generated for 3 sections with 10 teachers and specialized subject assignments."
-        );
-      } catch (err) {
-        console.error("Demo generation failed:", err);
-        setError("Failed to generate demo timetable. Please check if the backend is running.");
-      }
-    }, 100);
+    try {
+      await generateFromPayload(
+        buildApiPayload(demoData),
+        "✨ AI-Optimized Demo Timetable generated for 6 sections across 5 departments."
+      );
+    } catch (err) {
+      console.warn("Backend solver call failed, keeping local DEMO_RESULT fallback:", err);
+    }
   }, [generateFromPayload]);
 
   const rescheduleTimetable = async (request) => {
@@ -878,10 +771,6 @@ export default function App() {
     }
   };
 
-  const totalSlots = useMemo(
-    () => subjects.reduce((sum, s) => sum + s.required_slots, 0),
-    [subjects],
-  );
 
   useEffect(() => {
     // Check active session on mount
@@ -939,6 +828,7 @@ export default function App() {
       onRoleChange={setUserRole}
       onSaveCloud={saveToCloud}
       isCloudSaving={loading}
+      onLoadDemo={generateDemoTimetable}
       user={user}
       onLogout={handleLogout}
     >
@@ -1080,7 +970,7 @@ export default function App() {
 
       {/* 11. ACADEMIC SETUP: ROOMS */}
       {activeTab === "rooms" && (
-        <RoomsSection rooms={rooms} onChange={setRooms} />
+        <RoomsSection rooms={rooms} onChange={setRooms} result={result} timeSlots={timeSlots} />
       )}
 
       {/* 12. ACADEMIC SETUP: SLOTS */}

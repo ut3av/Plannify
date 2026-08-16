@@ -1,9 +1,50 @@
 """
 Pydantic models for the Faculty Management System.
+Includes robust date/datetime validators for SQLite and Supabase type consistency.
 """
 from datetime import date, datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import Any, List, Optional, Union
+from pydantic import BaseModel, Field, field_validator
+
+
+def _parse_date_value(v: Any) -> Optional[date]:
+    if v is None:
+        return None
+    if isinstance(v, date) and not isinstance(v, datetime):
+        return v
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, str):
+        v = v.strip()
+        if not v:
+            return None
+        # Handle ISO with T (e.g. 2026-08-16T00:00:00)
+        date_part = v.split("T")[0]
+        return date.fromisoformat(date_part)
+    return v
+
+
+def _parse_datetime_value(v: Any) -> Optional[datetime]:
+    if v is None:
+        return None
+    if isinstance(v, datetime):
+        return v
+    if isinstance(v, str):
+        v = v.strip()
+        if not v:
+            return None
+        # Replace Z with +00:00 if needed for standard fromisoformat
+        clean_str = v.replace("Z", "+00:00")
+        try:
+            return datetime.fromisoformat(clean_str)
+        except ValueError:
+            # Fallback to date parsing
+            try:
+                d = date.fromisoformat(v.split("T")[0])
+                return datetime(d.year, d.month, d.day)
+            except Exception:
+                return None
+    return v
 
 
 # ── Department ──────────────────────────────────────────────
@@ -20,6 +61,11 @@ class DepartmentOut(BaseModel):
     faculty_count: int = 0
     created_at: Optional[datetime] = None
 
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def validate_created_at(cls, v):
+        return _parse_datetime_value(v)
+
 
 # ── Faculty Profile ─────────────────────────────────────────
 class FacultyCreate(BaseModel):
@@ -29,12 +75,17 @@ class FacultyCreate(BaseModel):
     designation: str = "Lecturer"
     qualification: Optional[str] = None
     employment_type: str = "full-time"
-    joining_date: date = Field(default_factory=date.today)
+    joining_date: Optional[date] = Field(default_factory=date.today)
     phone: Optional[str] = None
     emergency_contact: Optional[str] = None
     address: Optional[str] = None
     photo_url: Optional[str] = None
     email: Optional[str] = None
+
+    @field_validator("joining_date", mode="before")
+    @classmethod
+    def validate_joining_date(cls, v):
+        return _parse_date_value(v)
 
 
 class FacultyUpdate(BaseModel):
@@ -68,6 +119,16 @@ class FacultyOut(BaseModel):
     status: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_validator("joining_date", mode="before")
+    @classmethod
+    def validate_joining_date(cls, v):
+        return _parse_date_value(v)
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_datetimes(cls, v):
+        return _parse_datetime_value(v)
 
 
 class FacultyDetail(FacultyOut):
@@ -105,6 +166,11 @@ class LeaveApply(BaseModel):
     reason: str
     document_url: Optional[str] = None
 
+    @field_validator("from_date", "to_date", mode="before")
+    @classmethod
+    def validate_dates(cls, v):
+        return _parse_date_value(v)
+
 
 class LeaveReview(BaseModel):
     reviewed_by: str
@@ -133,7 +199,17 @@ class LeaveApplicationOut(BaseModel):
     review_remarks: Optional[str] = None
     substitute_id: Optional[str] = None
     substitute_name: Optional[str] = None
-    days_count: int = 0
+    days_count: float = 0.0
+
+    @field_validator("from_date", "to_date", mode="before")
+    @classmethod
+    def validate_dates(cls, v):
+        return _parse_date_value(v)
+
+    @field_validator("applied_at", "reviewed_at", mode="before")
+    @classmethod
+    def validate_datetimes(cls, v):
+        return _parse_datetime_value(v)
 
 
 # ── Leave Balance ───────────────────────────────────────────
@@ -160,6 +236,11 @@ class AttendanceManualEntry(BaseModel):
     status: str = "present"
     remarks: Optional[str] = None
 
+    @field_validator("date", mode="before")
+    @classmethod
+    def validate_date(cls, v):
+        return _parse_date_value(v)
+
 
 class AttendanceRecordOut(BaseModel):
     id: str
@@ -171,8 +252,18 @@ class AttendanceRecordOut(BaseModel):
     punch_out: Optional[datetime] = None
     source: str
     status: str
-    late_minutes: int
+    late_minutes: int = 0
     remarks: Optional[str] = None
+
+    @field_validator("date", mode="before")
+    @classmethod
+    def validate_date(cls, v):
+        return _parse_date_value(v)
+
+    @field_validator("punch_in", "punch_out", mode="before")
+    @classmethod
+    def validate_punch_times(cls, v):
+        return _parse_datetime_value(v)
 
 
 class AttendanceImportResult(BaseModel):
@@ -206,6 +297,11 @@ class SubstitutionAssign(BaseModel):
     section: Optional[str] = None
     room: Optional[str] = None
 
+    @field_validator("date", mode="before")
+    @classmethod
+    def validate_date(cls, v):
+        return _parse_date_value(v)
+
 
 class SubstitutionOut(BaseModel):
     id: str
@@ -222,6 +318,16 @@ class SubstitutionOut(BaseModel):
     status: str
     created_at: Optional[datetime] = None
 
+    @field_validator("date", mode="before")
+    @classmethod
+    def validate_date(cls, v):
+        return _parse_date_value(v)
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def validate_created_at(cls, v):
+        return _parse_datetime_value(v)
+
 
 class SubstituteSuggestion(BaseModel):
     faculty_id: str
@@ -230,3 +336,38 @@ class SubstituteSuggestion(BaseModel):
     department: Optional[str] = None
     reason: str  # e.g. "Free during this slot", "Least substitutions this month"
     workload_score: int = 0  # lower = less loaded = better candidate
+
+
+# ── Simulation & Impact Models ──────────────────────────────
+class SimulateInfluxRequest(BaseModel):
+    count: int = 30
+    date: Optional[str] = None
+
+
+class SimulateInfluxResponse(BaseModel):
+    message: str
+    simulated_count: int
+    present: int
+    late: int
+    absent: int
+    date: str
+
+
+class AffectedPeriod(BaseModel):
+    day: str
+    slot: str
+    subject: str
+    section: Optional[str] = None
+    room: Optional[str] = None
+
+
+class LeaveImpactResponse(BaseModel):
+    leave_id: str
+    faculty_id: str
+    faculty_name: str
+    from_date: str
+    to_date: str
+    affected_lectures_count: int
+    affected_periods: List[AffectedPeriod] = []
+    available_substitutes_count: int
+    recommended_substitutes: List[SubstituteSuggestion] = []

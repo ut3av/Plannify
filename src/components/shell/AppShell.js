@@ -12,6 +12,7 @@ export default function AppShell({
   onRoleChange,
   onSaveCloud,
   isCloudSaving,
+  onLoadDemo,
   user,
   onLogout,
   children,
@@ -43,6 +44,7 @@ export default function AppShell({
         unreadNotificationsCount={notifications.length}
         onSaveCloud={onSaveCloud}
         isCloudSaving={isCloudSaving}
+        onLoadDemo={onLoadDemo}
         user={user}
         onLogout={onLogout}
       />
