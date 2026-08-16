@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import DispatchPreviewModal from "../common/DispatchPreviewModal";
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
-export default function FacultyDirectory({ onSelectFaculty, teachers = [], subjects = [] }) {
+export default function FacultyDirectory({ onSelectFaculty, teachers = [], subjects = [], result }) {
   const [faculty, setFaculty] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +14,7 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
   const [viewMode, setViewMode] = useState("grid"); // grid | table
   const [showAddForm, setShowAddForm] = useState(false);
   const [deletedKeys, setDeletedKeys] = useState(new Set());
+  const [dispatchTeacher, setDispatchTeacher] = useState(null);
   const [form, setForm] = useState({
     teacher_name: "", employee_id: "", department_id: "",
     designation: "Lecturer", qualification: "", employment_type: "full-time",
@@ -334,6 +336,16 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
                     <p className="font-bold text-slate-900 dark:text-white truncate text-sm">{f.teacher_name}</p>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className={`badge ${statusColor(f.status)}`}>{f.status}</span>
+                      <button
+                        title="Dispatch Schedule via Email/WhatsApp"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDispatchTeacher(f);
+                        }}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30 transition-all flex items-center gap-1 shadow"
+                      >
+                        ✉️ Schedule
+                      </button>
                       {f.status !== "active" && (
                         <button
                           title="Reinstate Faculty Member to Active"
@@ -419,6 +431,13 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
                   <td><span className={`badge ${statusColor(f.status)}`}>{f.status}</span></td>
                   <td>
                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        title="Dispatch Schedule via Email/WhatsApp"
+                        onClick={() => setDispatchTeacher(f)}
+                        className="px-2 py-1 text-[11px] font-bold rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 transition-colors"
+                      >
+                        ✉️ Dispatch
+                      </button>
                       {f.status !== "active" && (
                         <button
                           title="Reinstate to Active"
@@ -442,6 +461,15 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Dispatch Preview Modal */}
+      {dispatchTeacher && (
+        <DispatchPreviewModal
+          teacher={dispatchTeacher}
+          result={result}
+          onClose={() => setDispatchTeacher(null)}
+        />
       )}
     </div>
   );

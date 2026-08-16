@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import BrandLogo from '../common/BrandLogo';
+import NotificationCenter from '../common/NotificationCenter';
 
 export default function HeaderBar({
   isSidebarOpen,
@@ -22,6 +23,8 @@ export default function HeaderBar({
   onToggleTheme,
 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false);
+  const [liveUnreadCount, setLiveUnreadCount] = useState(unreadNotificationsCount);
   const isWarm = theme === 'warm-white';
 
   // Keyboard shortcut Ctrl+K / Cmd+K for command palette
@@ -200,26 +203,38 @@ export default function HeaderBar({
 
         {/* Notifications Bell */}
         <button
-          onClick={onOpenNotifications}
+          onClick={() => setShowNotificationCenter(true)}
           className={`p-2 rounded-xl transition-colors border relative ${
             isWarm
               ? 'bg-[#f3ede4] hover:bg-[#e8ddd0] text-[#6b5344] border-[#e8ddd0]'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700/80'
           }`}
-          title="Notifications"
+          title="Real-Time Notifications"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
-          {unreadNotificationsCount > 0 && (
-            <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-white font-bold text-[9px] flex items-center justify-center animate-pulse ${
+          {liveUnreadCount > 0 && (
+            <span className={`absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full text-white font-bold text-[9px] flex items-center justify-center animate-pulse shadow-sm ${
               isWarm ? 'bg-amber-600' : 'bg-indigo-500'
             }`}>
-              {unreadNotificationsCount}
+              {liveUnreadCount}
             </span>
           )}
         </button>
+
+        {/* Live Real-Time Notification Center */}
+        {showNotificationCenter && (
+          <NotificationCenter
+            isOpen={showNotificationCenter}
+            onClose={() => setShowNotificationCenter(false)}
+            onNavigate={(targetTab) => {
+              if (onSelectPage) onSelectPage(targetTab);
+            }}
+            onUpdateUnreadCount={(count) => setLiveUnreadCount(count)}
+          />
+        )}
 
 
         {/* User Profile Dropdown */}

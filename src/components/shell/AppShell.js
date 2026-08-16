@@ -21,15 +21,8 @@ export default function AppShell({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [showNotificationDrawer, setShowNotificationDrawer] = useState(false);
 
   const isWarm = theme === 'warm-white';
-
-  const notifications = [
-    { id: 1, title: "Leave Application Received", text: "Dr. Arvind Kumar requested 2 days Casual Leave.", time: "10 mins ago", type: "leave" },
-    { id: 2, title: "Substitution Needed", text: "Slot 3 proxy required for BCA-II CS102.", time: "25 mins ago", type: "substitution" },
-    { id: 3, title: "Timetable Solved", text: "Draft generated with score 0 (Optimal).", time: "1 hour ago", type: "timetable" },
-  ];
 
   return (
     <div className={`min-h-screen font-sans flex flex-col antialiased transition-colors duration-300 ${
@@ -48,8 +41,6 @@ export default function AppShell({
         userRole={userRole}
         onRoleChange={onRoleChange}
         onOpenSearch={() => setIsSearchOpen(true)}
-        onOpenNotifications={() => setShowNotificationDrawer(!showNotificationDrawer)}
-        unreadNotificationsCount={notifications.length}
         onSaveCloud={onSaveCloud}
         isCloudSaving={isCloudSaving}
         onLoadDemo={onLoadDemo}
@@ -90,39 +81,6 @@ export default function AppShell({
           setIsSearchOpen(false);
         }}
       />
-
-      {/* Notification Drawer */}
-      {showNotificationDrawer && (
-        <div className={`fixed right-4 top-20 w-80 rounded-2xl border shadow-2xl p-4 z-50 text-xs animate-fade-in ${
-          isWarm
-            ? 'bg-[#fffdf8] border-[#e8ddd0] text-[#2c1810]'
-            : 'bg-slate-900 border-slate-700 text-slate-200'
-        }`}>
-          <div className={`flex items-center justify-between border-b pb-3 mb-3 ${
-            isWarm ? 'border-[#e8ddd0]' : 'border-slate-800'
-          }`}>
-            <h3 className={`font-bold text-sm ${isWarm ? 'text-[#2c1810]' : 'text-white'}`}>Notifications</h3>
-            <button onClick={() => setShowNotificationDrawer(false)} className={`font-bold text-xs ${
-              isWarm ? 'text-[#a08b7a] hover:text-[#2c1810]' : 'text-slate-400 hover:text-white'
-            }`}>✕</button>
-          </div>
-          <div className="space-y-3">
-            {notifications.map((n) => (
-              <div key={n.id} className={`p-3 rounded-xl border space-y-1 ${
-                isWarm
-                  ? 'bg-[#f3ede4] border-[#e8ddd0]'
-                  : 'bg-slate-800/80 border-slate-700/60'
-              }`}>
-                <div className="flex justify-between items-start font-semibold">
-                  <span className={isWarm ? 'text-[#2c1810]' : 'text-white'}>{n.title}</span>
-                  <span className={`text-[10px] font-normal ${isWarm ? 'text-[#a08b7a]' : 'text-slate-400'}`}>{n.time}</span>
-                </div>
-                <p className={`text-[11px] leading-relaxed ${isWarm ? 'text-[#6b5344]' : 'text-slate-300'}`}>{n.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

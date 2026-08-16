@@ -1163,7 +1163,11 @@ export default function App() {
   if (user.role === "teacher") {
     return (
       <Suspense fallback={<PageLoadingFallback />}>
-        <TeacherDashboard user={user} result={result} onLogout={handleLogout} />
+        <TeacherDashboard
+          user={user}
+          result={result}
+          onLogout={handleLogout}
+        />
       </Suspense>
     );
   }
@@ -1257,7 +1261,7 @@ export default function App() {
               <FacultyProfile faculty={selectedFaculty} onBack={() => setSelectedFaculty(null)} />
             ) : (
               <div className="space-y-8">
-                <FacultyDirectory teachers={teachers} subjects={subjects} onSelectFaculty={(f) => setSelectedFaculty(f)} />
+                <FacultyDirectory teachers={teachers} subjects={subjects} result={result} onSelectFaculty={(f) => setSelectedFaculty(f)} />
                 <AttendanceDashboard />
               </div>
             )}

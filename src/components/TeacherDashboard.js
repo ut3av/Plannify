@@ -39,7 +39,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
       <div className="glow-mesh" />
       
       {/* Top Navbar */}
-      <nav className="sticky top-0 z-50 glass-panel border-b border-white/10 px-8 py-4 flex justify-between items-center bg-slate-950/90 backdrop-blur-2xl">
+      <nav className="sticky top-0 z-50 glass-panel border-b border-white/10 px-6 py-4 flex justify-between items-center bg-slate-950/90 backdrop-blur-2xl">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/20">
             <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -62,16 +62,18 @@ export default function TeacherDashboard({ user, result, onLogout }) {
           </div>
         </div>
         
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex flex-col items-end">
-            <span className="text-sm font-black text-white">{teacherName}</span>
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex flex-col items-end border-r border-slate-800 pr-4">
+            <span className="text-xs font-black text-white">{teacherName}</span>
             <span className="text-[10px] font-bold text-slate-500">{user?.email}</span>
           </div>
+
           <button 
             onClick={onLogout} 
-            className="px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-black hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-200 transition-all active:scale-95"
+            className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-bold text-red-300 hover:bg-red-500/20 hover:text-white transition-all active:scale-95 flex items-center gap-1.5"
           >
-            SIGN OUT
+            <span>🔒</span>
+            <span>Sign Out</span>
           </button>
         </div>
       </nav>
