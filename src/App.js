@@ -355,7 +355,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [teachers, sections, subjects, rooms, timeSlots]);
+  }, [teachers, sections, subjects, rooms, timeSlots, result]);
 
   // --- Periodic Auto-sync (1 min interval) ---
   useEffect(() => {
@@ -422,7 +422,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [teachers, sections, subjects, rooms, timeSlots]);
 
   const generateTimetable = useCallback(async () => {
     await generateFromPayload(payload);
@@ -920,35 +920,9 @@ export default function App() {
         </div>
       )}
 
-      {/* 5. LEAVE MANAGEMENT WORKSPACE */}
-      {activeTab === "leave" && (
-        <div className="space-y-6">
-          <LeaveManagement />
-        </div>
-      )}
-
-      {/* 6. SUBSTITUTION WORKSPACE */}
-      {activeTab === "substitutions" && (
-        <div className="space-y-6">
-          <SubstitutionPanel />
-        </div>
-      )}
-
-      {/* 7. OPERATIONAL ANALYTICS 360° */}
+      {/* 5. OPERATIONAL ANALYTICS 360° */}
       {activeTab === "analytics" && (
         <FacultyAnalyticsModule initialFacultyId={selectedFaculty?.id} />
-      )}
-
-      {/* 8. ACADEMIC SETUP: DEPARTMENTS */}
-      {activeTab === "departments" && (
-        <DepartmentAnalyticsView
-          rangeKey="30d"
-          sections={sections}
-          teachers={teachers}
-          subjects={subjects}
-          onNavigate={(p) => setActiveTab(p)}
-          onSelectFaculty={(f) => { setSelectedFaculty(f); setActiveTab("faculty"); }}
-        />
       )}
 
       {/* 9. ACADEMIC SETUP: SUBJECTS */}

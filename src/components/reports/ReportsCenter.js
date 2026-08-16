@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 export default function ReportsCenter() {
-  const [reportType, setReportType] = useState("faculty_summary");
   const [rangeKey, setRangeKey] = useState("30d");
   const [formatType, setFormatType] = useState("excel");
 
@@ -17,7 +16,7 @@ export default function ReportsCenter() {
   ];
 
   const handleDownload = (rType) => {
-    const targetType = rType || reportType;
+    const targetType = rType || "faculty_summary";
     window.open(`${API}/analytics/export?report_type=${targetType}&range_key=${rangeKey}&format_type=${formatType}`, '_blank');
   };
 

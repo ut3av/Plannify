@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
@@ -9,11 +9,8 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (faculty?.id) fetchDetail();
-  }, [faculty?.id]);
-
-  const fetchDetail = async () => {
+  const fetchDetail = useCallback(async () => {
+    if (!faculty?.id) return;
     try {
       setLoading(true);
       const res = await axios.get(`${API}/faculty/${faculty.id}`);
@@ -21,7 +18,11 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
       setForm(res.data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  };
+  }, [faculty?.id]);
+
+  useEffect(() => {
+    fetchDetail();
+  }, [fetchDetail]);
 
   const handleSave = async () => {
     try {

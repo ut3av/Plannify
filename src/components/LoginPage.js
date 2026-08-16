@@ -61,7 +61,7 @@ export default function LoginPage() {
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-violet-600/15 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative w-full max-w-[1020px] grid lg:grid-cols-12 gap-0 overflow-hidden bg-slate-900/90 rounded-[32px] shadow-2xl border border-slate-800 backdrop-blur-xl">
-        
+
         {/* LEFT COLUMN: BRAND HERO (5 cols) */}
         <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-950 border-r border-slate-800">
           <div>
@@ -99,7 +99,7 @@ export default function LoginPage() {
 
         {/* RIGHT COLUMN: 2 PORTAL LOGIN SECTIONS (7 cols) */}
         <div className="lg:col-span-7 p-8 lg:p-10 flex flex-col justify-center space-y-6">
-          
+
           {/* Header & Title */}
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">
@@ -118,36 +118,34 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setPortalRole("admin")}
-              className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${
-                portalRole === "admin"
+              className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${portalRole === "admin"
                   ? "bg-indigo-600/20 border-indigo-500/50 text-white shadow-lg shadow-indigo-500/10"
                   : "bg-transparent border-transparent text-slate-400 hover:text-slate-200"
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold">🛡️ Admin / HOD</span>
+                <span className="text-sm font-bold">🛡️ Admin</span>
                 {portalRole === "admin" && <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />}
               </div>
               <p className="text-[10px] text-slate-400 mt-1 leading-tight">
-                Full institutional operations, timetable solver, & settings
+                Full institutional operations, timetable solver, faculty management, & settings
               </p>
             </button>
 
             <button
               type="button"
               onClick={() => setPortalRole("teacher")}
-              className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${
-                portalRole === "teacher"
+              className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${portalRole === "teacher"
                   ? "bg-indigo-600/20 border-indigo-500/50 text-white shadow-lg shadow-indigo-500/10"
                   : "bg-transparent border-transparent text-slate-400 hover:text-slate-200"
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold">👨‍🏫 Faculty Member</span>
                 {portalRole === "teacher" && <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />}
               </div>
               <p className="text-[10px] text-slate-400 mt-1 leading-tight">
-                Personal timetable schedule, workload, & leaves
+                Personal timetable schedule, individual attendance, workload analytics, & Leave Apply
               </p>
             </button>
           </div>
@@ -193,11 +191,10 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className={`p-3 rounded-xl font-semibold border ${
-                error.includes("Success")
+              <div className={`p-3 rounded-xl font-semibold border ${error.includes("Success")
                   ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
                   : "bg-rose-500/10 border-rose-500/30 text-rose-300"
-              }`}>
+                }`}>
                 {error}
               </div>
             )}

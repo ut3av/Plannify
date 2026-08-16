@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -10,11 +10,7 @@ export default function FacultyAnalyticsProfile({ facultyId, rangeKey, startDate
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
 
-  useEffect(() => {
-    fetchProfile();
-  }, [facultyId, rangeKey, startDate, endDate]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -30,7 +26,11 @@ export default function FacultyAnalyticsProfile({ facultyId, rangeKey, startDate
     } finally {
       setLoading(false);
     }
-  };
+  }, [facultyId, rangeKey, startDate, endDate]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   if (loading) {
     return (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
@@ -19,29 +19,7 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
   });
   const [reviewForm, setReviewForm] = useState({ leaveId: null, action: "", remarks: "", substituteId: "" });
 
-  useEffect(() => {
-    fetchLeaves();
-    fetchLeaveTypes();
-    fetchFaculty();
-    if (facultyId) fetchBalances(facultyId);
-  }, [facultyId]);
-
-  const fetchLeaves = async () => {
-    try {
-      setLoading(true);
-      const params = {};
-      if (facultyId && !isAdmin) params.faculty_id = facultyId;
-      const res = await axios.get(`${API}/leaves/`, { params });
-      const data = res.data || [];
-      setLeaves(data);
-
-      // Fetch timetable substitution impact for each leave
-      fetchImpacts(data);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  };
-
-  const fetchImpacts = async (leaveList) => {
+  const fetchImpacts = useCallback(async (leaveList) => {
     const map = {};
     for (const l of leaveList) {
       try {
@@ -60,28 +38,50 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
       }
     }
     setImpactMap(map);
-  };
+  }, []);
 
-  const fetchLeaveTypes = async () => {
+  const fetchLeaves = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (facultyId && !isAdmin) params.faculty_id = facultyId;
+      const res = await axios.get(`${API}/leaves/`, { params });
+      const data = res.data || [];
+      setLeaves(data);
+
+      // Fetch timetable substitution impact for each leave
+      fetchImpacts(data);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  }, [facultyId, isAdmin, fetchImpacts]);
+
+  const fetchLeaveTypes = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/leaves/types`);
       setLeaveTypes(res.data || []);
     } catch (e) { console.error(e); }
-  };
+  }, []);
 
-  const fetchBalances = async (fid) => {
+  const fetchBalances = useCallback(async (fid) => {
     try {
       const res = await axios.get(`${API}/leaves/balance/${fid}`);
       setBalances(res.data || []);
     } catch (e) { console.error(e); }
-  };
+  }, []);
 
-  const fetchFaculty = async () => {
+  const fetchFaculty = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/faculty/`);
       setFaculty(res.data || []);
     } catch (e) { console.error(e); }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLeaves();
+    fetchLeaveTypes();
+    fetchFaculty();
+    if (facultyId) fetchBalances(facultyId);
+  }, [facultyId, fetchLeaves, fetchLeaveTypes, fetchFaculty, fetchBalances]);
 
   const handleApply = async (e) => {
     e.preventDefault();
@@ -132,10 +132,12 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Leave Management & Substitution Impact</h2>
           <p className="text-sm text-slate-500 mt-1">Track faculty leave applications with live timetable impact analytics</p>
         </div>
-        <button onClick={() => setShowApplyForm(!showApplyForm)} className="btn-primary gap-2">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Apply Leave
-        </button>
+        {!isAdmin && (
+          <button onClick={() => setShowApplyForm(!showApplyForm)} className="btn-primary gap-2">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Apply Leave
+          </button>
+        )}
       </div>
 
       {/* Leave Balance Cards */}

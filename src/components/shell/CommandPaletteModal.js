@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
+const QUICK_ACTIONS = [
+  { type: "action", label: "Open Timetable Workspace", page: "timetable", icon: "grid" },
+  { type: "action", label: "View Faculty Directory", page: "faculty", icon: "users" },
+  { type: "action", label: "Open Attendance Dashboard", page: "attendance", icon: "clock" },
+  { type: "action", label: "View Operational Analytics", page: "analytics", icon: "bar-chart" },
+  { type: "action", label: "Academic Setup: Subjects", page: "subjects", icon: "book-open" },
+  { type: "action", label: "Academic Setup: Classrooms", page: "rooms", icon: "building" },
+];
 
 export default function CommandPaletteModal({ isOpen, onClose, onNavigate }) {
   const [query, setQuery] = useState("");
@@ -12,33 +21,10 @@ export default function CommandPaletteModal({ isOpen, onClose, onNavigate }) {
     if (!isOpen) {
       setQuery("");
       setResults([]);
-      return;
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults(getQuickActions());
-      return;
-    }
-    const timer = setTimeout(() => {
-      performSearch(query);
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  const getQuickActions = () => [
-    { type: "action", label: "Open Timetable Workspace", page: "timetable", icon: "grid" },
-    { type: "action", label: "View Faculty Directory", page: "faculty", icon: "users" },
-    { type: "action", label: "Open Attendance Dashboard", page: "attendance", icon: "clock" },
-    { type: "action", label: "Open Leave Management", page: "leave", icon: "calendar" },
-    { type: "action", label: "Open Substitution Center", page: "substitutions", icon: "user-check" },
-    { type: "action", label: "View Operational Analytics", page: "analytics", icon: "bar-chart" },
-    { type: "action", label: "Academic Setup: Subjects", page: "subjects", icon: "book-open" },
-    { type: "action", label: "Academic Setup: Classrooms", page: "rooms", icon: "building" },
-  ];
-
-  const performSearch = async (searchTerm) => {
+  const performSearch = useCallback(async (searchTerm) => {
     try {
       setLoading(true);
       const res = await axios.get(`${API}/analytics/faculty`, { params: { search: searchTerm } });
@@ -50,16 +36,28 @@ export default function CommandPaletteModal({ isOpen, onClose, onNavigate }) {
         id: f.id,
       }));
 
-      // Combine with static action matches
-      const actionMatches = getQuickActions().filter(a => a.label.toLowerCase().includes(searchTerm.toLowerCase()));
+      const actionMatches = QUICK_ACTIONS.filter(a =>
+        a.label.toLowerCase().includes(searchTerm.toLowerCase())
+      );
       setResults([...actionMatches, ...facultyMatches]);
     } catch (e) {
       console.error("Command palette search error:", e);
-      setResults(getQuickActions().filter(a => a.label.toLowerCase().includes(searchTerm.toLowerCase())));
+      setResults(QUICK_ACTIONS.filter(a => a.label.toLowerCase().includes(searchTerm.toLowerCase())));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults(QUICK_ACTIONS);
+      return;
+    }
+    const timer = setTimeout(() => {
+      performSearch(query);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [query, performSearch]);
 
   if (!isOpen) return null;
 

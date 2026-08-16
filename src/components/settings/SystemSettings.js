@@ -105,26 +105,18 @@ export default function SystemSettings({ userRole = "Super Admin" }) {
           <div className="space-y-3 text-xs">
             <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between">
               <div>
-                <p className="font-bold text-white">Super Admin</p>
-                <p className="text-[10px] text-slate-400">Full institutional & technical access</p>
+                <p className="font-bold text-white">Admin</p>
+                <p className="text-[10px] text-slate-400">Full institutional operations, timetable solver, faculty management, & settings</p>
               </div>
-              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Full Access</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between">
-              <div>
-                <p className="font-bold text-white">Department HOD</p>
-                <p className="text-[10px] text-slate-400">Department faculty, workload, & leaves</p>
-              </div>
-              <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">Department Scope</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Admin Scope</span>
             </div>
 
             <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between">
               <div>
                 <p className="font-bold text-white">Faculty Member</p>
-                <p className="text-[10px] text-slate-400">Personal timetable, leaves, & substitutions</p>
+                <p className="text-[10px] text-slate-400">Personal timetable schedule, individual attendance, workload analytics, & Leave Apply</p>
               </div>
-              <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-bold">Personal Scope</span>
+              <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-bold">Faculty Scope</span>
             </div>
           </div>
         </div>

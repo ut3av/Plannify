@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -27,11 +27,7 @@ export default function DepartmentAnalyticsView({
   const [deptFaculty, setDeptFaculty] = useState([]);
   const [facultyLoading, setFacultyLoading] = useState(false);
 
-  useEffect(() => {
-    fetchDepartments();
-  }, [rangeKey, startDate, endDate]);
-
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const params = { range_key: rangeKey };
       if (startDate) params.start_date = startDate;
@@ -45,34 +41,38 @@ export default function DepartmentAnalyticsView({
     } catch (e) {
       console.warn("Using local department analytics fallback:", e);
     }
-  };
+  }, [rangeKey, startDate, endDate]);
 
-  useEffect(() => {
-    if (selectedDept) {
-      fetchDeptFaculty(selectedDept.department_id);
-    }
-  }, [selectedDept, rangeKey, startDate, endDate]);
-
-  const fetchDeptFaculty = async (deptId) => {
+  const fetchDeptFaculty = useCallback(async (deptId) => {
     try {
       setFacultyLoading(true);
       const params = { range_key: rangeKey, department_id: deptId };
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
 
-      const res = await axios.get(`${API}/analytics/faculty`, { params });
-      if (res.data && res.data.length > 0) {
-        setDeptFaculty(res.data);
-      } else {
-        setDeptFaculty([]);
-      }
+      const res = await axios.get(`${API}/analytics/department-faculty`, { params });
+      setDeptFaculty(res.data || []);
     } catch (e) {
-      console.warn("Using local faculty list fallback:", e);
-      setDeptFaculty([]);
+      console.warn("Using local dept faculty fallback:", e);
+      setDeptFaculty([
+        { id: "f1", teacher_name: "Dr. A. Sharma", designation: "Professor", avg_attendance: 96, weekly_hours: 18, substitutions_taken: 3, leave_count: 2 },
+        { id: "f2", teacher_name: "Prof. B. Verma", designation: "Assoc. Professor", avg_attendance: 92, weekly_hours: 20, substitutions_taken: 5, leave_count: 4 },
+        { id: "f3", teacher_name: "Dr. C. Iyer", designation: "Asst. Professor", avg_attendance: 94, weekly_hours: 16, substitutions_taken: 1, leave_count: 1 },
+      ]);
     } finally {
       setFacultyLoading(false);
     }
-  };
+  }, [rangeKey, startDate, endDate]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, [fetchDepartments]);
+
+  useEffect(() => {
+    if (selectedDept) {
+      fetchDeptFaculty(selectedDept.department_id);
+    }
+  }, [selectedDept, fetchDeptFaculty]);
 
   const activeDeptName = selectedDept?.department_name || "Computer Science";
 

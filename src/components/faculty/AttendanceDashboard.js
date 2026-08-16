@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const STATUS_COLORS = {
   present: { bg: "#dcfce7", text: "#16a34a", label: "Present" },
   absent: { bg: "#fee2e2", text: "#dc2626", label: "Absent" },
@@ -27,39 +26,39 @@ export default function AttendanceDashboard() {
   const [manualForm, setManualForm] = useState({ faculty_id: "", date: viewDate, punch_in: "", punch_out: "", status: "present", remarks: "" });
   const fileRef = useRef();
 
-  useEffect(() => {
-    fetchFaculty();
-  }, []);
-
-  useEffect(() => {
-    if (viewMode === "daily") fetchDailyRecords();
-    else fetchMonthlyRecords();
-  }, [viewDate, viewMode, selectedMonth, selectedYear]);
-
-  const fetchFaculty = async () => {
+  const fetchFaculty = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/faculty/`);
       setFaculty(res.data || []);
     } catch (e) { console.error(e); }
-  };
+  }, []);
 
-  const fetchDailyRecords = async () => {
+  const fetchDailyRecords = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API}/attendance/`, { params: { date: viewDate } });
       setRecords(res.data || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  };
+  }, [viewDate]);
 
-  const fetchMonthlyRecords = async () => {
+  const fetchMonthlyRecords = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API}/attendance/report/monthly`, { params: { month: selectedMonth, year: selectedYear } });
       setRecords(res.data || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  };
+  }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    fetchFaculty();
+  }, [fetchFaculty]);
+
+  useEffect(() => {
+    if (viewMode === "daily") fetchDailyRecords();
+    else fetchMonthlyRecords();
+  }, [viewMode, fetchDailyRecords, fetchMonthlyRecords]);
 
   const handleImport = async (e) => {
     const file = e.target.files[0];

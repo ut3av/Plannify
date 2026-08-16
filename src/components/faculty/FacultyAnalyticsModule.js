@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import FacultyAnalyticsProfile from './FacultyAnalyticsProfile';
 import DepartmentAnalyticsView from './DepartmentAnalyticsView';
@@ -36,15 +36,7 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [configForm, setConfigForm] = useState({ low_threshold: 12, high_threshold: 18 });
 
-  useEffect(() => {
-    fetchDashboard();
-    fetchDirectory();
-    fetchInsights();
-    fetchDepartments();
-    fetchConfig();
-  }, [rangeKey, startDate, endDate]);
-
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
       const params = { range_key: rangeKey };
@@ -59,9 +51,9 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
     } finally {
       setLoading(false);
     }
-  };
+  }, [rangeKey, startDate, endDate, filterDept]);
 
-  const fetchDirectory = async () => {
+  const fetchDirectory = useCallback(async () => {
     try {
       const params = {
         range_key: rangeKey,
@@ -81,9 +73,9 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
     } catch (e) {
       console.error("Failed to load faculty directory analytics:", e);
     }
-  };
+  }, [rangeKey, startDate, endDate, sortBy, sortOrder, filterDept, filterDesignation, filterStatus, search, attMin]);
 
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
     try {
       const params = { range_key: rangeKey };
       if (startDate) params.start_date = startDate;
@@ -93,25 +85,36 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
     } catch (e) {
       console.error("Failed to load insights:", e);
     }
-  };
+  }, [rangeKey, startDate, endDate]);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/faculty/departments`);
       setDepartments(res.data || []);
     } catch (e) {
       console.error("Failed to load departments:", e);
     }
-  };
+  }, []);
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/analytics/config`);
       if (res.data) setConfigForm(res.data);
     } catch (e) {
       console.error("Failed to load config:", e);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchDashboard();
+    fetchInsights();
+    fetchDepartments();
+    fetchConfig();
+  }, [fetchDashboard, fetchInsights, fetchDepartments, fetchConfig]);
+
+  useEffect(() => {
+    fetchDirectory();
+  }, [fetchDirectory]);
 
   const handleSaveConfig = async (e) => {
     e.preventDefault();
@@ -137,10 +140,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
       setSortOrder("asc");
     }
   };
-
-  useEffect(() => {
-    fetchDirectory();
-  }, [sortBy, sortOrder, search, filterDept, filterDesignation, filterStatus, attMin]);
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-100">
@@ -364,6 +363,29 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
               </select>
 
               <select
+                value={filterDesignation}
+                onChange={(e) => setFilterDesignation(e.target.value)}
+                className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white"
+              >
+                <option value="">All Designations</option>
+                <option value="Professor">Professor</option>
+                <option value="Associate Professor">Associate Professor</option>
+                <option value="Assistant Professor">Assistant Professor</option>
+                <option value="Lecturer">Lecturer</option>
+              </select>
+
+              <select
+                value={attMin}
+                onChange={(e) => setAttMin(e.target.value)}
+                className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white"
+              >
+                <option value="">Any Attendance</option>
+                <option value="90">≥ 90% Attendance</option>
+                <option value="80">≥ 80% Attendance</option>
+                <option value="75">≥ 75% Attendance</option>
+              </select>
+
+              <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white"
@@ -373,6 +395,12 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
                 <option value="on-leave">On Leave</option>
                 <option value="resigned">Resigned</option>
               </select>
+
+              {loading && (
+                <span className="text-[11px] text-amber-400 font-semibold animate-pulse">
+                  Syncing...
+                </span>
+              )}
             </div>
           </div>
 

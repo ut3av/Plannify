@@ -18,12 +18,12 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from pydantic import BaseModel, Field
 
 # --- Environment Setup ---
-# First load from current working directory
-load_dotenv()
-# Then specifically load from backend folder to ensure API keys are picked up
+# Specifically load from backend folder first to ensure backend port and API keys take precedence
 backend_env = os.path.join(os.path.dirname(__file__), ".env")
 if os.path.exists(backend_env):
     load_dotenv(backend_env, override=True)
+# Load from root / current working directory for shared variables without overwriting backend env vars
+load_dotenv(override=False)
 
 
 import re
@@ -116,7 +116,8 @@ app.include_router(substitution_router)
 app.include_router(analytics_router)
 
 # --- Middleware & Error Handling ---
-origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+cors_env = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080")
+origins = [o.strip() for o in cors_env.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -1494,3 +1495,21 @@ def chat_with_groq(request: ChatRequest):
         logger.warning(f"Groq API call error handled: {error_str}")
         fallback_reply = generate_expert_fallback_reply(request.message, ctx)
         return {"reply": fallback_reply}
+
+
+if __name__ == "__main__":
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    import uvicorn
+    env_backend_port = os.getenv("BACKEND_PORT")
+    env_port = os.getenv("PORT")
+    if env_backend_port:
+        port = int(env_backend_port)
+    elif env_port and env_port != "3000":
+        port = int(env_port)
+    else:
+        port = 8080
+    host = os.getenv("HOST", "0.0.0.0")
+    print(f"[+] Starting Plannify Backend on http://{host}:{port}")
+    uvicorn.run(app, host=host, port=port)
+

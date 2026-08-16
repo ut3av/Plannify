@@ -146,16 +146,6 @@ export default function HeaderBar({
           )}
         </button>
 
-        {/* Role Switcher Selector */}
-        <select
-          value={userRole || "Admin"}
-          onChange={(e) => onRoleChange && onRoleChange(e.target.value)}
-          className="px-2.5 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 hidden sm:block"
-        >
-          <option value="Admin">🛡️ Admin</option>
-          <option value="HOD">🎓 HOD View</option>
-          <option value="Faculty">👨‍🏫 Faculty View</option>
-        </select>
 
         {/* User Profile Dropdown */}
         <div className="relative">

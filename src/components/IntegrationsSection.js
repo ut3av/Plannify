@@ -30,7 +30,7 @@ export default function IntegrationsSection() {
     setDistributeStatus(null);
     try {
       const response = await axios.post(`${API_BASE_URL}/n8n/email-all`);
-      setDistributeStatus({ success: true, message: "Bulk distribution triggered! n8n is now mailing all teachers." });
+      setDistributeStatus({ success: true, message: response.data?.message || "Bulk distribution triggered! n8n is now mailing all teachers." });
     } catch (err) {
       setDistributeStatus({ success: false, error: err.response?.data?.detail || "Could not reach the distribution engine." });
     } finally {
