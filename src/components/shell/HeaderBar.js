@@ -71,10 +71,10 @@ export default function HeaderBar({
             alt="Planify Logo"
             className="w-8 h-8 object-contain drop-shadow-md"
           />
-          <span className={`font-black text-sm tracking-tight hidden sm:inline-block ${
+          <span className={`font-black text-base tracking-normal hidden sm:inline-block ${
             isWarm ? 'text-[#2c1810]' : 'text-white'
           }`}>
-            Planify<span className={isWarm ? 'text-amber-600' : 'text-indigo-400'}>.exe</span>
+            ρℓαɳɳเƒყ<span className={isWarm ? 'text-amber-600' : 'text-indigo-400'}>.exe</span>
           </span>
         </button>
 

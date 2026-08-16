@@ -142,8 +142,8 @@ export default function LoginPage() {
           <div>
             <div className="flex items-center gap-3 mb-8">
               <img src="/favicon.png" alt="Planify" className="w-10 h-10 object-contain drop-shadow-md" />
-              <span className="font-black text-xl tracking-tight text-white">
-                Planify<span className="text-indigo-400">.exe</span>
+              <span className="font-black text-2xl tracking-normal text-white">
+                ρℓαɳɳเƒყ<span className="text-indigo-400">.exe</span>
               </span>
             </div>
 
@@ -181,7 +181,7 @@ export default function LoginPage() {
               {isSignUp ? "Registration Portal" : "Authentication Portal"}
             </span>
             <h2 className="text-2xl font-black text-white mt-1">
-              {isSignUp ? "Create OS Identity" : "Sign In to Planify"}
+              {isSignUp ? "Create OS Identity" : "Sign In to ρℓαɳɳเƒყ.exe"}
             </h2>
             <p className="text-xs text-slate-400 mt-1">
               Select your role portal to access your designated workspace.

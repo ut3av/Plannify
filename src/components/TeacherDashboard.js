@@ -52,7 +52,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
                 alt="Planify" 
                 className="h-7 md:h-8 object-contain" 
               />
-              <span className="font-black text-xl md:text-2xl text-white tracking-tighter ml-1">Planify<span className="text-indigo-400">.exe</span></span>
+              <span className="font-black text-xl md:text-2xl text-white tracking-normal ml-1">ρℓαɳɳเƒყ<span className="text-indigo-400">.exe</span></span>
             </h1>
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-400/80">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

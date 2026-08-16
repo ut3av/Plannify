@@ -13,7 +13,7 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
   const [messages, setMessages] = useState([
     {
       id: "welcome",
-      text: "👋 **Hello! I am your Planify AI Co-Pilot.**\n\nI specialize in academic timetable optimization, teacher workload balancing, substitution management, and automated timetable OCR image extraction.\n\n*How can I assist your institution today?*",
+      text: "👋 **Hello! I am your ρℓαɳɳเƒყ.exe AI Co-Pilot.**\n\nI specialize in academic timetable optimization, teacher workload balancing, substitution management, and automated timetable OCR image extraction.\n\n*How can I assist your institution today?*",
       sender: 'bot',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
@@ -157,7 +157,7 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 p-3.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-500 text-white shadow-2xl shadow-indigo-500/40 hover:scale-105 hover:shadow-indigo-500/60 transition-all duration-300 border border-indigo-400/30"
-          title="Open Planify AI Co-Pilot"
+          title="Open ρℓαɳɳเƒყ AI Co-Pilot"
         >
           <div className="relative flex items-center justify-center w-7 h-7 rounded-full bg-white/20 backdrop-blur-md">
             <svg className="w-4 h-4 text-white animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -165,7 +165,7 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
             </svg>
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900" />
           </div>
-          <span className="text-xs font-black tracking-wide pr-1 hidden sm:inline">Planify AI</span>
+          <span className="text-xs font-black tracking-normal pr-1 hidden sm:inline">ρℓαɳɳเƒყ AI</span>
         </button>
       )}
 
@@ -186,7 +186,7 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-black text-sm text-white tracking-tight">Planify AI Co-Pilot</h3>
+                  <h3 className="font-black text-sm text-white tracking-normal">ρℓαɳɳเƒყ AI Co-Pilot</h3>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     Llama 3.3 70B

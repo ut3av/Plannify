@@ -179,8 +179,8 @@ export default function SidebarNav({
             ? 'border-[#3d2a1e] text-amber-200/40'
             : 'border-slate-800 text-slate-500'
         }`}>
-          <span>Planify Enterprise</span>
-          <span className={`font-mono ${isWarm ? 'text-amber-400' : 'text-emerald-400'}`}>v1.0.0</span>
+          <span className="font-semibold">ρℓαɳɳเƒყ.exe OS</span>
+          <span className={`font-mono ${isWarm ? 'text-amber-400' : 'text-emerald-400'}`}>v2.0</span>
         </div>
       )}
     </aside>

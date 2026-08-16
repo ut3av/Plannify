@@ -121,7 +121,7 @@ function PageLoadingFallback() {
           <div className="w-8 h-8 border-3 border-indigo-400 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
-      <h2 className="text-sm font-bold text-slate-200 tracking-wider uppercase">Loading Planify</h2>
+      <h2 className="text-sm font-bold text-slate-200 tracking-normal">Loading ρℓαɳɳเƒყ.exe</h2>
       <p className="text-xs text-slate-500 mt-1">Initializing academic workspace...</p>
     </div>
   );
