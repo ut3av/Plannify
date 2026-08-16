@@ -438,7 +438,7 @@ export default function App() {
       }
 
       // 2. Relational Sync (Structured Tables for Make/Analytics)
-      if (activeTimetable) {
+      if (result) {
         await syncRelationalData({ ...stateToSave, result });
       }
       

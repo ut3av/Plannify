@@ -1315,8 +1315,8 @@ def assign_proxy(request: RescheduleRequest):
     LAST_TIMETABLE["reschedule_note"] = {
         "teacher": teacher,
         "proxies_assigned": proxies_assigned,
-        "message": f"Assigned {
-            len(proxies_assigned)} proxies for {teacher} on {day}."}
+        "message": f"Assigned {len(proxies_assigned)} proxies for {teacher} on {day}."
+    }
     LAST_TIMETABLE["n8n_delivery"] = notify_n8n(
         "timetable.proxy_assigned",
         {
