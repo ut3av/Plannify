@@ -3,7 +3,7 @@ import axios from 'axios';
 import FacultyAnalyticsProfile from './FacultyAnalyticsProfile';
 import AIAnalyticsAssistantModal from './AIAnalyticsAssistantModal';
 
-const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
+import { API_BASE_URL as API } from "../../apiConfig";
 
 export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSystem }) {
   // 1. Time Period State

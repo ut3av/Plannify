@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 
 import { compressImage } from '../utils/imageOptimizer';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+import { API_BASE_URL } from '../apiConfig';
 
 export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
   const [isOpen, setIsOpen] = useState(false);

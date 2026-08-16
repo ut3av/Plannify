@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
+import { API_BASE_URL as API } from "../../apiConfig";
 
 export default function FacultyAnalyticsProfile({ facultyId, rangeKey, startDate, endDate, onBack }) {
   const [profile, setProfile] = useState(null);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
+import { API_BASE_URL as API } from "../../apiConfig";
 
 export default function AIAnalyticsAssistantModal({ rangeKey, departmentId, onClose }) {
   const [messages, setMessages] = useState([

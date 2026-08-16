@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 
-const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
+import { API_BASE_URL as API } from "../../apiConfig";
 
 const STATUS_COLORS = {
   present: { bg: "#dcfce7", text: "#16a34a", label: "Present" },

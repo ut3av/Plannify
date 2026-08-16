@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
+import { API_BASE_URL as API } from "../../apiConfig";
 
 export default function ReportsCenter() {
   const [rangeKey, setRangeKey] = useState("30d");

@@ -3,6 +3,7 @@ import axios from "axios";
 import { saveAs } from "file-saver";
 import { supabase } from "./supabaseClient";
 import { syncRelationalData } from "./services/supabaseService";
+import { API_BASE_URL } from "./apiConfig";
 import AppShell from "./components/shell/AppShell";
 
 // Dynamic Section / View Imports (React.lazy)
@@ -27,9 +28,6 @@ const IntegrationsSection = lazy(() => import("./components/IntegrationsSection"
 const LogsSection = lazy(() => import("./components/LogsSection"));
 const ReportsCenter = lazy(() => import("./components/reports/ReportsCenter"));
 const AIChatBot = lazy(() => import("./components/AIChatBot"));
-
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 const parseCloudJson = (value, fallback) => {
   if (value === null || value === undefined || value === "") return fallback;

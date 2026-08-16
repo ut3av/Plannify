@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { supabase } from "../supabaseClient";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+import { API_BASE_URL } from "../apiConfig";
 
 export default function LoginPage() {
   const [portalRole, setPortalRole] = useState("teacher"); // "admin" | "teacher"
@@ -28,10 +28,12 @@ export default function LoginPage() {
         const teacherName = name || email.split('@')[0];
 
         // 1. Supabase Auth Signup with complete metadata
+        const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}` : undefined;
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
+            emailRedirectTo: redirectUrl,
             data: {
               role: portalRole,
               name: teacherName,
