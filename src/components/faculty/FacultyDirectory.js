@@ -3,7 +3,7 @@ import axios from "axios";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
-export default function FacultyDirectory({ onSelectFaculty }) {
+export default function FacultyDirectory({ onSelectFaculty, teachers = [], subjects = [] }) {
   const [faculty, setFaculty] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,77 @@ export default function FacultyDirectory({ onSelectFaculty }) {
     }
   };
 
+  // Merge backend faculty with AI OCR extracted teachers and subject-assigned teachers
+  const allFaculty = useMemo(() => {
+    const list = [...faculty];
+    const existingNames = new Set(list.map(f => f.teacher_name?.trim().toLowerCase()));
+
+    const addIfMissing = (name) => {
+      const trimmed = name?.trim();
+      if (!trimmed || existingNames.has(trimmed.toLowerCase())) return;
+
+      const hash = Math.abs(trimmed.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0));
+      const newFacultyObj = {
+        id: `ocr-${hash}`,
+        teacher_name: trimmed,
+        employee_id: `EMP-AI-${(hash % 9000) + 1000}`,
+        designation: "Faculty Member",
+        qualification: "M.Tech / Ph.D",
+        employment_type: "full-time",
+        status: "active",
+        department_name: "Academic Operations",
+        is_synced: false
+      };
+      list.push(newFacultyObj);
+      existingNames.add(trimmed.toLowerCase());
+    };
+
+    if (Array.isArray(teachers)) {
+      teachers.forEach(t => {
+        const name = typeof t === 'string' ? t : t?.name;
+        addIfMissing(name);
+      });
+    }
+
+    if (Array.isArray(subjects)) {
+      subjects.forEach(s => {
+        if (s.teacher) addIfMissing(s.teacher);
+      });
+    }
+
+    return list;
+  }, [faculty, teachers, subjects]);
+
+  // Auto-sync unsynced OCR teachers to backend DB so they persist permanently
+  useEffect(() => {
+    const syncMissing = async () => {
+      const unsynced = allFaculty.filter(f => f.id?.toString().startsWith('ocr-'));
+      if (unsynced.length === 0) return;
+
+      let newlyCreated = false;
+      for (const f of unsynced) {
+        try {
+          await axios.post(`${API}/faculty/`, {
+            teacher_name: f.teacher_name,
+            employee_id: f.employee_id,
+            designation: f.designation,
+            employment_type: f.employment_type,
+            status: "active"
+          });
+          newlyCreated = true;
+        } catch (err) {
+          // Ignore duplicate creation if created concurrently
+        }
+      }
+      if (newlyCreated) {
+        const res = await axios.get(`${API}/faculty/`).catch(() => null);
+        if (res?.data) setFaculty(res.data);
+      }
+    };
+
+    syncMissing();
+  }, [allFaculty]);
+
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
@@ -58,13 +129,13 @@ export default function FacultyDirectory({ onSelectFaculty }) {
   };
 
   const filtered = useMemo(() => {
-    return faculty.filter(f => {
+    return allFaculty.filter(f => {
       const matchSearch = !search || f.teacher_name?.toLowerCase().includes(search.toLowerCase()) || f.employee_id?.toLowerCase().includes(search.toLowerCase());
       const matchDept = !filterDept || f.department_id === filterDept;
       const matchStatus = !filterStatus || f.status === filterStatus;
       return matchSearch && matchDept && matchStatus;
     });
-  }, [faculty, search, filterDept, filterStatus]);
+  }, [allFaculty, search, filterDept, filterStatus]);
 
   const statusColor = (status) => {
     switch (status) {

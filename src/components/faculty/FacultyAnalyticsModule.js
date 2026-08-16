@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import FacultyAnalyticsProfile from './FacultyAnalyticsProfile';
-import DepartmentAnalyticsView from './DepartmentAnalyticsView';
 import AIAnalyticsAssistantModal from './AIAnalyticsAssistantModal';
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:8080";
@@ -270,17 +269,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
         </button>
 
         <button
-          onClick={() => setActiveTab("departments")}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-            activeTab === "departments"
-              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
-              : "text-slate-400 hover:text-white hover:bg-slate-800"
-          }`}
-        >
-          Department Analytics (HOD View)
-        </button>
-
-        <button
           onClick={() => setActiveTab("ai")}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === "ai"
@@ -460,15 +448,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
         </div>
       )}
 
-      {/* ── TAB 3: DEPARTMENT ANALYTICS (HOD VIEW) ── */}
-      {activeTab === "departments" && (
-        <DepartmentAnalyticsView
-          rangeKey={rangeKey}
-          startDate={startDate}
-          endDate={endDate}
-          onSelectFaculty={(f) => { setSelectedFacultyId(f.id); setActiveTab("profile"); }}
-        />
-      )}
 
       {/* ── TAB 4: AI ANALYTICS ASSISTANT ── */}
       {activeTab === "ai" && (

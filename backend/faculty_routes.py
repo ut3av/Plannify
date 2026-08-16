@@ -43,6 +43,40 @@ def faculty_dashboard_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/seed-lnct")
+def seed_lnct():
+    """Seeds LNCT University Bhopal 17 Faculty Members."""
+    lnct = [
+        {"teacher_name": "Prof Ripusoodan Sharma", "employee_id": "EMP-LNCT-001", "designation": "Professor", "phone": "+91-7869543871"},
+        {"teacher_name": "Prof Anshu Gangwar", "employee_id": "EMP-LNCT-002", "designation": "Professor", "phone": "+91-8519064890"},
+        {"teacher_name": "Dr Satish Manwani", "employee_id": "EMP-LNCT-003", "designation": "Associate Professor", "phone": "+91-9893724144"},
+        {"teacher_name": "Prof Pragya Shastri", "employee_id": "EMP-LNCT-004", "designation": "Assistant Professor", "phone": "+91-9589952503"},
+        {"teacher_name": "Prof Mohit Kubade", "employee_id": "EMP-LNCT-005", "designation": "Assistant Professor", "phone": "+91-7804817594"},
+        {"teacher_name": "Dr Sonal Sharma", "employee_id": "EMP-LNCT-006", "designation": "Professor", "phone": "+91-9425644974"},
+        {"teacher_name": "Mr. Aniket Satpute", "employee_id": "EMP-LNCT-007", "designation": "Assistant Professor", "phone": "+91-7028467010"},
+        {"teacher_name": "Prof Jagruti Durugkar", "employee_id": "EMP-LNCT-008", "designation": "Assistant Professor", "phone": "+91-8964877562"},
+        {"teacher_name": "Mr Kaiwalya Zankar", "employee_id": "EMP-LNCT-009", "designation": "Lecturer", "phone": "+91-9834921305"},
+        {"teacher_name": "Ms. Swarupa Waghmare", "employee_id": "EMP-LNCT-010", "designation": "Lecturer", "phone": "+91-8482894207"},
+        {"teacher_name": "Prof Dipanshu Jha", "employee_id": "EMP-LNCT-011", "designation": "Assistant Professor", "phone": "+91-8462821467"},
+        {"teacher_name": "Dr Alka Gulati", "employee_id": "EMP-LNCT-012", "designation": "Associate Professor", "phone": "+91-9826722264"},
+        {"teacher_name": "Prof Neha Swanakar", "employee_id": "EMP-LNCT-013", "designation": "Assistant Professor", "phone": "+91-9300787622"},
+        {"teacher_name": "Dr Swagatika Lenka", "employee_id": "EMP-LNCT-014", "designation": "Associate Professor", "phone": "+91-8637248598"},
+        {"teacher_name": "Mr Jitendra Maind", "employee_id": "EMP-LNCT-015", "designation": "Assistant Professor", "phone": "+91-7875492545"},
+        {"teacher_name": "Prof Pramod Kumar Saket", "employee_id": "EMP-LNCT-016", "designation": "Assistant Professor", "phone": "+91-9039371123"},
+        {"teacher_name": "Prof Atul Verma", "employee_id": "EMP-LNCT-017", "designation": "Assistant Professor", "phone": "+91-9569455529"}
+    ]
+    added = []
+    for f in lnct:
+        try:
+            res = create_faculty(f)
+            if res and res.get("id"):
+                initialize_leave_balances(res["id"])
+                added.append(res)
+        except Exception:
+            pass
+    return {"message": "LNCT Faculty members seeded successfully", "count": len(added)}
+
+
 # ── Departments ─────────────────────────────────────────────
 
 @router.get("/departments")

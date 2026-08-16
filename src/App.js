@@ -16,16 +16,13 @@ import { syncRelationalData } from "./services/supabaseService";
 import TeacherDashboard from "./components/TeacherDashboard";
 import FacultyDirectory from "./components/faculty/FacultyDirectory";
 import FacultyProfile from "./components/faculty/FacultyProfile";
-import LeaveManagement from "./components/faculty/LeaveManagement";
 import AttendanceDashboard from "./components/faculty/AttendanceDashboard";
-import SubstitutionPanel from "./components/faculty/SubstitutionPanel";
 import FacultyDashboardStats from "./components/faculty/FacultyDashboardStats";
 import FacultyAnalyticsModule from "./components/faculty/FacultyAnalyticsModule";
 import AppShell from "./components/shell/AppShell";
 import InstitutionalDashboard from "./components/dashboard/InstitutionalDashboard";
 import SectionsManagement from "./components/sections/SectionsManagement";
 import ReportsCenter from "./components/reports/ReportsCenter";
-import DepartmentAnalyticsView from "./components/faculty/DepartmentAnalyticsView";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
@@ -141,45 +138,58 @@ function ErrorAlert({ error }) {
 
 const DEMO_TIMETABLE_DATA = {
   teachers: [
-    { name: "Dr. Arvind Kumar", department: "Computer Science", free_periods: 1, email: "arvind.kumar@univ.edu", phone: "+91-9876543210" },
-    { name: "Prof. Sarah Jenkins", department: "Computer Science", free_periods: 1, email: "s.jenkins@univ.edu", phone: "+91-9876543211" },
-    { name: "Rajesh Malhotra", department: "Information Technology", free_periods: 1, email: "r.malhotra@univ.edu", phone: "+91-9876543212" },
-    { name: "Anita Desai", department: "Information Technology", free_periods: 1, email: "a.desai@univ.edu", phone: "+91-9876543213" },
-    { name: "Kevin Peterson", department: "Computer Science", free_periods: 1, email: "k.peterson@univ.edu", phone: "+91-9876543214" },
-    { name: "Dr. Meenakshi Iyer", department: "Electronics & Comm.", free_periods: 1, email: "m.iyer@univ.edu", phone: "+91-9876543215" },
-    { name: "Suresh Raina", department: "Information Technology", free_periods: 1, email: "s.raina@univ.edu", phone: "+91-9876543216" },
-    { name: "Monica Geller", department: "Business Admin", free_periods: 1, email: "m.geller@univ.edu", phone: "+91-9876543217" },
-    { name: "Vikram Seth", department: "Business Admin", free_periods: 1, email: "v.seth@univ.edu", phone: "+91-9876543218" },
-    { name: "Librarian", department: "General Academic", free_periods: 0, email: "library@univ.edu", phone: "+91-9876543219" },
+    { name: "Prof Ripusoodan Sharma", department: "Computer Applications", free_periods: 1, email: "ripusoodan.sharma@lnctu.ac.in", phone: "+91-7869543871" },
+    { name: "Prof Anshu Gangwar", department: "Computer Applications", free_periods: 1, email: "anshu.gangwar@lnctu.ac.in", phone: "+91-8519064890" },
+    { name: "Dr Satish Manwani", department: "Computer Applications", free_periods: 1, email: "satish.manwani@lnctu.ac.in", phone: "+91-9893724144" },
+    { name: "Prof Pragya Shastri", department: "Computer Applications", free_periods: 1, email: "pragya.shastri@lnctu.ac.in", phone: "+91-9589952503" },
+    { name: "Prof Mohit Kubade", department: "Computer Applications", free_periods: 1, email: "mohit.kubade@lnctu.ac.in", phone: "+91-7804817594" },
+    { name: "Dr Sonal Sharma", department: "Computer Applications", free_periods: 1, email: "sonal.sharma@lnctu.ac.in", phone: "+91-9425644974" },
+    { name: "Mr. Aniket Satpute", department: "AI & DA", free_periods: 1, email: "aniket.satpute@lnctu.ac.in", phone: "+91-7028467010" },
+    { name: "Prof Jagruti Durugkar", department: "AI & DA", free_periods: 1, email: "jagruti.durugkar@lnctu.ac.in", phone: "+91-8964877562" },
+    { name: "Mr Kaiwalya Zankar", department: "AI & DA", free_periods: 1, email: "kaiwalya.zankar@lnctu.ac.in", phone: "+91-9834921305" },
+    { name: "Ms. Swarupa Waghmare", department: "AI & DA", free_periods: 1, email: "swarupa.waghmare@lnctu.ac.in", phone: "+91-8482894207" },
+    { name: "Prof Dipanshu Jha", department: "Computer Applications", free_periods: 1, email: "dipanshu.jha@lnctu.ac.in", phone: "+91-8462821467" },
+    { name: "Dr Alka Gulati", department: "AI & DA", free_periods: 1, email: "alka.gulati@lnctu.ac.in", phone: "+91-9826722264" },
+    { name: "Prof Neha Swanakar", department: "Computer Applications", free_periods: 1, email: "neha.swanakar@lnctu.ac.in", phone: "+91-9300787622" },
+    { name: "Dr Swagatika Lenka", department: "Computer Applications", free_periods: 1, email: "swagatika.lenka@lnctu.ac.in", phone: "+91-8637248598" },
+    { name: "Mr Jitendra Maind", department: "AI & DA", free_periods: 1, email: "jitendra.maind@lnctu.ac.in", phone: "+91-7875492545" },
+    { name: "Prof Pramod Kumar Saket", department: "Computer Applications", free_periods: 1, email: "pramod.saket@lnctu.ac.in", phone: "+91-9039371123" },
+    { name: "Prof Atul Verma", department: "Computer Applications", free_periods: 1, email: "atul.verma@lnctu.ac.in", phone: "+91-9569455529" }
   ],
   sections: [
-    { name: "BCA-I", department: "Computer Science", room: "Room 101", lab_room: "Computer Lab A" },
-    { name: "BCA-II", department: "Information Technology", room: "Room 102", lab_room: "Computer Lab B" },
-    { name: "BCA-III", department: "Information Technology", room: "Room 103", lab_room: "Computer Lab A" },
-    { name: "CS-A", department: "Computer Science", room: "Room 101", lab_room: "Computer Lab A" },
-    { name: "EC-A", department: "Electronics & Comm.", room: "Room 102", lab_room: "Computer Lab B" },
-    { name: "MBA-I", department: "Business Admin", room: "Seminar Hall", lab_room: "Computer Lab A" },
+    { name: "Section A (BCA-III)", room: "308/MCA", lab_room: "Lab Room No. 006" },
+    { name: "Section B (BCA-III)", room: "401/MCA", lab_room: "Lab Room No. 006" },
+    { name: "Section C (BCA-III)", room: "402/MCA", lab_room: "Lab Room No. 002" },
+    { name: "Section D (BCA-III)", room: "404/MCA", lab_room: "Lab Room No. 003" },
+    { name: "Section E (BCA-III)", room: "407/MCA", lab_room: "Lab Room No. 003" },
+    { name: "Section F (BCA-III)", room: "408/MCA", lab_room: "Lab Room No. 007" },
   ],
-  rooms: ["Room 101", "Room 102", "Room 103", "Computer Lab A", "Computer Lab B", "Seminar Hall"],
+  rooms: ["308/MCA", "401/MCA", "402/MCA", "403/MCA", "404/MCA", "407/MCA", "408/MCA", "Lab Room No. 002", "Lab Room No. 003", "Lab Room No. 006", "Lab Room No. 007", "Seminar Hall"],
   timeSlots: [
-    "09:00 AM - 10:00 AM",
-    "10:00 AM - 11:00 AM",
-    "11:15 AM - 12:15 PM",
-    "12:15 PM - 01:15 PM",
-    "02:00 PM - 03:00 PM",
+    "09:00 AM - 09:45 AM",
+    "09:45 AM - 10:30 AM",
+    "10:30 AM - 11:20 AM",
+    "11:20 AM - 12:10 PM",
+    "12:10 PM - 01:00 PM",
+    "01:00 PM - 01:50 PM",
+    "01:50 PM - 02:40 PM",
+    "02:40 PM - 03:30 PM"
   ],
   subjects: [
-    { code: "CS101", name: "Python Programming", teacher: "Dr. Arvind Kumar", sections: ["BCA-I", "BCA-II", "CS-A"], department: "Computer Science", required_slots: 3, colorIndex: 0 },
-    { code: "CS102", name: "Data Structures", teacher: "Prof. Sarah Jenkins", sections: ["BCA-I", "BCA-II", "CS-A"], department: "Computer Science", required_slots: 3, colorIndex: 1 },
-    { code: "CS103", name: "Operating Systems", teacher: "Rajesh Malhotra", sections: ["BCA-I", "BCA-II", "BCA-III"], department: "Information Technology", required_slots: 3, colorIndex: 2 },
-    { code: "CS104", name: "Computer Networks", teacher: "Anita Desai", sections: ["BCA-I", "BCA-II", "BCA-III"], department: "Information Technology", required_slots: 3, colorIndex: 3 },
-    { code: "CS105", name: "Database Management", teacher: "Kevin Peterson", sections: ["BCA-I", "BCA-II", "CS-A"], department: "Computer Science", required_slots: 2, colorIndex: 4 },
-    { code: "CS106", name: "Software Engineering", teacher: "Dr. Meenakshi Iyer", sections: ["EC-A", "BCA-III"], department: "Electronics & Comm.", required_slots: 2, colorIndex: 5 },
-    { code: "CS107", name: "Web Technologies", teacher: "Suresh Raina", sections: ["BCA-I", "BCA-II", "BCA-III"], department: "Information Technology", required_slots: 2, colorIndex: 6 },
-    { code: "MGT101", name: "Principles of Management", teacher: "Monica Geller", sections: ["MBA-I", "BCA-I"], department: "Business Admin", required_slots: 2, colorIndex: 7 },
-    { code: "MAT101", name: "Discrete Mathematics", teacher: "Vikram Seth", sections: ["BCA-I", "BCA-II", "MBA-I"], department: "Business Admin", required_slots: 2, colorIndex: 8 },
-    { code: "LAB101", name: "Coding Lab", teacher: "Dr. Arvind Kumar", sections: ["BCA-I", "CS-A"], department: "Computer Science", is_lab: true, required_slots: 2, colorIndex: 9 },
-    { code: "LIB", name: "Library", teacher: "Librarian", sections: ["BCA-I", "BCA-II", "BCA-III"], department: "General Academic", required_slots: 1, colorIndex: 0 },
+    { code: "BCA-301", name: "Object Oriented Programming in C++", teacher: "Prof Ripusoodan Sharma", sections: ["Section A (BCA-III)"], required_slots: 3, colorIndex: 0 },
+    { code: "BCA-302", name: "Data Base Management System", teacher: "Prof Anshu Gangwar", sections: ["Section A (BCA-III)"], required_slots: 3, colorIndex: 1 },
+    { code: "BCA-303", name: "Accounting and Management Control", teacher: "Dr Satish Manwani", sections: ["Section A (BCA-III)"], required_slots: 3, colorIndex: 2 },
+    { code: "BCA-304", name: "Soft Skills & Entrepreneurship", teacher: "Prof Pragya Shastri", sections: ["Section A (BCA-III)"], required_slots: 3, colorIndex: 3 },
+    { code: "BCA-305", name: "Linux & Shell Programming", teacher: "Prof Mohit Kubade", sections: ["Section A (BCA-III)"], required_slots: 3, colorIndex: 4 },
+    { code: "BCA-306", name: "Programming Lab in C++", teacher: "Prof Ripusoodan Sharma", sections: ["Section A (BCA-III)"], is_lab: true, required_slots: 2, colorIndex: 5 },
+    { code: "BCA-307", name: "Programming Lab in DBMS", teacher: "Prof Anshu Gangwar", sections: ["Section A (BCA-III)"], is_lab: true, required_slots: 2, colorIndex: 6 },
+    { code: "BAI-301", name: "Object Oriented Programming in C++", teacher: "Dr Alka Gulati", sections: ["Section B (BCA-III)", "Section C (BCA-III)", "Section D (BCA-III)", "Section E (BCA-III)", "Section F (BCA-III)"], required_slots: 3, colorIndex: 7 },
+    { code: "BAI-302", name: "Data Base Management System", teacher: "Prof Dipanshu Jha", sections: ["Section B (BCA-III)", "Section C (BCA-III)", "Section D (BCA-III)", "Section E (BCA-III)", "Section F (BCA-III)"], required_slots: 3, colorIndex: 8 },
+    { code: "BAI-303", name: "Statistical Modelling & Python", teacher: "Mr. Aniket Satpute", sections: ["Section B (BCA-III)", "Section C (BCA-III)", "Section D (BCA-III)", "Section E (BCA-III)", "Section F (BCA-III)"], required_slots: 3, colorIndex: 0 },
+    { code: "BAI-304", name: "Discrete Maths", teacher: "Prof Jagruti Durugkar", sections: ["Section B (BCA-III)", "Section C (BCA-III)", "Section D (BCA-III)", "Section E (BCA-III)", "Section F (BCA-III)"], required_slots: 3, colorIndex: 1 },
+    { code: "BAI-305", name: "Data Visualization", teacher: "Ms. Swarupa Waghmare", sections: ["Section B (BCA-III)", "Section C (BCA-III)", "Section D (BCA-III)", "Section E (BCA-III)", "Section F (BCA-III)"], required_slots: 3, colorIndex: 2 },
+    { code: "BAI-306", name: "Programming Lab in C++", teacher: "Prof Mohit Kubade", sections: ["Section B (BCA-III)", "Section C (BCA-III)", "Section D (BCA-III)", "Section E (BCA-III)", "Section F (BCA-III)"], is_lab: true, required_slots: 2, colorIndex: 3 },
+    { code: "BAI-307", name: "Programming Lab in DBMS", teacher: "Prof Pramod Kumar Saket", sections: ["Section B (BCA-III)", "Section C (BCA-III)", "Section D (BCA-III)", "Section E (BCA-III)", "Section F (BCA-III)"], is_lab: true, required_slots: 2, colorIndex: 4 },
   ],
 };
 
@@ -188,53 +198,87 @@ const DEMO_RESULT = {
   objective_score: 0,
   days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
   time_slots: [
-    "09:00 AM - 10:00 AM",
-    "10:00 AM - 11:00 AM",
-    "11:15 AM - 12:15 PM",
-    "12:15 PM - 01:15 PM",
-    "02:00 PM - 03:00 PM",
+    "09:00 AM - 09:45 AM",
+    "09:45 AM - 10:30 AM",
+    "10:30 AM - 11:20 AM",
+    "11:20 AM - 12:10 PM",
+    "12:10 PM - 01:00 PM",
+    "01:00 PM - 01:50 PM",
+    "01:50 PM - 02:40 PM",
+    "02:40 PM - 03:30 PM"
   ],
   assignments: [
-    { day: "Mon", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 101" },
-    { day: "Mon", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Data Structures", teacher: "Prof. Sarah Jenkins", room: "Room 101" },
-    { day: "Mon", slot: "11:15 AM - 12:15 PM", section: "BCA-I", subject: "Operating Systems", teacher: "Rajesh Malhotra", room: "Room 101" },
-    { day: "Mon", slot: "12:15 PM - 01:15 PM", section: "BCA-I", subject: "Computer Networks", teacher: "Anita Desai", room: "Room 101" },
-    { day: "Mon", slot: "02:00 PM - 03:00 PM", section: "BCA-I", subject: "Coding Lab", teacher: "Dr. Arvind Kumar", room: "Computer Lab A" },
+    // SECTION A
+    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section A (BCA-III)", subject: "Linux & Shell Programming", code: "BCA-305", teacher: "Prof Mohit Kubade", room: "308/MCA" },
+    { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section A (BCA-III)", subject: "Soft Skills & Entrepreneurship", code: "BCA-304", teacher: "Prof Pragya Shastri", room: "308/MCA" },
+    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section A (BCA-III)", subject: "Accounting & Management Control", code: "BCA-303", teacher: "Dr Satish Manwani", room: "308/MCA" },
+    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Programming Lab in C++", code: "BCA-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006" },
 
-    { day: "Mon", slot: "09:00 AM - 10:00 AM", section: "BCA-II", subject: "Database Management", teacher: "Kevin Peterson", room: "Room 102" },
-    { day: "Mon", slot: "10:00 AM - 11:00 AM", section: "BCA-II", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 102" },
-    { day: "Mon", slot: "11:15 AM - 12:15 PM", section: "BCA-II", subject: "Web Technologies", teacher: "Suresh Raina", room: "Room 102" },
-    { day: "Mon", slot: "12:15 PM - 01:15 PM", section: "BCA-II", subject: "Principles of Management", teacher: "Monica Geller", room: "Room 102" },
-    { day: "Mon", slot: "02:00 PM - 03:00 PM", section: "BCA-II", subject: "Coding Lab", teacher: "Prof. Sarah Jenkins", room: "Computer Lab B" },
+    { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section A (BCA-III)", subject: "Soft Skills & Entrepreneurship", code: "BCA-304", teacher: "Prof Pragya Shastri", room: "308/MCA" },
+    { day: "Tue", slot: "11:20 AM - 12:10 PM", section: "Section A (BCA-III)", subject: "Accounting Tutorial", code: "BCA-303/T", teacher: "Dr Satish Manwani", room: "308/MCA" },
+    { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section A (BCA-III)", subject: "Linux & Shell Programming", code: "BCA-305", teacher: "Prof Mohit Kubade", room: "308/MCA" },
+    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Programming Lab in C++", code: "BCA-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006" },
 
-    { day: "Mon", slot: "09:00 AM - 10:00 AM", section: "CS-A", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 101" },
-    { day: "Mon", slot: "10:00 AM - 11:00 AM", section: "CS-A", subject: "Database Management", teacher: "Kevin Peterson", room: "Room 101" },
+    { day: "Wed", slot: "10:30 AM - 11:20 AM", section: "Section A (BCA-III)", subject: "Accounting & Management Control", code: "BCA-303", teacher: "Dr Satish Manwani", room: "308/MCA" },
+    { day: "Wed", slot: "11:20 AM - 12:10 PM", section: "Section A (BCA-III)", subject: "Soft Skills Tutorial", code: "BCA-304/T", teacher: "Prof Pragya Shastri", room: "308/MCA" },
+    { day: "Wed", slot: "01:00 PM - 01:50 PM", section: "Section A (BCA-III)", subject: "Object Oriented Programming in C++", code: "BCA-301", teacher: "Prof Ripusoodan Sharma", room: "308/MCA" },
+    { day: "Wed", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Programming Lab in DBMS", code: "BCA-307", teacher: "Prof Anshu Gangwar", room: "Lab Room No. 007" },
 
-    { day: "Mon", slot: "09:00 AM - 10:00 AM", section: "EC-A", subject: "Software Engineering", teacher: "Dr. Meenakshi Iyer", room: "Room 102" },
-    { day: "Mon", slot: "10:00 AM - 11:00 AM", section: "MBA-I", subject: "Principles of Management", teacher: "Monica Geller", room: "Seminar Hall" },
+    { day: "Thu", slot: "10:30 AM - 11:20 AM", section: "Section A (BCA-III)", subject: "Accounting & Management Control", code: "BCA-303", teacher: "Dr Satish Manwani", room: "308/MCA" },
+    { day: "Thu", slot: "11:20 AM - 12:10 PM", section: "Section A (BCA-III)", subject: "Object Oriented Programming in C++", code: "BCA-301", teacher: "Prof Ripusoodan Sharma", room: "308/MCA" },
+    { day: "Thu", slot: "01:00 PM - 01:50 PM", section: "Section A (BCA-III)", subject: "Data Base Management System", code: "BCA-302", teacher: "Prof Anshu Gangwar", room: "308/MCA" },
+    { day: "Thu", slot: "01:50 PM - 02:40 PM", section: "Section A (BCA-III)", subject: "Library Session", code: "Library", teacher: "Prof Anshu Gangwar", room: "308/MCA" },
+    { day: "Thu", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Linux & Shell Programming", code: "BCA-305", teacher: "Prof Mohit Kubade", room: "308/MCA" },
 
-    { day: "Tue", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Principles of Management", teacher: "Monica Geller", room: "Room 101" },
-    { day: "Tue", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 101" },
-    { day: "Tue", slot: "11:15 AM - 12:15 PM", section: "BCA-I", subject: "Data Structures", teacher: "Prof. Sarah Jenkins", room: "Room 101" },
-    { day: "Tue", slot: "12:15 PM - 01:15 PM", section: "BCA-I", subject: "Discrete Mathematics", teacher: "Vikram Seth", room: "Room 101" },
-    { day: "Tue", slot: "02:00 PM - 03:00 PM", section: "BCA-I", subject: "Library", teacher: "Librarian", room: "Seminar Hall" },
+    { day: "Fri", slot: "10:30 AM - 11:20 AM", section: "Section A (BCA-III)", subject: "Data Base Management System", code: "BCA-302", teacher: "Prof Anshu Gangwar", room: "308/MCA" },
+    { day: "Fri", slot: "11:20 AM - 12:10 PM", section: "Section A (BCA-III)", subject: "Soft Skills & Entrepreneurship", code: "BCA-304", teacher: "Prof Pragya Shastri", room: "308/MCA" },
+    { day: "Fri", slot: "01:00 PM - 01:50 PM", section: "Section A (BCA-III)", subject: "Data Base Management System", code: "BCA-302", teacher: "Prof Anshu Gangwar", room: "308/MCA" },
+    { day: "Fri", slot: "01:50 PM - 02:40 PM", section: "Section A (BCA-III)", subject: "Linux Tutorial", code: "BCA-305/T", teacher: "Prof Mohit Kubade", room: "308/MCA" },
+    { day: "Fri", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Object Oriented Programming in C++", code: "BCA-301", teacher: "Prof Ripusoodan Sharma", room: "308/MCA" },
 
-    { day: "Tue", slot: "09:00 AM - 10:00 AM", section: "BCA-II", subject: "Operating Systems", teacher: "Rajesh Malhotra", room: "Room 102" },
-    { day: "Tue", slot: "10:00 AM - 11:00 AM", section: "BCA-II", subject: "Computer Networks", teacher: "Anita Desai", room: "Room 102" },
-    { day: "Tue", slot: "11:15 AM - 12:15 PM", section: "BCA-II", subject: "Database Management", teacher: "Kevin Peterson", room: "Room 102" },
+    // SECTION B
+    { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section B (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006" },
+    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section B (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "401/MCA" },
+    { day: "Mon", slot: "01:50 PM - 02:40 PM", section: "Section B (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Mr Kaiwalya Zankar", room: "401/MCA" },
+    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section B (BCA-III)", subject: "Library Session", code: "Library", teacher: "Prof Jagruti Durugkar", room: "401/MCA" },
 
-    { day: "Wed", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Web Technologies", teacher: "Suresh Raina", room: "Room 101" },
-    { day: "Wed", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Software Engineering", teacher: "Dr. Meenakshi Iyer", room: "Room 101" },
-    { day: "Wed", slot: "11:15 AM - 12:15 PM", section: "BCA-I", subject: "Data Structures", teacher: "Prof. Sarah Jenkins", room: "Room 101" },
+    { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section B (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "401/MCA" },
+    { day: "Tue", slot: "11:20 AM - 12:10 PM", section: "Section B (BCA-III)", subject: "Python Tutorial", code: "BAI-303/T", teacher: "Mr. Aniket Satpute", room: "401/MCA" },
+    { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section B (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "401/MCA" },
+    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section B (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Anshu Gangwar", room: "Lab Room No. 007" },
 
-    { day: "Wed", slot: "09:00 AM - 10:00 AM", section: "BCA-II", subject: "Discrete Mathematics", teacher: "Vikram Seth", room: "Room 102" },
-    { day: "Wed", slot: "10:00 AM - 11:00 AM", section: "BCA-II", subject: "Principles of Management", teacher: "Monica Geller", room: "Room 102" },
+    { day: "Wed", slot: "10:30 AM - 11:20 AM", section: "Section B (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "401/MCA" },
+    { day: "Wed", slot: "11:20 AM - 12:10 PM", section: "Section B (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "401/MCA" },
+    { day: "Wed", slot: "01:00 PM - 01:50 PM", section: "Section B (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Anshu Gangwar", room: "401/MCA" },
+    { day: "Wed", slot: "01:50 PM - 02:40 PM", section: "Section B (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "401/MCA" },
+    { day: "Wed", slot: "02:40 PM - 03:30 PM", section: "Section B (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Mr Kaiwalya Zankar", room: "401/MCA" },
 
-    { day: "Thu", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Operating Systems", teacher: "Rajesh Malhotra", room: "Room 101" },
-    { day: "Thu", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Computer Networks", teacher: "Anita Desai", room: "Room 101" },
+    // SECTION C
+    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section C (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Anshu Gangwar", room: "Lab Room No. 007" },
+    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section C (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "402/MCA" },
+    { day: "Mon", slot: "01:50 PM - 02:40 PM", section: "Section C (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "402/MCA" },
+    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section C (BCA-III)", subject: "Python Tutorial", code: "BAI-303/T", teacher: "Mr. Aniket Satpute", room: "402/MCA" },
 
-    { day: "Fri", slot: "09:00 AM - 10:00 AM", section: "BCA-I", subject: "Python Programming", teacher: "Dr. Arvind Kumar", room: "Room 101" },
-    { day: "Fri", slot: "10:00 AM - 11:00 AM", section: "BCA-I", subject: "Coding Lab", teacher: "Dr. Arvind Kumar", room: "Computer Lab A" },
+    { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section C (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "402/MCA" },
+    { day: "Tue", slot: "11:20 AM - 12:10 PM", section: "Section C (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "402/MCA" },
+    { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section C (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Anshu Gangwar", room: "402/MCA" },
+
+    // SECTION D
+    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section D (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Mohit Kubade", room: "Lab Room No. 006" },
+    { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section D (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "404/MCA" },
+    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section D (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "404/MCA" },
+    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section D (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "404/MCA" },
+
+    // SECTION E
+    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section E (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Dr Alka Gulati", room: "407/MCA" },
+    { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section E (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "407/MCA" },
+    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section E (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "407/MCA" },
+    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section E (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "407/MCA" },
+
+    // SECTION F
+    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section F (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "408/MCA" },
+    { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section F (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "408/MCA" },
+    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section F (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Mohit Kubade", room: "Lab Room No. 002" },
   ]
 };
 
@@ -261,13 +305,13 @@ const getBreadcrumbsForPage = (page) => {
     case "subjects": return ["Academic Setup", "Subjects Catalog"];
     case "sections": return ["Academic Setup", "Sections & Classes"];
     case "rooms": return ["Academic Setup", "Classrooms & Labs"];
-    case "slots": return ["Academic Setup", "Daily Time Slots"];
+    case "slots": return ["Academic Setup", "Time Slots"];
     case "reschedule": return ["Operations", "Reschedule Engine"];
-    case "history": return ["Operations", "Audit History Logs"];
+    case "history": return ["Operations", "History & Audit Logs"];
     case "integrations": return ["Operations", "Automation & n8n"];
     case "logs": return ["Operations", "System Logs"];
-    case "reports": return ["Reports", "Centralized Reports Hub"];
-    default: return ["Main", page];
+    case "reports": return ["Reports", "Reports Center"];
+    default: return ["Main"];
   }
 };
 
@@ -437,15 +481,45 @@ export default function App() {
     setRooms(demoData.rooms);
     setTimeSlots(demoData.timeSlots);
     setResult(DEMO_RESULT);
-    setRescheduleNote("⚡ Complete Demo Academic Data & Timetable Solution Loaded!");
+    setRescheduleNote("⚡ LNCT University Bhopal BCA (Sections A-F) Official Timetable & Faculty Dataset Loaded!");
+
+    // Post LNCT Faculty Members & punch logs to backend API for Attendance & Analytics sections
+    if (demoData.teachers && demoData.teachers.length > 0) {
+      const todayDate = new Date().toISOString().split("T")[0];
+      demoData.teachers.forEach(async (t) => {
+        try {
+          const facRes = await axios.post(`${API_BASE_URL}/faculty/`, {
+            teacher_name: t.name,
+            employee_id: `EMP-LNCT-${Math.floor(1000 + Math.random() * 9000)}`,
+            designation: "Faculty Member",
+            employment_type: "full-time",
+            status: "active",
+            phone: t.phone
+          });
+          const facId = facRes.data?.id;
+          if (facId) {
+            await axios.post(`${API_BASE_URL}/attendance/record`, {
+              faculty_id: facId,
+              date: todayDate,
+              punch_in: `${todayDate}T09:00:00`,
+              punch_out: `${todayDate}T15:30:00`,
+              status: "present",
+              remarks: "LNCT University Class Session Punch"
+            }).catch(() => null);
+          }
+        } catch (err) {
+          // Ignore duplicate creation
+        }
+      });
+    }
 
     try {
       await generateFromPayload(
         buildApiPayload(demoData),
-        "✨ AI-Optimized Demo Timetable generated for 6 sections across 5 departments."
+        "✨ LNCT University BCA (Sections A-F) Timetable Solution Active!"
       );
     } catch (err) {
-      console.warn("Backend solver call failed, keeping local DEMO_RESULT fallback:", err);
+      console.warn("Backend solver call failed, keeping local LNCT DEMO_RESULT fallback:", err);
     }
   }, [generateFromPayload]);
 
@@ -901,11 +975,7 @@ export default function App() {
             <FacultyProfile faculty={selectedFaculty} onBack={() => setSelectedFaculty(null)} />
           ) : (
             <div className="space-y-8">
-              <FacultyDirectory onSelectFaculty={(f) => setSelectedFaculty(f)} />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <LeaveManagement />
-                <SubstitutionPanel />
-              </div>
+              <FacultyDirectory teachers={teachers} subjects={subjects} onSelectFaculty={(f) => setSelectedFaculty(f)} />
               <AttendanceDashboard />
             </div>
           )}
@@ -982,21 +1052,57 @@ export default function App() {
         result={result} 
         onLoadDemo={generateDemoTimetable}
         onExtractedData={(data) => {
+          const teacherMap = new Map();
+
+          // 1. Process explicit teacher list
           if (data.teachers && data.teachers.length > 0) {
-             const cleanTeachers = data.teachers.map(t => {
+            data.teachers.forEach(t => {
+              if (t.name && t.name.trim()) {
                 let parsedFP = parseInt(t.free_periods);
-                return {
-                   name: t.name,
-                   free_periods: isNaN(parsedFP) ? 1 : Math.max(0, parsedFP)
-                };
-             });
-             setTeachers(cleanTeachers);
+                teacherMap.set(t.name.trim(), {
+                  name: t.name.trim(),
+                  free_periods: isNaN(parsedFP) ? 1 : Math.max(0, parsedFP)
+                });
+              }
+            });
           }
+
+          // 2. Process subjects to extract any assigned teacher names
+          if (data.subjects && data.subjects.length > 0) {
+            data.subjects.forEach(s => {
+              if (s.teacher && s.teacher.trim() && !teacherMap.has(s.teacher.trim())) {
+                teacherMap.set(s.teacher.trim(), {
+                  name: s.teacher.trim(),
+                  free_periods: 1
+                });
+              }
+            });
+            setSubjects(data.subjects);
+          }
+
+          const cleanTeachers = Array.from(teacherMap.values());
+          if (cleanTeachers.length > 0) {
+            setTeachers(cleanTeachers);
+            // Auto-sync extracted teachers to backend Faculty Directory
+            cleanTeachers.forEach(async (t) => {
+              try {
+                await axios.post(`${API_BASE_URL}/faculty/`, {
+                  teacher_name: t.name,
+                  employee_id: `EMP-AI-${Math.floor(1000 + Math.random() * 9000)}`,
+                  designation: "Lecturer",
+                  employment_type: "full-time",
+                  status: "active"
+                });
+              } catch (err) {
+                // Ignore duplicate creation
+              }
+            });
+          }
+
           if (data.sections && data.sections.length > 0) setSections(data.sections);
-          if (data.subjects && data.subjects.length > 0) setSubjects(data.subjects);
           if (data.rooms && data.rooms.length > 0) setRooms(data.rooms);
           if (data.timeSlots && data.timeSlots.length > 0) setTimeSlots(data.timeSlots);
-          setRescheduleNote("AI successfully extracted and seamlessly filled timetable data from your image!");
+          setRescheduleNote("AI OCR successfully extracted timetable data and synced faculty with Faculty Directory!");
         }}
       />
 
