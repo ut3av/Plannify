@@ -232,7 +232,7 @@ const DEMO_TIMETABLE_DATA = {
 };
 
 const DEMO_RESULT = {
-  solver_status: "FEASIBLE (Optimal)",
+  solver_status: "OPTIMAL (LNCT University Schedule Active)",
   objective_score: 0,
   days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
   time_slots: [
@@ -240,27 +240,29 @@ const DEMO_RESULT = {
     "09:45 AM - 10:30 AM",
     "10:30 AM - 11:20 AM",
     "11:20 AM - 12:10 PM",
-    "12:10 PM - 01:00 PM",
     "01:00 PM - 01:50 PM",
     "01:50 PM - 02:40 PM",
     "02:40 PM - 03:30 PM"
   ],
   assignments: [
-    // SECTION A
+    // ── SECTION A (BCA-III) ──
     { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section A (BCA-III)", subject: "Linux & Shell Programming", code: "BCA-305", teacher: "Prof Mohit Kubade", room: "308/MCA" },
     { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section A (BCA-III)", subject: "Soft Skills & Entrepreneurship", code: "BCA-304", teacher: "Prof Pragya Shastri", room: "308/MCA" },
     { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section A (BCA-III)", subject: "Accounting & Management Control", code: "BCA-303", teacher: "Dr Satish Manwani", room: "308/MCA" },
-    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Programming Lab in C++", code: "BCA-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006" },
+    { day: "Mon", slot: "01:50 PM - 02:40 PM", section: "Section A (BCA-III)", subject: "Object Oriented Programming in C++", code: "BCA-301", teacher: "Prof Ripusoodan Sharma", room: "308/MCA" },
+    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Programming Lab in C++", code: "BCA-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006", is_lab: true },
 
     { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section A (BCA-III)", subject: "Soft Skills & Entrepreneurship", code: "BCA-304", teacher: "Prof Pragya Shastri", room: "308/MCA" },
     { day: "Tue", slot: "11:20 AM - 12:10 PM", section: "Section A (BCA-III)", subject: "Accounting Tutorial", code: "BCA-303/T", teacher: "Dr Satish Manwani", room: "308/MCA" },
     { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section A (BCA-III)", subject: "Linux & Shell Programming", code: "BCA-305", teacher: "Prof Mohit Kubade", room: "308/MCA" },
-    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Programming Lab in C++", code: "BCA-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006" },
+    { day: "Tue", slot: "01:50 PM - 02:40 PM", section: "Section A (BCA-III)", subject: "Data Base Management System", code: "BCA-302", teacher: "Prof Anshu Gangwar", room: "308/MCA" },
+    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Programming Lab in C++", code: "BCA-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006", is_lab: true },
 
     { day: "Wed", slot: "10:30 AM - 11:20 AM", section: "Section A (BCA-III)", subject: "Accounting & Management Control", code: "BCA-303", teacher: "Dr Satish Manwani", room: "308/MCA" },
     { day: "Wed", slot: "11:20 AM - 12:10 PM", section: "Section A (BCA-III)", subject: "Soft Skills Tutorial", code: "BCA-304/T", teacher: "Prof Pragya Shastri", room: "308/MCA" },
     { day: "Wed", slot: "01:00 PM - 01:50 PM", section: "Section A (BCA-III)", subject: "Object Oriented Programming in C++", code: "BCA-301", teacher: "Prof Ripusoodan Sharma", room: "308/MCA" },
-    { day: "Wed", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Programming Lab in DBMS", code: "BCA-307", teacher: "Prof Anshu Gangwar", room: "Lab Room No. 007" },
+    { day: "Wed", slot: "01:50 PM - 02:40 PM", section: "Section A (BCA-III)", subject: "Linux & Shell Programming", code: "BCA-305", teacher: "Prof Mohit Kubade", room: "308/MCA" },
+    { day: "Wed", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Programming Lab in DBMS", code: "BCA-307", teacher: "Prof Anshu Gangwar", room: "Lab Room No. 007", is_lab: true },
 
     { day: "Thu", slot: "10:30 AM - 11:20 AM", section: "Section A (BCA-III)", subject: "Accounting & Management Control", code: "BCA-303", teacher: "Dr Satish Manwani", room: "308/MCA" },
     { day: "Thu", slot: "11:20 AM - 12:10 PM", section: "Section A (BCA-III)", subject: "Object Oriented Programming in C++", code: "BCA-301", teacher: "Prof Ripusoodan Sharma", room: "308/MCA" },
@@ -274,8 +276,9 @@ const DEMO_RESULT = {
     { day: "Fri", slot: "01:50 PM - 02:40 PM", section: "Section A (BCA-III)", subject: "Linux Tutorial", code: "BCA-305/T", teacher: "Prof Mohit Kubade", room: "308/MCA" },
     { day: "Fri", slot: "02:40 PM - 03:30 PM", section: "Section A (BCA-III)", subject: "Object Oriented Programming in C++", code: "BCA-301", teacher: "Prof Ripusoodan Sharma", room: "308/MCA" },
 
-    // SECTION B
-    { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section B (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006" },
+    // ── SECTION B (BCA-III) ──
+    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section B (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "401/MCA" },
+    { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section B (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006", is_lab: true },
     { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section B (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "401/MCA" },
     { day: "Mon", slot: "01:50 PM - 02:40 PM", section: "Section B (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Mr Kaiwalya Zankar", room: "401/MCA" },
     { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section B (BCA-III)", subject: "Library Session", code: "Library", teacher: "Prof Jagruti Durugkar", room: "401/MCA" },
@@ -283,7 +286,8 @@ const DEMO_RESULT = {
     { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section B (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "401/MCA" },
     { day: "Tue", slot: "11:20 AM - 12:10 PM", section: "Section B (BCA-III)", subject: "Python Tutorial", code: "BAI-303/T", teacher: "Mr. Aniket Satpute", room: "401/MCA" },
     { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section B (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "401/MCA" },
-    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section B (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Anshu Gangwar", room: "Lab Room No. 007" },
+    { day: "Tue", slot: "01:50 PM - 02:40 PM", section: "Section B (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Mr Kaiwalya Zankar", room: "401/MCA" },
+    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section B (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Anshu Gangwar", room: "Lab Room No. 007", is_lab: true },
 
     { day: "Wed", slot: "10:30 AM - 11:20 AM", section: "Section B (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "401/MCA" },
     { day: "Wed", slot: "11:20 AM - 12:10 PM", section: "Section B (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "401/MCA" },
@@ -291,32 +295,140 @@ const DEMO_RESULT = {
     { day: "Wed", slot: "01:50 PM - 02:40 PM", section: "Section B (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "401/MCA" },
     { day: "Wed", slot: "02:40 PM - 03:30 PM", section: "Section B (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Mr Kaiwalya Zankar", room: "401/MCA" },
 
-    // SECTION C
-    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section C (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Anshu Gangwar", room: "Lab Room No. 007" },
-    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section C (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "402/MCA" },
+    { day: "Thu", slot: "10:30 AM - 11:20 AM", section: "Section B (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Anshu Gangwar", room: "401/MCA" },
+    { day: "Thu", slot: "11:20 AM - 12:10 PM", section: "Section B (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "401/MCA" },
+    { day: "Thu", slot: "01:00 PM - 01:50 PM", section: "Section B (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "401/MCA" },
+    { day: "Thu", slot: "01:50 PM - 02:40 PM", section: "Section B (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "401/MCA" },
+    { day: "Thu", slot: "02:40 PM - 03:30 PM", section: "Section B (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Ripusoodan Sharma", room: "Lab Room No. 006", is_lab: true },
+
+    { day: "Fri", slot: "10:30 AM - 11:20 AM", section: "Section B (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "401/MCA" },
+    { day: "Fri", slot: "11:20 AM - 12:10 PM", section: "Section B (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Mr Kaiwalya Zankar", room: "401/MCA" },
+    { day: "Fri", slot: "01:00 PM - 01:50 PM", section: "Section B (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Anshu Gangwar", room: "401/MCA" },
+    { day: "Fri", slot: "01:50 PM - 02:40 PM", section: "Section B (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "401/MCA" },
+    { day: "Fri", slot: "02:40 PM - 03:30 PM", section: "Section B (BCA-III)", subject: "Discrete Maths Tutorial", code: "BAI-304/T", teacher: "Prof Jagruti Durugkar", room: "401/MCA" },
+
+    // ── SECTION C (BCA-III) ──
+    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section C (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Anshu Gangwar", room: "Lab Room No. 007", is_lab: true },
+    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section C (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "402/MCA" },
     { day: "Mon", slot: "01:50 PM - 02:40 PM", section: "Section C (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "402/MCA" },
     { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section C (BCA-III)", subject: "Python Tutorial", code: "BAI-303/T", teacher: "Mr. Aniket Satpute", room: "402/MCA" },
 
-    { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section C (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Ripusoodan Sharma", room: "402/MCA" },
+    { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section C (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "402/MCA" },
     { day: "Tue", slot: "11:20 AM - 12:10 PM", section: "Section C (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "402/MCA" },
-    { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section C (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Anshu Gangwar", room: "402/MCA" },
+    { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section C (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "402/MCA" },
+    { day: "Tue", slot: "01:50 PM - 02:40 PM", section: "Section C (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "402/MCA" },
+    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section C (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Mohit Kubade", room: "Lab Room No. 006", is_lab: true },
 
-    // SECTION D
-    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section D (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Mohit Kubade", room: "Lab Room No. 006" },
+    { day: "Wed", slot: "10:30 AM - 11:20 AM", section: "Section C (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "402/MCA" },
+    { day: "Wed", slot: "11:20 AM - 12:10 PM", section: "Section C (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "402/MCA" },
+    { day: "Wed", slot: "01:00 PM - 01:50 PM", section: "Section C (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "402/MCA" },
+    { day: "Wed", slot: "01:50 PM - 02:40 PM", section: "Section C (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "402/MCA" },
+    { day: "Wed", slot: "02:40 PM - 03:30 PM", section: "Section C (BCA-III)", subject: "Library Session", code: "Library", teacher: "Prof Dipanshu Jha", room: "402/MCA" },
+
+    { day: "Thu", slot: "10:30 AM - 11:20 AM", section: "Section C (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "402/MCA" },
+    { day: "Thu", slot: "11:20 AM - 12:10 PM", section: "Section C (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "402/MCA" },
+    { day: "Thu", slot: "01:00 PM - 01:50 PM", section: "Section C (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "402/MCA" },
+    { day: "Thu", slot: "01:50 PM - 02:40 PM", section: "Section C (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "402/MCA" },
+    { day: "Thu", slot: "02:40 PM - 03:30 PM", section: "Section C (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Dipanshu Jha", room: "Lab Room No. 002", is_lab: true },
+
+    { day: "Fri", slot: "10:30 AM - 11:20 AM", section: "Section C (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "402/MCA" },
+    { day: "Fri", slot: "11:20 AM - 12:10 PM", section: "Section C (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "402/MCA" },
+    { day: "Fri", slot: "01:00 PM - 01:50 PM", section: "Section C (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "402/MCA" },
+    { day: "Fri", slot: "01:50 PM - 02:40 PM", section: "Section C (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "402/MCA" },
+    { day: "Fri", slot: "02:40 PM - 03:30 PM", section: "Section C (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Mohit Kubade", room: "Lab Room No. 006", is_lab: true },
+
+    // ── SECTION D (BCA-III) ──
+    { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section D (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Dr Alka Gulati", room: "Lab Room No. 003", is_lab: true },
     { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section D (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "404/MCA" },
-    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section D (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "404/MCA" },
+    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section D (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "404/MCA" },
+    { day: "Mon", slot: "01:50 PM - 02:40 PM", section: "Section D (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "404/MCA" },
     { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section D (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "404/MCA" },
 
-    // SECTION E
+    { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section D (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "404/MCA" },
+    { day: "Tue", slot: "11:20 AM - 12:10 PM", section: "Section D (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Neha Swanakar", room: "404/MCA" },
+    { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section D (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "404/MCA" },
+    { day: "Tue", slot: "01:50 PM - 02:40 PM", section: "Section D (BCA-III)", subject: "Python Tutorial", code: "BAI-303/T", teacher: "Mr. Aniket Satpute", room: "404/MCA" },
+    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section D (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Dipanshu Jha", room: "Lab Room No. 003", is_lab: true },
+
+    { day: "Wed", slot: "10:30 AM - 11:20 AM", section: "Section D (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "404/MCA" },
+    { day: "Wed", slot: "11:20 AM - 12:10 PM", section: "Section D (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "404/MCA" },
+    { day: "Wed", slot: "01:00 PM - 01:50 PM", section: "Section D (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Neha Swanakar", room: "404/MCA" },
+    { day: "Wed", slot: "01:50 PM - 02:40 PM", section: "Section D (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "404/MCA" },
+    { day: "Wed", slot: "02:40 PM - 03:30 PM", section: "Section D (BCA-III)", subject: "Library Session", code: "Library", teacher: "Prof Dipanshu Jha", room: "404/MCA" },
+
+    { day: "Thu", slot: "10:30 AM - 11:20 AM", section: "Section D (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "404/MCA" },
+    { day: "Thu", slot: "11:20 AM - 12:10 PM", section: "Section D (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "404/MCA" },
+    { day: "Thu", slot: "01:00 PM - 01:50 PM", section: "Section D (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "404/MCA" },
+    { day: "Thu", slot: "01:50 PM - 02:40 PM", section: "Section D (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Neha Swanakar", room: "404/MCA" },
+    { day: "Thu", slot: "02:40 PM - 03:30 PM", section: "Section D (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Dr Alka Gulati", room: "Lab Room No. 003", is_lab: true },
+
+    { day: "Fri", slot: "10:30 AM - 11:20 AM", section: "Section D (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Neha Swanakar", room: "404/MCA" },
+    { day: "Fri", slot: "11:20 AM - 12:10 PM", section: "Section D (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "404/MCA" },
+    { day: "Fri", slot: "01:00 PM - 01:50 PM", section: "Section D (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr. Aniket Satpute", room: "404/MCA" },
+    { day: "Fri", slot: "01:50 PM - 02:40 PM", section: "Section D (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "404/MCA" },
+    { day: "Fri", slot: "02:40 PM - 03:30 PM", section: "Section D (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "404/MCA" },
+
+    // ── SECTION E (BCA-III) ──
     { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section E (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Dr Alka Gulati", room: "407/MCA" },
     { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section E (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "407/MCA" },
     { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section E (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "407/MCA" },
-    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section E (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "407/MCA" },
+    { day: "Mon", slot: "01:50 PM - 02:40 PM", section: "Section E (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "407/MCA" },
+    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section E (BCA-III)", subject: "Python Tutorial", code: "BAI-303/T", teacher: "Mr Jitendra Maind", room: "407/MCA" },
 
-    // SECTION F
+    { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section E (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "407/MCA" },
+    { day: "Tue", slot: "11:20 AM - 12:10 PM", section: "Section E (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "407/MCA" },
+    { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section E (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "407/MCA" },
+    { day: "Tue", slot: "01:50 PM - 02:40 PM", section: "Section E (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "407/MCA" },
+    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section E (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Dr Alka Gulati", room: "Lab Room No. 003", is_lab: true },
+
+    { day: "Wed", slot: "10:30 AM - 11:20 AM", section: "Section E (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "407/MCA" },
+    { day: "Wed", slot: "11:20 AM - 12:10 PM", section: "Section E (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "407/MCA" },
+    { day: "Wed", slot: "01:00 PM - 01:50 PM", section: "Section E (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "407/MCA" },
+    { day: "Wed", slot: "01:50 PM - 02:40 PM", section: "Section E (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "407/MCA" },
+    { day: "Wed", slot: "02:40 PM - 03:30 PM", section: "Section E (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Dipanshu Jha", room: "Lab Room No. 003", is_lab: true },
+
+    { day: "Thu", slot: "10:30 AM - 11:20 AM", section: "Section E (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "407/MCA" },
+    { day: "Thu", slot: "11:20 AM - 12:10 PM", section: "Section E (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "407/MCA" },
+    { day: "Thu", slot: "01:00 PM - 01:50 PM", section: "Section E (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "407/MCA" },
+    { day: "Thu", slot: "01:50 PM - 02:40 PM", section: "Section E (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "407/MCA" },
+    { day: "Thu", slot: "02:40 PM - 03:30 PM", section: "Section E (BCA-III)", subject: "Library Session", code: "Library", teacher: "Dr Alka Gulati", room: "407/MCA" },
+
+    { day: "Fri", slot: "10:30 AM - 11:20 AM", section: "Section E (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Dipanshu Jha", room: "407/MCA" },
+    { day: "Fri", slot: "11:20 AM - 12:10 PM", section: "Section E (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Dr Alka Gulati", room: "407/MCA" },
+    { day: "Fri", slot: "01:00 PM - 01:50 PM", section: "Section E (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "407/MCA" },
+    { day: "Fri", slot: "01:50 PM - 02:40 PM", section: "Section E (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Ms. Swarupa Waghmare", room: "407/MCA" },
+    { day: "Fri", slot: "02:40 PM - 03:30 PM", section: "Section E (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Dr Alka Gulati", room: "Lab Room No. 003", is_lab: true },
+
+    // ── SECTION F (BCA-III) ──
     { day: "Mon", slot: "10:30 AM - 11:20 AM", section: "Section F (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "408/MCA" },
     { day: "Mon", slot: "11:20 AM - 12:10 PM", section: "Section F (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "408/MCA" },
-    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section F (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Mohit Kubade", room: "Lab Room No. 002" },
+    { day: "Mon", slot: "01:00 PM - 01:50 PM", section: "Section F (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "408/MCA" },
+    { day: "Mon", slot: "01:50 PM - 02:40 PM", section: "Section F (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Mr Kaiwalya Zankar", room: "408/MCA" },
+    { day: "Mon", slot: "02:40 PM - 03:30 PM", section: "Section F (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Mohit Kubade", room: "Lab Room No. 002", is_lab: true },
+
+    { day: "Tue", slot: "10:30 AM - 11:20 AM", section: "Section F (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Mr Kaiwalya Zankar", room: "408/MCA" },
+    { day: "Tue", slot: "11:20 AM - 12:10 PM", section: "Section F (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Pramod Kumar Saket", room: "408/MCA" },
+    { day: "Tue", slot: "01:00 PM - 01:50 PM", section: "Section F (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "408/MCA" },
+    { day: "Tue", slot: "01:50 PM - 02:40 PM", section: "Section F (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "408/MCA" },
+    { day: "Tue", slot: "02:40 PM - 03:30 PM", section: "Section F (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Pramod Kumar Saket", room: "Lab Room No. 007", is_lab: true },
+
+    { day: "Wed", slot: "10:30 AM - 11:20 AM", section: "Section F (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "408/MCA" },
+    { day: "Wed", slot: "11:20 AM - 12:10 PM", section: "Section F (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "408/MCA" },
+    { day: "Wed", slot: "01:00 PM - 01:50 PM", section: "Section F (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Pramod Kumar Saket", room: "408/MCA" },
+    { day: "Wed", slot: "01:50 PM - 02:40 PM", section: "Section F (BCA-III)", subject: "Python Tutorial", code: "BAI-303/T", teacher: "Mr Jitendra Maind", room: "408/MCA" },
+    { day: "Wed", slot: "02:40 PM - 03:30 PM", section: "Section F (BCA-III)", subject: "Library Session", code: "Library", teacher: "Prof Mohit Kubade", room: "408/MCA" },
+
+    { day: "Thu", slot: "10:30 AM - 11:20 AM", section: "Section F (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Pramod Kumar Saket", room: "408/MCA" },
+    { day: "Thu", slot: "11:20 AM - 12:10 PM", section: "Section F (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "408/MCA" },
+    { day: "Thu", slot: "01:00 PM - 01:50 PM", section: "Section F (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "408/MCA" },
+    { day: "Thu", slot: "01:50 PM - 02:40 PM", section: "Section F (BCA-III)", subject: "Data Visualization", code: "BAI-305", teacher: "Mr Kaiwalya Zankar", room: "408/MCA" },
+    { day: "Thu", slot: "02:40 PM - 03:30 PM", section: "Section F (BCA-III)", subject: "Programming Lab in C++", code: "BAI-306", teacher: "Prof Mohit Kubade", room: "Lab Room No. 002", is_lab: true },
+
+    { day: "Fri", slot: "10:30 AM - 11:20 AM", section: "Section F (BCA-III)", subject: "Object Oriented Programming in C++", code: "BAI-301", teacher: "Prof Mohit Kubade", room: "408/MCA" },
+    { day: "Fri", slot: "11:20 AM - 12:10 PM", section: "Section F (BCA-III)", subject: "Discrete Maths", code: "BAI-304", teacher: "Prof Jagruti Durugkar", room: "408/MCA" },
+    { day: "Fri", slot: "01:00 PM - 01:50 PM", section: "Section F (BCA-III)", subject: "Data Base Management System", code: "BAI-302", teacher: "Prof Pramod Kumar Saket", room: "408/MCA" },
+    { day: "Fri", slot: "01:50 PM - 02:40 PM", section: "Section F (BCA-III)", subject: "Statistical Modelling & Python", code: "BAI-303", teacher: "Mr Jitendra Maind", room: "408/MCA" },
+    { day: "Fri", slot: "02:40 PM - 03:30 PM", section: "Section F (BCA-III)", subject: "Programming Lab in DBMS", code: "BAI-307", teacher: "Prof Pramod Kumar Saket", room: "Lab Room No. 007", is_lab: true },
   ]
 };
 
