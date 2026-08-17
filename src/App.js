@@ -117,13 +117,13 @@ function ModuleLoadingFallback() {
 function PageLoadingFallback() {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-100">
-      <div className="relative mb-5">
-        <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 flex items-center justify-center shadow-2xl shadow-indigo-500/20">
-          <div className="w-8 h-8 border-3 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+      <div className="relative mb-6">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-600/20 to-purple-600/20 border border-purple-500/30 flex items-center justify-center shadow-2xl shadow-purple-500/25 p-3">
+          <img src="/favicon.png" alt="Plannify" className="w-12 h-12 object-contain animate-pulse" />
         </div>
       </div>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">INITIALIZING</span>
+      <div className="flex items-center gap-2.5 mb-2">
+        <span className="text-xs font-bold text-indigo-400/80 uppercase tracking-widest">INITIALIZING</span>
         <BrandLogo size="md" />
       </div>
       <p className="text-xs text-slate-500 mt-1">Preparing academic workspace...</p>

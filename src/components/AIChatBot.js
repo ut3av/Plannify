@@ -13,7 +13,7 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
   const [messages, setMessages] = useState([
     {
       id: "welcome",
-      text: "👋 **Hello! I am your ρℓαɳɳเƒყ.exe AI Co-Pilot.**\n\nI specialize in academic timetable optimization, teacher workload balancing, substitution management, and automated timetable OCR image extraction.\n\n*How can I assist your institution today?*",
+      text: "👋 **Hello! I am your Plannify.exe AI Co-Pilot.**\n\nI specialize in academic timetable optimization, teacher workload balancing, substitution management, and automated timetable OCR image extraction.\n\n*How can I assist your institution today?*",
       sender: 'bot',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
@@ -156,13 +156,11 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 p-3.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-500 text-white shadow-2xl shadow-indigo-500/40 hover:scale-105 hover:shadow-indigo-500/60 transition-all duration-300 border border-indigo-400/30"
+          className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 p-3.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-500 text-white shadow-2xl shadow-purple-500/40 hover:scale-105 hover:shadow-purple-500/60 transition-all duration-300 border border-purple-400/30"
           title="Open Plannify.exe AI Co-Pilot"
         >
           <div className="relative flex items-center justify-center w-7 h-7 rounded-full bg-white/20 backdrop-blur-md">
-            <svg className="w-4 h-4 text-white animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-            </svg>
+            <img src="/favicon.png" alt="AI" className="w-5 h-5 object-contain" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900" />
           </div>
           <BrandLogo size="xs" className="pr-1 hidden sm:inline-flex" />
@@ -182,8 +180,8 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
           {/* Header */}
           <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-indigo-300 font-bold text-sm">
-                🤖
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600/30 to-purple-600/30 border border-purple-500/40 flex items-center justify-center shadow-lg shadow-purple-500/20 p-1.5">
+                <img src="/favicon.png" alt="Plannify" className="w-full h-full object-contain" />
               </div>
               <div>
                 <div className="flex items-center gap-2">

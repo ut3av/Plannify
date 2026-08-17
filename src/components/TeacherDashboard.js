@@ -40,19 +40,14 @@ export default function TeacherDashboard({ user, result, onLogout }) {
       
       {/* Top Navbar */}
       <nav className="sticky top-0 z-50 glass-panel border-b border-white/10 px-6 py-4 flex justify-between items-center bg-slate-950/90 backdrop-blur-2xl">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/20">
-            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z" />
-            </svg>
-          </div>
+        <div className="flex items-center gap-3.5">
+          <img 
+            src="/favicon.png" 
+            alt="Plannify" 
+            className="w-10 h-10 object-contain drop-shadow-[0_2px_12px_rgba(126,34,206,0.4)]" 
+          />
           <div className="flex flex-col">
             <h1 className="flex items-center gap-2 group">
-              <img 
-                src="/favicon.png" 
-                alt="Plannify" 
-                className="h-7 md:h-8 object-contain" 
-              />
               <BrandLogo size="md" />
             </h1>
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-400/80">

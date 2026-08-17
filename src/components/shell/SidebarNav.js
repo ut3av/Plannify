@@ -180,8 +180,11 @@ export default function SidebarNav({
             ? 'border-[#3d2a1e] text-amber-200/40'
             : 'border-slate-800 text-slate-500'
         }`}>
-          <BrandLogo size="xs" isWarm={isWarm} />
-          <span className={`font-mono text-[10px] font-bold ${isWarm ? 'text-amber-400' : 'text-emerald-400'}`}>v2.0</span>
+          <div className="flex items-center gap-2">
+            <img src="/favicon.png" alt="Plannify" className="w-4 h-4 object-contain drop-shadow-sm" />
+            <BrandLogo size="xs" isWarm={isWarm} />
+          </div>
+          <span className={`font-mono text-[10px] font-bold ${isWarm ? 'text-amber-400' : 'text-purple-400'}`}>v2.0</span>
         </div>
       )}
     </aside>

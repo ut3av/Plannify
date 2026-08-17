@@ -66,14 +66,14 @@ export default function HeaderBar({
         {/* Brand logo in header */}
         <button
           onClick={() => onSelectPage && onSelectPage("dashboard")}
-          className={`flex items-center gap-2.5 shrink-0 pr-2 border-r text-left cursor-pointer hover:opacity-90 transition-opacity ${
+          className={`flex items-center gap-2.5 shrink-0 pr-3 border-r text-left cursor-pointer hover:opacity-90 transition-all group ${
             isWarm ? 'border-[#e8ddd0]' : 'border-slate-800'
           }`}
         >
           <img
             src="/favicon.png"
             alt="Plannify Logo"
-            className="w-8 h-8 object-contain drop-shadow-md"
+            className="w-8 h-8 object-contain drop-shadow-[0_2px_10px_rgba(126,34,206,0.35)] group-hover:scale-105 transition-transform"
           />
           <BrandLogo size="md" isWarm={isWarm} className="hidden sm:inline-flex" />
         </button>

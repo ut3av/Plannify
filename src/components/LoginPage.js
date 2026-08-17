@@ -140,8 +140,12 @@ export default function LoginPage() {
         {/* LEFT COLUMN: BRAND HERO (5 cols) */}
         <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-950 border-r border-slate-800">
           <div>
-            <div className="flex items-center gap-3 mb-8">
-              <img src="/favicon.png" alt="Plannify" className="w-10 h-10 object-contain drop-shadow-md" />
+            <div className="flex items-center gap-3.5 mb-8">
+              <img 
+                src="/favicon.png" 
+                alt="Plannify" 
+                className="w-12 h-12 object-contain drop-shadow-[0_4px_20px_rgba(126,34,206,0.45)]" 
+              />
               <BrandLogo size="lg" />
             </div>
 
@@ -173,13 +177,23 @@ export default function LoginPage() {
         {/* RIGHT COLUMN: 2 PORTAL LOGIN SECTIONS (7 cols) */}
         <div className="lg:col-span-7 p-8 lg:p-10 flex flex-col justify-center space-y-6">
 
+          {/* Mobile Brand Header */}
+          <div className="flex lg:hidden items-center justify-center gap-2.5 mb-1 pb-4 border-b border-slate-800">
+            <img 
+              src="/favicon.png" 
+              alt="Plannify" 
+              className="w-9 h-9 object-contain drop-shadow-[0_2px_12px_rgba(126,34,206,0.4)]" 
+            />
+            <BrandLogo size="md" />
+          </div>
+
           {/* Header & Title */}
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">
               {isSignUp ? "Registration Portal" : "Authentication Portal"}
             </span>
             <h2 className="text-2xl font-black text-white mt-1">
-              {isSignUp ? "Create OS Identity" : "Sign In to ρℓαɳɳเƒყ.exe"}
+              {isSignUp ? "Create OS Identity" : "Sign In to Plannify.exe"}
             </h2>
             <p className="text-xs text-slate-400 mt-1">
               Select your role portal to access your designated workspace.

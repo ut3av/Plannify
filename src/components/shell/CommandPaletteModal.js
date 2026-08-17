@@ -86,7 +86,7 @@ export default function CommandPaletteModal({ isOpen, onClose, onNavigate }) {
         {/* Search Results List */}
         <div className="max-h-96 overflow-y-auto p-2 space-y-1 text-xs">
           {loading ? (
-            <div className="p-4 text-center text-slate-400 italic">Searching ρℓαɳɳเƒყ.exe database...</div>
+            <div className="p-4 text-center text-slate-400 italic">Searching Plannify.exe database...</div>
           ) : results.length > 0 ? (
             results.map((item, idx) => (
               <button
@@ -116,7 +116,10 @@ export default function CommandPaletteModal({ isOpen, onClose, onNavigate }) {
         {/* Command Palette Footer */}
         <div className="p-3 bg-slate-950/80 border-t border-slate-800 text-[10px] text-slate-500 flex justify-between items-center px-4">
           <span>Use <strong>↑↓</strong> to navigate, <strong>Enter</strong> to select</span>
-          <span>ρℓαɳɳเƒყ.exe Global Search</span>
+          <span className="flex items-center gap-1.5 font-medium text-slate-400">
+            <img src="/favicon.png" alt="Plannify" className="w-3.5 h-3.5 object-contain" />
+            Plannify.exe Global Search
+          </span>
         </div>
       </div>
     </div>
