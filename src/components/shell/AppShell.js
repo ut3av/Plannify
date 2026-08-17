@@ -19,7 +19,6 @@ export default function AppShell({
   onToggleTheme,
   onSwitchUser,
   teachers = [],
-  onOpenPersonaSwitcher,
   children,
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -53,7 +52,6 @@ export default function AppShell({
         onToggleTheme={onToggleTheme}
         onSwitchUser={onSwitchUser}
         teachers={teachers}
-        onOpenPersonaSwitcher={onOpenPersonaSwitcher}
       />
 
       <div className="flex flex-1 relative">

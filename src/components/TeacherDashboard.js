@@ -156,18 +156,6 @@ export default function TeacherDashboard({
     }
   };
 
-  const handleReturnToAdmin = () => {
-    if (onSwitchRole) {
-      onSwitchRole("admin");
-    } else if (onSwitchUser) {
-      onSwitchUser({
-        role: "admin",
-        name: "Dean / Administrator",
-        email: "admin@lnctu.ac.in",
-      });
-    }
-  };
-
   const filteredTeachersForSelector = useMemo(() => {
     if (!teacherSearch.trim()) return allTeachersList;
     const q = teacherSearch.toLowerCase();
@@ -315,15 +303,7 @@ export default function TeacherDashboard({
             )}
           </div>
 
-          {/* SWITCH TO ADMIN CONSOLE BUTTON */}
-          <button
-            onClick={handleReturnToAdmin}
-            className="px-3.5 py-2 rounded-xl bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/30 text-xs font-bold text-indigo-700 dark:text-indigo-300 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
-            title="Return to the Admin Timetable Generator & Scheduling Panel"
-          >
-            <span>🛡️</span>
-            <span className="hidden sm:inline">Admin Console</span>
-          </button>
+
 
           {/* Theme Toggle */}
           {onToggleTheme && (
@@ -437,12 +417,7 @@ export default function TeacherDashboard({
                 📞 {selectedTeacher?.phone || user?.user_metadata?.phone}
               </span>
             )}
-            <button
-              onClick={handleReturnToAdmin}
-              className="px-3 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all"
-            >
-              🛡️ Admin Console ➔
-            </button>
+
           </div>
         </div>
 

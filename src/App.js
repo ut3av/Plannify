@@ -30,7 +30,6 @@ const IntegrationsSection = lazy(() => import("./components/IntegrationsSection"
 const LogsSection = lazy(() => import("./components/LogsSection"));
 const ReportsCenter = lazy(() => import("./components/reports/ReportsCenter"));
 const AIChatBot = lazy(() => import("./components/AIChatBot"));
-const PersonaSwitcher = lazy(() => import("./components/common/PersonaSwitcher"));
 
 const parseCloudJson = (value, fallback) => {
   if (value === null || value === undefined || value === "") return fallback;
@@ -4194,8 +4193,6 @@ export default function App() {
   };
 
 
-  const [showPersonaSwitcher, setShowPersonaSwitcher] = useState(false);
-
   const handleSwitchUser = useCallback((newUser) => {
     setUser(newUser);
     if (newUser.role) {
@@ -4306,7 +4303,6 @@ export default function App() {
       onSwitchUser={handleSwitchUser}
       onSwitchRole={handleSwitchRole}
       teachers={teachers}
-      onOpenPersonaSwitcher={() => setShowPersonaSwitcher(true)}
     >
       {/* Global Alerts */}
       <ErrorAlert error={error} />
@@ -4548,19 +4544,7 @@ export default function App() {
         />
       </Suspense>
 
-      {/* Live Persona Switcher Modal */}
-      {showPersonaSwitcher && (
-        <Suspense fallback={null}>
-          <PersonaSwitcher
-            currentRole={user?.role || userRole}
-            currentUser={user}
-            teachers={teachers}
-            onSwitchUser={handleSwitchUser}
-            onAddFaculty={handleAddFaculty}
-            onClose={() => setShowPersonaSwitcher(false)}
-          />
-        </Suspense>
-      )}
+
 
       {/* Global Loading Overlay */}
       {loading && activeTab !== "timetable" && (
