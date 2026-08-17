@@ -504,6 +504,93 @@ input:-webkit-autofill:active {
 .warm-white .to-indigo-500      { --tw-gradient-to: #D97706 !important; }
 .warm-white .shadow-indigo-500\/20 { --tw-shadow-color: rgba(180,83,9,0.15) !important; }
 
+/* ── Amber / Gold text — dark readable variants ─────────── */
+.warm-white .text-amber-200     { color: #92400E !important; }
+.warm-white .text-amber-300     { color: #B45309 !important; }
+.warm-white .text-amber-300\/80 { color: rgba(180, 83, 9, 0.85) !important; }
+.warm-white .text-amber-400     { color: #B45309 !important; }
+.warm-white .text-amber-100     { color: #78350F !important; }
+
+/* ── Indigo → Warm Amber remaps ──────────────────────────── */
+.warm-white .text-indigo-200    { color: #92400E !important; }
+.warm-white .text-indigo-300\/80 { color: rgba(146, 64, 14, 0.85) !important; }
+
+/* ── Emerald / Green text ────────────────────────────────── */
+.warm-white .text-emerald-300   { color: #15803D !important; }
+.warm-white .text-emerald-400   { color: #166534 !important; }
+.warm-white .text-emerald-600\/80 { color: rgba(22, 101, 52, 0.85) !important; }
+
+/* ── Rose / Red text ─────────────────────────────────────── */
+.warm-white .text-rose-400      { color: #BE123C !important; }
+.warm-white .text-rose-300      { color: #E11D48 !important; }
+
+/* ── Teal text ───────────────────────────────────────────── */
+.warm-white .text-teal-400      { color: #0D7377 !important; }
+.warm-white .text-teal-300      { color: #0F766E !important; }
+
+/* ── Purple text ─────────────────────────────────────────── */
+.warm-white .text-purple-300    { color: #7E22CE !important; }
+.warm-white .text-purple-400    { color: #7C3AED !important; }
+
+/* ── Orange text ─────────────────────────────────────────── */
+.warm-white .text-orange-400    { color: #C2410C !important; }
+
+/* ── Green text ──────────────────────────────────────────── */
+.warm-white .text-green-600     { color: #15803D !important; }
+
+/* ── Red text ────────────────────────────────────────────── */
+.warm-white .text-red-500       { color: #B91C1C !important; }
+.warm-white .text-red-400       { color: #DC2626 !important; }
+
+/* ── Cyan text ───────────────────────────────────────────── */
+.warm-white .text-cyan-400      { color: #0E7490 !important; }
+
+/* ── Colored text on colored tinted backgrounds ──────────── */
+/* Amber alert cards (Attention Required / leave pending) */
+.warm-white .bg-amber-500\/10  { background-color: rgba(254, 243, 199, 0.50) !important; }
+.warm-white .bg-amber-500\/20  { background-color: rgba(254, 243, 199, 0.70) !important; }
+.warm-white .border-amber-500\/30 { border-color: rgba(180, 83, 9, 0.25) !important; }
+.warm-white .bg-amber-500\/10 .text-amber-200,
+.warm-white [class*="bg-amber-500"] .text-amber-200 { color: #78350F !important; }
+
+/* Indigo alert cards (insights) */
+.warm-white .bg-indigo-500\/10 { background-color: rgba(254, 243, 199, 0.40) !important; }
+.warm-white .bg-indigo-500\/20 { background-color: rgba(254, 243, 199, 0.60) !important; }
+.warm-white .border-indigo-500\/30 { border-color: rgba(180, 83, 9, 0.25) !important; }
+
+/* Emerald tinted backgrounds */
+.warm-white .bg-emerald-500\/10 { background-color: rgba(220, 252, 231, 0.50) !important; }
+.warm-white .bg-emerald-500\/20 { background-color: rgba(220, 252, 231, 0.70) !important; }
+.warm-white .border-emerald-500\/30 { border-color: rgba(21, 128, 61, 0.25) !important; }
+
+/* Rose tinted backgrounds */
+.warm-white .bg-rose-500\/10   { background-color: rgba(255, 228, 230, 0.50) !important; }
+.warm-white .bg-rose-500\/20   { background-color: rgba(255, 228, 230, 0.70) !important; }
+.warm-white .border-rose-500\/30 { border-color: rgba(190, 18, 60, 0.25) !important; }
+
+/* Purple tinted backgrounds */
+.warm-white .bg-purple-500\/20 { background-color: rgba(243, 232, 255, 0.60) !important; }
+
+/* Indigo badge/tag backgrounds */
+.warm-white .bg-indigo-600\/30 { background-color: rgba(254, 243, 199, 0.50) !important; }
+.warm-white .border-indigo-500\/40 { border-color: rgba(180, 83, 9, 0.30) !important; }
+.warm-white .border-indigo-400\/40 { border-color: rgba(180, 83, 9, 0.30) !important; }
+
+/* ── Amber icon color ────────────────────────────────────── */
+.warm-white .text-amber-400.w-5,
+.warm-white svg.text-amber-400 { color: #B45309 !important; }
+.warm-white .text-indigo-400.w-5,
+.warm-white svg.text-indigo-400 { color: #B45309 !important; }
+
+/* ── Hover overrides for warm ────────────────────────────── */
+.warm-white .hover\:text-indigo-300:hover { color: #92400E !important; }
+.warm-white .hover\:text-rose-400:hover   { color: #BE123C !important; }
+.warm-white .hover\:bg-rose-500\/20:hover { background-color: rgba(255, 228, 230, 0.70) !important; }
+.warm-white .hover\:bg-amber-500\/20:hover { background-color: rgba(254, 243, 199, 0.70) !important; }
+.warm-white .hover\:bg-indigo-500\/20:hover { background-color: rgba(254, 243, 199, 0.60) !important; }
+.warm-white .hover\:bg-emerald-500\/20:hover { background-color: rgba(220, 252, 231, 0.70) !important; }
+.warm-white .hover\:bg-indigo-600:hover { background-color: #B45309 !important; }
+
 /* Sidebar inside Warm Mode preserves rich espresso obsidian */
 .warm-white aside {
   background-color: #20140E !important;
@@ -514,6 +601,15 @@ input:-webkit-autofill:active {
 .warm-white aside .text-amber-200\/60 { color: rgba(253, 230, 138, 0.75) !important; }
 .warm-white aside .text-amber-700\/50 { color: #D4C4B0 !important; }
 .warm-white aside .hover\:bg-slate-800\/60:hover { background-color: rgba(255, 255, 255, 0.06) !important; }
+/* Sidebar overrides: keep light text inside dark sidebar */
+.warm-white aside .text-amber-200     { color: #FDE68A !important; }
+.warm-white aside .text-amber-300     { color: #FCD34D !important; }
+.warm-white aside .text-amber-400     { color: #FBBF24 !important; }
+.warm-white aside .text-emerald-300   { color: #6EE7B7 !important; }
+.warm-white aside .text-emerald-400   { color: #34D399 !important; }
+.warm-white aside .text-indigo-300    { color: #FCD34D !important; }
+.warm-white aside .text-purple-300    { color: #C4B5FD !important; }
+.warm-white aside .text-purple-400    { color: #A78BFA !important; }
 
 /* Print Stylesheet */
 .print-only {
