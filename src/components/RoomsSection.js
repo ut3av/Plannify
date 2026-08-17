@@ -130,12 +130,14 @@ export default function RoomsSection({ rooms = [], onChange, result, timeSlots =
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-                Classrooms, Labs & Space Matrix
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  REAL-TIME CONGESTION
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  Classrooms, Labs & Space Matrix
+                </h1>
+                <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+                  Real-Time Congestion
                 </span>
-              </h1>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Manage theory rooms, specialized computing/electronics labs, seating capacities, and room occupancy load.
               </p>

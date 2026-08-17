@@ -163,10 +163,12 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
       {/* ── MODULE HEADER & DATE RANGE SELECTOR ── */}
       <div className="card p-6 bg-slate-900 border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black tracking-tight text-white">Faculty Performance & Operational Analytics</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              UNIVERSITY ERP GRADE
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              Faculty Performance & Operational Analytics
+            </h1>
+            <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/30">
+              ERP Grade
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">

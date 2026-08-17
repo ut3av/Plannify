@@ -84,12 +84,14 @@ export default function HistorySection({ onSelectTimetable }) {
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              Timetable History & Version Control
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                AUDIT LOGS
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                Timetable History & Version Control
+              </h1>
+              <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/30">
+                Audit Logs
               </span>
-            </h1>
+            </div>
             <p className="text-xs text-slate-400 mt-0.5">
               Browse archived timetable solutions, rollback to prior versions, and review institutional changes.
             </p>

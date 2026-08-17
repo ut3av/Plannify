@@ -95,12 +95,14 @@ export default function IntegrationsSection() {
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-                Automation & Broadcast Center
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  MAKE & WEBHOOKS
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  Automation & Broadcast Center
+                </h1>
+                <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+                  Make & Webhooks
                 </span>
-              </h1>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Automate timetable distribution, WhatsApp notifications, emergency alerts, and third-party ERP integrations.
               </p>

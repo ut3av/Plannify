@@ -203,12 +203,14 @@ export default function TimeSlotsSection({ timeSlots = [], onChange }) {
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-                Time Slots & Bell Schedule
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30">
-                  DRAG & DROP
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  Time Slots & Bell Schedule
+                </h1>
+                <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30">
+                  Drag & Drop
                 </span>
-              </h1>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Configure academic periods, lecture lengths, recess intervals, and institutional time matrices.
               </p>

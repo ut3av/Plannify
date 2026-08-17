@@ -209,15 +209,17 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
       <div className="p-6 border-b border-slate-800 bg-slate-900/90 no-print space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                <span className="p-1.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
                   📅
                 </span>
-                Master Timetable Workspace
-              </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
-                {result.solver_status || "OPTIMAL"}
+                <h2 className="text-lg sm:text-xl font-black tracking-tight text-white">
+                  Master Timetable Workspace
+                </h2>
+              </div>
+              <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+                {result.solver_status ? (result.solver_status.includes("OPTIMAL") ? "Optimal Active" : result.solver_status.split(" ")[0]) : "Optimal Active"}
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-1">

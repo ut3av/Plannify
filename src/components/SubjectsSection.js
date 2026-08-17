@@ -169,12 +169,14 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-                Subjects & Curriculum Matrix
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-indigo-500/20 text-amber-800 dark:text-indigo-300 border border-amber-300 dark:border-indigo-500/30">
-                  DRAG & DROP PRIORITY
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  Subjects & Curriculum Matrix
+                </h1>
+                <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/30">
+                  Priority Order
                 </span>
-              </h1>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Manage subject codes, weekly period allocations, teacher bindings, and multi-section delivery.
               </p>

@@ -530,12 +530,12 @@ export default function TeacherDashboard({
         {activeTab === "attendance" && (
           <div className="animate-fade-in space-y-6">
             <div className="card p-6 bg-slate-900/90 border border-slate-800">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div>
                   <h3 className="text-lg font-black text-white">Individual Attendance Record</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Track your daily punches, attendance %, and monthly compliance.</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+                <span className="inline-flex items-center whitespace-nowrap shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
                   Attendance: 96.4%
                 </span>
               </div>
@@ -575,12 +575,12 @@ export default function TeacherDashboard({
         {activeTab === "leave" && (
           <div className="animate-fade-in space-y-6">
             <div className="card p-6 bg-slate-900/90 border border-slate-800">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-black text-white">Leave Application & Balances</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Submit casual, medical, or earned leave requests and track review status.</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-indigo-500/20 text-amber-800 dark:text-indigo-300 border border-amber-300 dark:border-indigo-500/30">
+                <span className="inline-flex items-center whitespace-nowrap shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-indigo-500/20 text-amber-800 dark:text-indigo-300 border border-amber-300 dark:border-indigo-500/30">
                   Teacher Self-Service
                 </span>
               </div>
