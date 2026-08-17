@@ -13,11 +13,11 @@ export default function AppShell({
   onSaveCloud,
   isCloudSaving,
   onLoadDemo,
+  onRemoveDemo,
   user,
   onLogout,
   theme = 'warm-white',
   onToggleTheme,
-  onSwitchUser,
   teachers = [],
   children,
 }) {
@@ -46,11 +46,11 @@ export default function AppShell({
         onSaveCloud={onSaveCloud}
         isCloudSaving={isCloudSaving}
         onLoadDemo={onLoadDemo}
+        onRemoveDemo={onRemoveDemo}
         user={user}
         onLogout={onLogout}
         theme={theme}
         onToggleTheme={onToggleTheme}
-        onSwitchUser={onSwitchUser}
         teachers={teachers}
       />
 

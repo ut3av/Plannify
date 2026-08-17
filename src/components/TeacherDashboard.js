@@ -11,8 +11,6 @@ export default function TeacherDashboard({
   result,
   onLogout,
   teachers = [],
-  onSwitchUser,
-  onSwitchRole,
   theme = "warm-white",
   onToggleTheme,
 }) {
@@ -142,18 +140,6 @@ export default function TeacherDashboard({
   const handleSelectTeacher = (teacher) => {
     setSelectedTeacher(teacher);
     setTeacherSelectorOpen(false);
-    if (onSwitchUser) {
-      onSwitchUser({
-        role: "teacher",
-        name: teacher.name,
-        email: teacher.email,
-        department: teacher.department,
-        designation: teacher.designation,
-        employee_id: teacher.employee_id,
-        phone: teacher.phone,
-        id: teacher.id,
-      });
-    }
   };
 
   const filteredTeachersForSelector = useMemo(() => {

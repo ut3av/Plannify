@@ -12,7 +12,6 @@ export default function FacultyDirectory({
   result,
   onAddFaculty,
   onTeachersChange,
-  onSwitchUser,
 }) {
   const [faculty, setFaculty] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -600,33 +599,18 @@ export default function FacultyDirectory({
 
               {/* Bottom Quick-Action Buttons */}
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
-                {onSwitchUser ? (
-                  <button
-                    onClick={() => onSwitchUser({
-                      role: "teacher",
-                      name: f.teacher_name,
-                      email: f.email,
-                      department: f.department_name,
-                      designation: f.designation,
-                      employee_id: f.employee_id,
-                      id: f.id
-                    })}
-                    className="flex-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-900 dark:text-amber-300 border border-amber-500/30 transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
-                    title={`Open Faculty Portal as ${f.teacher_name}`}
-                  >
-                    <span>👨‍🏫 Open Faculty Portal ➔</span>
-                  </button>
-                ) : (
-                  <span className="text-[10px] font-bold text-slate-400">Account Verified ✓</span>
-                )}
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  Verified Faculty
+                </span>
 
                 <div className="flex items-center gap-1.5">
                   <button
                     title="Dispatch Schedule via Email/WhatsApp"
                     onClick={() => setDispatchTeacher(f)}
-                    className="px-2 py-1.5 rounded-xl text-[11px] font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/20 transition-all"
+                    className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/20 transition-all flex items-center gap-1"
                   >
-                    ✉️
+                    ✉️ Dispatch
                   </button>
                   {f.status !== "active" && (
                     <button
@@ -676,27 +660,10 @@ export default function FacultyDirectory({
                   <td><span className={`badge ${statusColor(f.status)}`}>{f.status}</span></td>
                   <td>
                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      {onSwitchUser && (
-                        <button
-                          onClick={() => onSwitchUser({
-                            role: "teacher",
-                            name: f.teacher_name,
-                            email: f.email,
-                            department: f.department_name,
-                            designation: f.designation,
-                            employee_id: f.employee_id,
-                            id: f.id
-                          })}
-                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 transition-colors flex items-center gap-1"
-                          title={`Switch to Faculty Portal as ${f.teacher_name}`}
-                        >
-                          👨‍🏫 Portal
-                        </button>
-                      )}
                       <button
                         title="Dispatch Schedule via Email/WhatsApp"
                         onClick={() => setDispatchTeacher(f)}
-                        className="px-2 py-1 text-[11px] font-bold rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 transition-colors"
+                        className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 transition-colors flex items-center gap-1"
                       >
                         ✉️ Dispatch
                       </button>

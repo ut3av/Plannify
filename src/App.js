@@ -466,6 +466,47 @@ export default function App() {
     }
   }, [generateFromPayload]);
 
+  const handleRemoveDemoData = useCallback(async () => {
+    // 1. Reset frontend active workspace state
+    setTeachers([]);
+    setSections([]);
+    setSubjects([]);
+    setRooms([]);
+    const defaultSlots = [
+      "09:00 AM - 09:45 AM",
+      "09:45 AM - 10:30 AM",
+      "10:30 AM - 11:20 AM",
+      "11:20 AM - 12:10 PM",
+      "01:00 PM - 01:50 PM",
+      "01:50 PM - 02:40 PM",
+      "02:40 PM - 03:30 PM"
+    ];
+    setTimeSlots(defaultSlots);
+    setResult(null);
+    setRescheduleNote("🧹 Workspace reset. All demo data removed — ready for real faculty onboarding and curriculum setup.");
+    setActiveTab("timetable");
+
+    // 2. Persist clean empty state to Supabase draft
+    try {
+      await supabase
+        .from('timetable_state')
+        .upsert({
+          id: 'draft',
+          teachers: [],
+          sections: [],
+          subjects: [],
+          rooms: [],
+          timeSlots: defaultSlots,
+          updated_at: new Date().toISOString()
+        });
+    } catch (e) {
+      console.warn("Could not reset Supabase draft state:", e);
+    }
+
+    // 3. Clear backend demo analytics history in background
+    axios.post(`${API_BASE_URL}/analytics/clear-demo`).catch(() => null);
+  }, []);
+
   const rescheduleTimetable = async (request) => {
     setLoading(true);
     setError(null);
@@ -847,18 +888,6 @@ export default function App() {
   };
 
 
-  const handleSwitchUser = useCallback((newUser) => {
-    setUser(newUser);
-    if (newUser.role) {
-      setUserRole(newUser.role === "admin" ? "Admin" : "Faculty");
-    }
-  }, []);
-
-  const handleSwitchRole = useCallback((newRole) => {
-    setUser(prev => ({ ...(prev || {}), role: newRole }));
-    setUserRole(newRole === "admin" ? "Admin" : "Faculty");
-  }, []);
-
   const handleAddFaculty = useCallback((newTeacher) => {
     setTeachers(prev => {
       const exists = prev.some(t => (t.name || t)?.trim().toLowerCase() === newTeacher.name?.trim().toLowerCase());
@@ -933,8 +962,6 @@ export default function App() {
           result={result}
           teachers={teachers}
           onLogout={handleLogout}
-          onSwitchUser={handleSwitchUser}
-          onSwitchRole={handleSwitchRole}
           theme={theme}
           onToggleTheme={toggleTheme}
         />
@@ -956,12 +983,11 @@ export default function App() {
       onSaveCloud={saveToCloud}
       isCloudSaving={loading}
       onLoadDemo={generateDemoTimetable}
+      onRemoveDemo={handleRemoveDemoData}
       user={user}
       onLogout={handleLogout}
       theme={theme}
       onToggleTheme={toggleTheme}
-      onSwitchUser={handleSwitchUser}
-      onSwitchRole={handleSwitchRole}
       teachers={teachers}
     >
       {/* Global Alerts */}
@@ -1048,7 +1074,6 @@ export default function App() {
                   onSelectFaculty={(f) => setSelectedFaculty(f)}
                   onAddFaculty={handleAddFaculty}
                   onTeachersChange={(updated) => { setTeachers(updated); saveToCloud(true); }}
-                  onSwitchUser={handleSwitchUser}
                 />
                 <AttendanceDashboard />
               </div>
@@ -1146,7 +1171,6 @@ export default function App() {
             onSelectFaculty={(f) => setSelectedFaculty(f)}
             onAddFaculty={handleAddFaculty}
             onTeachersChange={(updated) => { setTeachers(updated); saveToCloud(true); }}
-            onSwitchUser={handleSwitchUser}
           />
         )}
 
@@ -1161,6 +1185,7 @@ export default function App() {
         <AIChatBot 
           result={result} 
           onLoadDemo={generateDemoTimetable}
+          onRemoveDemo={handleRemoveDemoData}
           onExtractedData={(data) => {
             const teacherMap = new Map();
 

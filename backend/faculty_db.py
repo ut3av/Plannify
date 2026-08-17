@@ -461,6 +461,34 @@ def delete_faculty(faculty_id: str) -> dict:
     return {"deleted": True, "id": faculty_id}
 
 
+def clear_all_faculty() -> dict:
+    """Purges all faculty profiles and associated records to reset workspace."""
+    sb = get_supabase()
+    if sb:
+        try:
+            sb.table("leave_balances").delete().neq("faculty_id", "00000000-0000-0000-0000-000000000000").execute()
+            sb.table("attendance_records").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+            sb.table("substitution_log").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+            sb.table("leave_applications").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+            sb.table("faculty_profiles").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+        except Exception as e:
+            logger.warning(f"Supabase clear_all_faculty error: {e}. Using SQLite fallback.")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM leave_balances")
+        cursor.execute("DELETE FROM attendance_records")
+        cursor.execute("DELETE FROM substitution_log")
+        cursor.execute("DELETE FROM leave_applications")
+        cursor.execute("DELETE FROM faculty_profiles")
+        conn.commit()
+    finally:
+        conn.close()
+    return {"deleted": True, "message": "All faculty records cleared successfully"}
+
+
+
 # ── Leave Types ─────────────────────────────────────────────
 
 def list_leave_types() -> List[dict]:

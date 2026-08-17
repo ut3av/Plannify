@@ -23,6 +23,7 @@ try:
         get_workload_config,
         update_workload_config,
         seed_30day_demo_history,
+        clear_all_demo_data,
     )
 except ImportError:
     from analytics_db import (
@@ -34,6 +35,7 @@ except ImportError:
         get_workload_config,
         update_workload_config,
         seed_30day_demo_history,
+        clear_all_demo_data,
     )
 
 router = APIRouter(prefix="/analytics", tags=["Faculty Analytics"])
@@ -46,6 +48,17 @@ def seed_analytics_demo_history():
         return seed_30day_demo_history()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/clear-demo")
+@router.delete("/clear-demo")
+def clear_analytics_demo_history():
+    """Purges demo attendance punches, substitution logs, and leave records."""
+    try:
+        return clear_all_demo_data()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 class WorkloadConfigInput(BaseModel):

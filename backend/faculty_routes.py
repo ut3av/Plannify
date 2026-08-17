@@ -10,7 +10,7 @@ try:
         DepartmentCreate, DepartmentOut,
     )
     from .faculty_db import (
-        list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty, delete_faculty,
+        list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty, delete_faculty, clear_all_faculty,
         list_departments, create_department, update_department, delete_department,
         get_leave_balances, get_attendance_summary, initialize_leave_balances,
         get_dashboard_stats,
@@ -21,7 +21,7 @@ except ImportError:
         DepartmentCreate, DepartmentOut,
     )
     from faculty_db import (
-        list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty, delete_faculty,
+        list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty, delete_faculty, clear_all_faculty,
         list_departments, create_department, update_department, delete_department,
         get_leave_balances, get_attendance_summary, initialize_leave_balances,
         get_dashboard_stats,
@@ -181,3 +181,14 @@ def remove_faculty(faculty_id: str, hard_delete: bool = True):
             return {"message": "Faculty deactivated", "data": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/clear-all")
+@router.delete("/clear-all")
+def purge_all_faculty():
+    """Purges all faculty profiles and associated records to allow clean real data onboarding."""
+    try:
+        return clear_all_faculty()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

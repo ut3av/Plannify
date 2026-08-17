@@ -17,11 +17,11 @@ export default function HeaderBar({
   onSaveCloud,
   isCloudSaving,
   onLoadDemo,
+  onRemoveDemo,
   user,
   onLogout,
   theme = 'warm-white',
   onToggleTheme,
-  onSwitchUser,
   teachers = [],
 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -195,13 +195,29 @@ export default function HeaderBar({
             onClick={onLoadDemo}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
               isWarm
-                ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300/50 text-emerald-700'
+                ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300/60 text-emerald-700'
                 : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
             }`}
-            title="Load complete academic dummy data across all modules"
+            title="Load complete academic demo data across all modules"
           >
             <span>⚡</span>
             <span className="hidden sm:inline">Load Demo Data</span>
+          </button>
+        )}
+
+        {/* Remove Demo Data / Clear Workspace Action */}
+        {onRemoveDemo && (
+          <button
+            onClick={onRemoveDemo}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+              isWarm
+                ? 'bg-rose-50 hover:bg-rose-100 border-rose-300/60 text-rose-700'
+                : 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 text-rose-300'
+            }`}
+            title="Remove demo data and switch to clean real implementation workspace"
+          >
+            <span>🗑️</span>
+            <span className="hidden sm:inline">Remove Demo Data</span>
           </button>
         )}
 
@@ -238,33 +254,6 @@ export default function HeaderBar({
             }}
             onUpdateUnreadCount={(count) => setLiveUnreadCount(count)}
           />
-        )}
-
-
-        {/* Quick Faculty Portal Switcher */}
-        {onSwitchUser && (
-          <button
-            onClick={() => {
-              const firstTeacher = Array.isArray(teachers) && teachers.length > 0
-                ? (typeof teachers[0] === 'object' ? teachers[0].name : teachers[0])
-                : "Faculty Member";
-              onSwitchUser({
-                role: "teacher",
-                name: firstTeacher,
-                department: "Computer Applications",
-                designation: "Assistant Professor",
-              });
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
-              isWarm
-                ? 'bg-amber-100/70 hover:bg-amber-200/80 border-amber-300 text-amber-900'
-                : 'bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/30 text-amber-300'
-            }`}
-            title="Switch into Faculty Portal & personalized teacher view"
-          >
-            <span>👨‍🏫</span>
-            <span className="hidden sm:inline">Faculty Portal</span>
-          </button>
         )}
 
         {/* User Profile Dropdown */}

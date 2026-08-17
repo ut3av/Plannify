@@ -980,3 +980,31 @@ def seed_30day_demo_history() -> dict:
         "leave_records": total_leaves,
         "substitution_logs": total_subs
     }
+
+
+def clear_all_demo_data() -> dict:
+    """Purges demo attendance punches, substitution logs, and leave records."""
+    sb = get_supabase()
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        if sb:
+            try:
+                sb.table("attendance_records").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+                sb.table("substitution_log").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+                sb.table("leave_applications").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+            except Exception as e:
+                logger.warning(f"Supabase clear_all_demo_data error: {e}. Using SQLite fallback.")
+
+        cursor.execute("DELETE FROM attendance_records")
+        cursor.execute("DELETE FROM substitution_log")
+        cursor.execute("DELETE FROM leave_applications")
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {
+        "status": "success",
+        "message": "All operational demo history (attendance, substitutions, leaves) cleared successfully."
+    }
+

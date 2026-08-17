@@ -7,7 +7,7 @@ import { compressImage } from '../utils/imageOptimizer';
 import { API_BASE_URL } from '../apiConfig';
 import BrandLogo from './common/BrandLogo';
 
-export default function AIChatBot({ result, onExtractedData, onLoadDemo, isTeacherView = false, teacherName = "" }) {
+export default function AIChatBot({ result, onExtractedData, onLoadDemo, onRemoveDemo, isTeacherView = false, teacherName = "" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([
@@ -146,6 +146,7 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo, isTeach
 
   const SUGGESTIONS = [
     { label: "Load Demo Data", icon: "🚀", action: "demo" },
+    { label: "Remove Demo Data", icon: "🗑️", action: "clear_demo" },
     { label: "Optimize schedule", icon: "✨", action: "prompt" },
     { label: "Analyze workloads", icon: "📊", action: "prompt" },
     { label: "Find substitute teacher", icon: "👨‍🏫", action: "prompt" },
@@ -324,6 +325,17 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo, isTeach
                           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         }
                       ]);
+                    } else if (s.action === "clear_demo" && onRemoveDemo) {
+                      onRemoveDemo();
+                      setMessages(prev => [
+                        ...prev,
+                        {
+                          id: Date.now().toString(),
+                          text: "🧹 **Demo Data Removed!**\n\nI have cleared all demo entries from the workspace. You are now in clean real implementation mode ready to add real faculty and subjects.",
+                          sender: 'bot',
+                          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        }
+                      ]);
                     } else if (s.action === "ocr") {
                       fileInputRef.current?.click();
                     } else {
@@ -333,6 +345,8 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo, isTeach
                   className={`whitespace-nowrap px-3 py-1 rounded-xl text-[11px] font-bold border transition-all flex items-center gap-1.5 active:scale-95 ${
                     s.action === "demo"
                       ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                      : s.action === "clear_demo"
+                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30"
                       : "bg-slate-800/90 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
                   }`}
                 >
