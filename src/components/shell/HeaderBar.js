@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
 import NotificationCenter from '../common/NotificationCenter';
 
@@ -24,6 +25,7 @@ export default function HeaderBar({
   onToggleTheme,
   teachers = [],
 }) {
+  const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [liveUnreadCount, setLiveUnreadCount] = useState(unreadNotificationsCount);
@@ -67,7 +69,10 @@ export default function HeaderBar({
 
         {/* Brand logo in header */}
         <button
-          onClick={() => onSelectPage && onSelectPage("dashboard")}
+          onClick={() => {
+            if (onSelectPage) onSelectPage("dashboard");
+            navigate("/dashboard");
+          }}
           className={`flex items-center gap-2.5 shrink-0 pr-3 border-r text-left cursor-pointer hover:opacity-90 transition-all group ${
             isWarm ? 'border-[#E8DDD0]' : 'border-slate-800'
           }`}
@@ -87,7 +92,10 @@ export default function HeaderBar({
           isWarm ? 'text-[#8F7B6D]' : 'text-slate-400'
         }`}>
           <span
-            onClick={() => onSelectPage && onSelectPage("dashboard")}
+            onClick={() => {
+              if (onSelectPage) onSelectPage("dashboard");
+              navigate("/dashboard");
+            }}
             className={`cursor-pointer font-medium ${
               isWarm ? 'hover:text-[#1F140E]' : 'hover:text-slate-200'
             }`}

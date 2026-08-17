@@ -1,40 +1,42 @@
 import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
 
-const NAV_GROUPS = [
+export const NAV_GROUPS = [
   {
     title: "MAIN",
     items: [
-      { id: "dashboard", label: "Dashboard", icon: "home", badge: null },
-      { id: "timetable", label: "Timetable Workspace", icon: "grid", badge: "Primary" },
-      { id: "faculty", label: "Faculty Directory", icon: "users", badge: null },
-      { id: "attendance", label: "Attendance", icon: "clock", badge: null },
-      { id: "leave", label: "Leave Management", icon: "calendar", badge: null },
-      { id: "substitutions", label: "Substitutions", icon: "user-check", badge: null },
-      { id: "analytics", label: "Analytics 360°", icon: "bar-chart", badge: "ERP" },
+      { id: "dashboard", path: "/dashboard", label: "Dashboard", icon: "home", badge: null },
+      { id: "timetable", path: "/timetable", label: "Timetable Workspace", icon: "grid", badge: "Primary" },
+      { id: "faculty", path: "/faculty", label: "Faculty Directory", icon: "users", badge: null },
+      { id: "attendance", path: "/attendance", label: "Attendance", icon: "clock", badge: null },
+      { id: "leave", path: "/leave", label: "Leave Management", icon: "calendar", badge: null },
+      { id: "substitutions", path: "/substitutions", label: "Substitutions", icon: "user-check", badge: null },
+      { id: "analytics", path: "/analytics", label: "Analytics 360°", icon: "bar-chart", badge: "ERP" },
     ],
   },
   {
     title: "ACADEMIC SETUP",
     items: [
-      { id: "subjects", label: "Subjects", icon: "book-open", badge: null },
-      { id: "sections", label: "Sections / Classes", icon: "layers", badge: null },
-      { id: "rooms", label: "Classrooms & Labs", icon: "building", badge: null },
-      { id: "slots", label: "Time Slots", icon: "timer", badge: null },
+      { id: "subjects", path: "/academic/subjects", label: "Subjects", icon: "book-open", badge: null },
+      { id: "sections", path: "/academic/sections", label: "Sections / Classes", icon: "layers", badge: null },
+      { id: "rooms", path: "/academic/rooms", label: "Classrooms & Labs", icon: "building", badge: null },
+      { id: "slots", path: "/academic/slots", label: "Time Slots", icon: "timer", badge: null },
     ],
   },
   {
     title: "OPERATIONS",
     items: [
-      { id: "reschedule", label: "Reschedule Engine", icon: "refresh-cw", badge: "AI" },
-      { id: "integrations", label: "Automation & Broadcast", icon: "zap", badge: "Live" },
-      { id: "history", label: "Version Control & Audit", icon: "history", badge: null },
-      { id: "settings", label: "System Settings", icon: "settings", badge: null },
+      { id: "reschedule", path: "/operations/reschedule", label: "Reschedule Engine", icon: "refresh-cw", badge: "AI" },
+      { id: "integrations", path: "/operations/integrations", label: "Automation & Broadcast", icon: "zap", badge: "Live" },
+      { id: "history", path: "/operations/history", label: "Version Control & Audit", icon: "history", badge: null },
+      { id: "settings", path: "/operations/settings", label: "System Settings", icon: "settings", badge: null },
     ],
-  }, {
+  },
+  {
     title: "REPORTS",
     items: [
-      { id: "reports", label: "Reports Center", icon: "file-text", badge: "Excel" },
+      { id: "reports", path: "/reports", label: "Reports Center", icon: "file-text", badge: "Excel" },
     ],
   },
 ];
@@ -71,6 +73,13 @@ export default function SidebarNav({
   theme = "warm-white",
 }) {
   const isWarm = theme === 'warm-white';
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleNavigate = (path, id) => {
+    if (onSelectPage) onSelectPage(id);
+    navigate(path);
+  };
 
   return (
     <aside
@@ -108,11 +117,11 @@ export default function SidebarNav({
               )}
 
               {filteredItems.map((item) => {
-                const isActive = activePage === item.id;
+                const isActive = location.pathname === item.path || activePage === item.id || (item.path === "/dashboard" && location.pathname === "/");
                 return (
                   <button
                     key={item.id}
-                    onClick={() => onSelectPage(item.id)}
+                    onClick={() => handleNavigate(item.path, item.id)}
                     title={!isOpen ? item.label : undefined}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all relative group ${
                       isActive
@@ -139,21 +148,26 @@ export default function SidebarNav({
                     )}
 
                     {isOpen && item.badge && (
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
-                        isWarm
-                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                          : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                        item.badge === "Live"
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse"
+                          : item.badge === "AI"
+                          ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                          : item.badge === "Excel"
+                          ? "bg-emerald-600/20 text-emerald-400 border border-emerald-600/30"
+                          : isWarm
+                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                          : "bg-slate-800 text-slate-400 border border-slate-700"
                       }`}>
                         {item.badge}
                       </span>
                     )}
 
-                    {/* Tooltip on collapsed hover */}
                     {!isOpen && (
-                      <div className={`absolute left-full ml-2 hidden group-hover:block z-50 px-3 py-1.5 rounded-lg text-xs text-white whitespace-nowrap shadow-xl border ${
+                      <div className={`absolute left-full ml-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl border ${
                         isWarm
-                          ? 'bg-[#20140E] border-[#332219] text-amber-100'
-                          : 'bg-slate-900 border-slate-800'
+                          ? 'bg-[#20140E] text-amber-100 border-[#332219]'
+                          : 'bg-slate-900 text-white border-slate-700'
                       }`}>
                         {item.label}
                       </div>
@@ -166,18 +180,37 @@ export default function SidebarNav({
         })}
       </div>
 
-      {/* Sidebar Footer */}
-      {isOpen && (
-        <div className={`p-3 border-t text-[10px] flex items-center justify-between ${
-          isWarm
-            ? 'border-[#332219] text-amber-200/50'
-            : 'border-slate-800 text-slate-500'
+      {/* System Status / Brand Footer */}
+      {isOpen ? (
+        <div className={`p-4 border-t ${
+          isWarm ? 'border-[#332219] bg-[#1a0f0a]' : 'border-slate-800/80 bg-slate-950/50'
         }`}>
-          <div className="flex items-center gap-2">
-            <img src="/favicon.png" alt="Plannify" className="w-4 h-4 object-contain drop-shadow-sm" />
-            <BrandLogo size="xs" isWarm={isWarm} />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center p-1">
+              <BrandLogo size="xs" />
+            </div>
+            <div className="min-w-0">
+              <p className={`text-xs font-black truncate uppercase tracking-wide font-display ${
+                isWarm ? 'text-amber-100' : 'text-white'
+              }`}>
+                LNCT University
+              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className={`text-[10px] font-bold ${
+                  isWarm ? 'text-amber-300/80' : 'text-slate-400'
+                }`}>
+                  Solver Core Online
+                </span>
+              </div>
+            </div>
           </div>
-          <span className={`font-mono text-[10px] font-bold ${isWarm ? 'text-amber-400' : 'text-purple-400'}`}>v3.69.0</span>
+        </div>
+      ) : (
+        <div className={`py-4 border-t flex justify-center ${
+          isWarm ? 'border-[#332219]' : 'border-slate-800'
+        }`}>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 animate-pulse" title="System Operational" />
         </div>
       )}
     </aside>

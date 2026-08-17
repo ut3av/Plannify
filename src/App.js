@@ -1,13 +1,14 @@
-import { useCallback, useMemo, useState, useEffect, useRef, lazy, Suspense } from "react";
+import React, { lazy, Suspense, useCallback } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { saveAs } from "file-saver";
-import { supabase } from "./supabaseClient";
-import { syncRelationalData } from "./services/supabaseService";
+
+import { AcademicProvider, useAcademic } from "./context/AcademicContext";
 import { API_BASE_URL } from "./apiConfig";
-import { DEMO_TIMETABLE_DATA, DEMO_RESULT, buildApiPayload, formatResult } from "./data/demoTimetableData";
 import BrandLogo from "./components/common/BrandLogo";
 import GooeyLoader from "./components/common/GooeyLoader";
 import AppShell from "./components/shell/AppShell";
+import NotFoundPage from "./components/common/NotFoundPage";
 
 // Dynamic Section / View Imports (React.lazy)
 const LoginPage = lazy(() => import("./components/LoginPage"));
@@ -31,77 +32,6 @@ const IntegrationsSection = lazy(() => import("./components/IntegrationsSection"
 const SystemSettings = lazy(() => import("./components/settings/SystemSettings"));
 const ReportsCenter = lazy(() => import("./components/reports/ReportsCenter"));
 const AIChatBot = lazy(() => import("./components/AIChatBot"));
-
-const parseCloudJson = (value, fallback) => {
-  if (value === null || value === undefined || value === "") return fallback;
-  if (Array.isArray(value) || typeof value === "object") return value;
-
-  try {
-    return JSON.parse(value);
-  } catch {
-    return fallback;
-  }
-};
-
-const readCloudState = (data) => ({
-  teachers: parseCloudJson(data.teachers ?? data.room, null),
-  sections: parseCloudJson(data.sections ?? data.email, null),
-  subjects: parseCloudJson(data.subjects ?? data.day, null),
-  rooms: parseCloudJson(data.rooms ?? data.subject, null),
-  timeSlots: parseCloudJson(data.time_slots ?? data.timeSlots ?? data.teacher_name, null),
-});
-
-const buildCloudPayload = ({ teachers, sections, subjects, rooms, timeSlots }) => ({
-  id: "draft",
-  teachers,
-  sections,
-  subjects,
-  rooms,
-  time_slots: timeSlots,
-  updated_at: new Date().toISOString(),
-});
-
-const buildLegacyCloudPayload = ({ teachers, sections, subjects, rooms, timeSlots }) => ({
-  id: "draft",
-  teacher_name: JSON.stringify(timeSlots),
-  email: JSON.stringify(sections),
-  subject: JSON.stringify(rooms),
-  day: JSON.stringify(subjects),
-  room: JSON.stringify(teachers),
-  slot: new Date().toISOString(),
-});
-
-
-
-function getErrorMessage(error) {
-  const detail = error?.response?.data?.detail;
-  if (Array.isArray(detail)) {
-    return {
-      title: "Some timetable inputs need attention.",
-      suggestions: detail.map((item) => item.msg),
-      facts: [],
-    };
-  }
-  if (detail && typeof detail === "object") {
-    return {
-      title: detail.message || "Could not generate timetable.",
-      suggestions: Array.isArray(detail.suggestions) ? detail.suggestions : [],
-      facts: Array.isArray(detail.facts) ? detail.facts : [],
-    };
-  }
-  if (typeof detail === "string") {
-    return { title: detail, suggestions: [], facts: [] };
-  }
-  return {
-    title: "Could not reach the backend API.",
-    suggestions: [
-      `Checking connectivity with ${API_BASE_URL}...`,
-      "If hosted on Render free tier, the backend may take 30-50 seconds to wake up from idle sleep.",
-      "You can also use the local solver or load demo datasets while the cloud backend connects."
-    ],
-    facts: [],
-  };
-}
 
 function ModuleLoadingFallback() {
   return (
@@ -173,475 +103,76 @@ function ErrorAlert({ error }) {
   );
 }
 
-
-const getBreadcrumbsForPage = (page) => {
-  switch (page) {
-    case "dashboard": return ["Dashboard"];
-    case "timetable": return ["Main", "Timetable Workspace"];
-    case "faculty": return ["Main", "Faculty Directory"];
-    case "attendance": return ["Main", "Attendance Tracking"];
-    case "leave": return ["Main", "Leave Management"];
-    case "substitutions": return ["Main", "Substitution Center"];
-    case "analytics": return ["Main", "Operational Analytics 360°"];
-    case "departments": return ["Academic Setup", "Departments"];
-    case "subjects": return ["Academic Setup", "Subjects Catalog"];
-    case "sections": return ["Academic Setup", "Sections & Classes"];
-    case "rooms": return ["Academic Setup", "Classrooms & Labs"];
-    case "slots": return ["Academic Setup", "Time Slots"];
-    case "reschedule": return ["Operations", "Reschedule Engine"];
-    case "history": return ["Operations", "History & Audit Logs"];
-    case "integrations": return ["Operations", "Automation & Broadcast"];
-    case "settings": return ["Operations", "System Settings"];
-    case "reports": return ["Reports", "Reports Center"];
-    default: return ["Overview"];
-  }
+const getBreadcrumbsForPath = (pathname) => {
+  if (pathname === "/" || pathname === "/dashboard") return ["Dashboard"];
+  if (pathname === "/timetable") return ["Main", "Timetable Workspace"];
+  if (pathname.startsWith("/faculty")) return ["Main", "Faculty Directory"];
+  if (pathname === "/attendance") return ["Main", "Attendance Tracking"];
+  if (pathname === "/leave") return ["Main", "Leave Management"];
+  if (pathname === "/substitutions") return ["Main", "Substitution Center"];
+  if (pathname === "/analytics") return ["Main", "Operational Analytics 360°"];
+  if (pathname === "/academic/subjects") return ["Academic Setup", "Subjects Catalog"];
+  if (pathname === "/academic/sections") return ["Academic Setup", "Sections & Classes"];
+  if (pathname === "/academic/rooms") return ["Academic Setup", "Classrooms & Labs"];
+  if (pathname === "/academic/slots") return ["Academic Setup", "Time Slots"];
+  if (pathname === "/operations/reschedule") return ["Operations", "Reschedule Engine"];
+  if (pathname === "/operations/history") return ["Operations", "History & Audit Logs"];
+  if (pathname === "/operations/integrations") return ["Operations", "Automation & Broadcast"];
+  if (pathname === "/operations/settings") return ["Operations", "System Settings"];
+  if (pathname === "/reports") return ["Reports", "Reports Center"];
+  return ["Overview"];
 };
 
-export default function App() {
-  const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState("Admin");
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [selectedFaculty, setSelectedFaculty] = useState(null);
+// ── Sub-view Components ──
 
-  const [teachers, setTeachers] = useState(DEMO_TIMETABLE_DATA.teachers);
-  const [sections, setSections] = useState(DEMO_TIMETABLE_DATA.sections);
-  const [subjects, setSubjects] = useState(DEMO_TIMETABLE_DATA.subjects);
-  const [rooms, setRooms] = useState(DEMO_TIMETABLE_DATA.rooms);
-  const [timeSlots, setTimeSlots] = useState(DEMO_TIMETABLE_DATA.timeSlots);
-  const [result, setResult] = useState(() => formatResult(DEMO_RESULT));
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [rescheduleNote, setRescheduleNote] = useState("");
-  const [reschedulePreselect, setReschedulePreselect] = useState(null);
-  const [isCloudLoaded, setIsCloudLoaded] = useState(false);
+function TimetableWorkspaceRoute() {
+  const navigate = useNavigate();
+  const {
+    result,
+    teachers,
+    subjects,
+    sections,
+    loading,
+    generateTimetable,
+    setReschedulePreselect,
+    setRescheduleNote,
+    setError
+  } = useAcademic();
 
-  const handleNavigateToReschedule = useCallback((preselect) => {
+  const handleNavigateToReschedule = (preselect) => {
     setReschedulePreselect(preselect);
-    setActiveTab("reschedule");
-  }, []);
+    navigate("/operations/reschedule");
+  };
 
-  // Theme state: 'warm-white' (primary) | 'dark'
-  const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem('planify-theme') || 'warm-white'; } catch { return 'warm-white'; }
-  });
-
-  const toggleTheme = useCallback(() => {
-    setTheme(prev => {
-      const next = prev === 'warm-white' ? 'dark' : 'warm-white';
-      try { localStorage.setItem('planify-theme', next); } catch {}
-      return next;
-    });
-  }, []);
-
-  // Apply theme class to document root
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('dark', 'warm-white');
-    root.classList.add(theme);
-  }, [theme]);
-
-  // Load from Supabase on mount
-  useEffect(() => {
-
-    const loadCloudState = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('timetable_state')
-          .select('*')
-          .eq('id', 'draft')
-          .single();
-        
-        if (data && !error) {
-          const cloudState = readCloudState(data);
-          if (cloudState.teachers && cloudState.teachers.length > 0) setTeachers(cloudState.teachers);
-          if (cloudState.sections && cloudState.sections.length > 0) setSections(cloudState.sections);
-          if (cloudState.subjects && cloudState.subjects.length > 0) setSubjects(cloudState.subjects);
-          if (cloudState.rooms && cloudState.rooms.length > 0) setRooms(cloudState.rooms);
-          if (cloudState.timeSlots && cloudState.timeSlots.length > 0) setTimeSlots(cloudState.timeSlots);
-        }
-        setIsCloudLoaded(true);
-      } catch (e) {
-        console.warn("Supabase fetch failed. Ensure .env is set and table exists.", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadCloudState();
-  }, []);
-
-  const activeStateRef = useRef({ teachers, sections, subjects, rooms, timeSlots, result });
-  useEffect(() => {
-    activeStateRef.current = { teachers, sections, subjects, rooms, timeSlots, result };
-  });
-
-  // Cloud Save function (supports silent background auto-sync & manual save)
-  const saveToCloud = useCallback(async (isSilent = false, overrideState = null) => {
-    if (!isSilent) {
-      setLoading(true);
-      setError(null);
-      setRescheduleNote("");
-    }
+  const saveToDatabase = async () => {
+    if (!result) return;
     try {
-      const live = activeStateRef.current;
-      const stateToSave = overrideState || {
-        teachers: live.teachers,
-        sections: live.sections,
-        subjects: live.subjects,
-        rooms: live.rooms,
-        timeSlots: live.timeSlots
-      };
-      
-      // 1. Primary Save (JSONB Draft)
-      const { error } = await supabase
-        .from('timetable_state')
-        .upsert(buildCloudPayload(stateToSave));
-      
-      if (error) {
-        const { error: legacyError } = await supabase
-          .from('timetable_state')
-          .upsert(buildLegacyCloudPayload(stateToSave));
-        if (legacyError) throw legacyError;
-      }
-
-      // 2. Relational Sync (Structured Tables for Make/Analytics)
-      if (live.result) {
-        await syncRelationalData({ ...stateToSave, result: live.result }).catch(() => null);
-      }
-      
-      if (!isSilent) {
-        setRescheduleNote("☁️ All academic datasets and faculty successfully saved to Supabase Cloud!");
-      }
+      await axios.post(`${API_BASE_URL}/save`, {
+        name: `Timetable - ${new Date().toLocaleString()}`,
+        timetable_data: result,
+      });
+      setRescheduleNote("Timetable saved to SQLite database successfully!");
     } catch (e) {
-      console.warn("Cloud save notice:", e);
-      if (!isSilent) {
-        setError({
-          title: "Cloud Sync Notice",
-          suggestions: [e?.message || "Check network connectivity or Supabase configuration."],
-          facts: [],
-        });
-      }
-    } finally {
-      if (!isSilent) {
-        setLoading(false);
-      }
-    }
-  }, []);
-
-  // Automatic Debounced Cloud Sync whenever state changes
-  useEffect(() => {
-    if (!isCloudLoaded) return;
-    const timer = setTimeout(() => {
-      saveToCloud(true);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [teachers, sections, subjects, rooms, timeSlots, isCloudLoaded, saveToCloud]);
-
-  const payload = useMemo(
-    () => buildApiPayload({ teachers, subjects, rooms, sections, timeSlots }),
-    [teachers, subjects, rooms, sections, timeSlots],
-  );
-
-  const generateFromPayload = useCallback(async (nextPayload, successMessage = "") => {
-    setLoading(true);
-    setError(null);
-    setRescheduleNote("");
-    try {
-      const response = await axios.post(`${API_BASE_URL}/generate`, nextPayload, { timeout: 20000 });
-      const formatted = formatResult(response.data);
-      setResult(formatted);
-      
-      // Sync to relational tables immediately after generation
-      try {
-        await syncRelationalData({ teachers, sections, subjects, rooms, timeSlots, result: formatted });
-      } catch (syncErr) {
-        console.warn("Relational sync failed after generation", syncErr);
-      }
-
-      setRescheduleNote(successMessage || "✨ Optimal Timetable Generated Successfully by AI Solver!");
-      setActiveTab("timetable");
-    } catch (apiError) {
-      console.warn("Backend solver offline/sleeping, activating client-side scheduler:", apiError);
-      
-      // If we have sections and subjects, build a valid client schedule so the app never fails for judges/users
-      if (nextPayload?.sections?.length > 0 && nextPayload?.subjects?.length > 0) {
-        const clientAssignments = [];
-        const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-        const slots = nextPayload.time_slots && nextPayload.time_slots.length > 0 
-          ? nextPayload.time_slots 
-          : ["09:00 AM - 09:45 AM", "09:45 AM - 10:30 AM", "10:30 AM - 11:20 AM", "11:20 AM - 12:10 PM", "01:00 PM - 01:50 PM", "01:50 PM - 02:40 PM", "02:40 PM - 03:30 PM"];
-        
-        let slotOffset = 0;
-        nextPayload.subjects.forEach((sub, sIdx) => {
-          const subSections = sub.sections && sub.sections.length > 0 ? sub.sections : (nextPayload.sections || []).map(s => s.name || s);
-          subSections.forEach(secName => {
-            const secObj = (nextPayload.sections || []).find(s => (s.name || s) === secName);
-            const room = sub.is_lab ? (secObj?.lab_room || "Lab Room No. 006") : (secObj?.room || "308/MCA");
-            const req = Math.min(sub.required_slots || 2, 4);
-            for (let r = 0; r < req; r++) {
-              const day = days[(sIdx + r) % days.length];
-              const slot = slots[(slotOffset + r) % slots.length];
-              clientAssignments.push({
-                day,
-                slot,
-                section: secName,
-                subject: sub.name,
-                code: sub.code || `SUB-${sIdx + 1}`,
-                teacher: sub.teacher,
-                room
-              });
-            }
-          });
-          slotOffset++;
-        });
-
-        const fallbackResult = formatResult({
-          solver_status: "FEASIBLE (Client-Side Resilient Engine)",
-          objective_score: 0,
-          days,
-          time_slots: slots,
-          assignments: clientAssignments.length > 0 ? clientAssignments : DEMO_RESULT.assignments
-        });
-
-        setResult(fallbackResult);
-        setRescheduleNote(successMessage || "✨ Timetable Loaded Successfully (Client-Side Engine Active)");
-        setActiveTab("timetable");
-      } else {
-        setError(getErrorMessage(apiError));
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [teachers, sections, subjects, rooms, timeSlots]);
-
-  const generateTimetable = useCallback(async () => {
-    await generateFromPayload(payload);
-  }, [generateFromPayload, payload]);
-
-  const generateDemoTimetable = useCallback(async () => {
-    const demoData = JSON.parse(JSON.stringify(DEMO_TIMETABLE_DATA));
-
-    setTeachers(demoData.teachers);
-    setSections(demoData.sections);
-    setSubjects(demoData.subjects);
-    setRooms(demoData.rooms);
-    setTimeSlots(demoData.timeSlots);
-    
-    // Set formatted demo result immediately so grid renders instantly with all 30+ classes!
-    const formattedDemo = formatResult(DEMO_RESULT);
-    setResult(formattedDemo);
-    
-    activeStateRef.current = {
-      teachers: demoData.teachers,
-      sections: demoData.sections,
-      subjects: demoData.subjects,
-      rooms: demoData.rooms,
-      timeSlots: demoData.timeSlots,
-      result: formattedDemo
-    };
-
-    setRescheduleNote("🚀 Full Academic Demo Loaded! (30+ classes, LNCT University faculties, labs, and classroom allocations active)");
-    setActiveTab("timetable");
-
-    // Also call backend solver in background to populate server-side history & Make.com triggers
-    try {
-      const demoPayload = buildApiPayload(demoData);
-      axios.post(`${API_BASE_URL}/analytics/seed-demo-history`).catch(() => null);
-      axios.post(`${API_BASE_URL}/faculty/seed-lnct`).catch(() => null);
-      await axios.post(`${API_BASE_URL}/generate`, demoPayload, { timeout: 20000 });
-      saveToCloud(true, demoData);
-    } catch (err) {
-      console.warn("Backend solver call failed, keeping local LNCT DEMO_RESULT fallback:", err);
-    }
-  }, [saveToCloud]);
-
-  const handleRemoveDemoData = useCallback(async () => {
-    const defaultSlots = [
-      "09:00 AM - 09:45 AM",
-      "09:45 AM - 10:30 AM",
-      "10:30 AM - 11:20 AM",
-      "11:20 AM - 12:10 PM",
-      "01:00 PM - 01:50 PM",
-      "01:50 PM - 02:40 PM",
-      "02:40 PM - 03:30 PM"
-    ];
-
-    // 1. Reset frontend active workspace state immediately
-    setTeachers([]);
-    setSections([]);
-    setSubjects([]);
-    setRooms([]);
-    setTimeSlots(defaultSlots);
-    setResult(null);
-    setRescheduleNote("🧹 Workspace reset. All demo data, attendance percentages, and substitution records removed — clean real implementation active.");
-    setActiveTab("timetable");
-
-    activeStateRef.current = {
-      teachers: [],
-      sections: [],
-      subjects: [],
-      rooms: [],
-      timeSlots: defaultSlots,
-      result: null
-    };
-
-    // 2. Persist clean empty state to Supabase draft
-    try {
-      await supabase
-        .from('timetable_state')
-        .upsert({
-          id: 'draft',
-          teachers: [],
-          sections: [],
-          subjects: [],
-          rooms: [],
-          timeSlots: defaultSlots,
-          updated_at: new Date().toISOString()
-        });
-
-      // Direct clean of demo relational tables in Supabase
-      supabase.from('attendance_records').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
-      supabase.from('substitution_log').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
-      supabase.from('leave_applications').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
-      supabase.from('faculty_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
-      supabase.from('leave_balances').delete().neq('faculty_id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
-    } catch (e) {
-      console.warn("Could not reset Supabase draft state:", e);
-    }
-
-    // 3. Clear backend demo analytics, attendance, substitutions, and faculty in background
-    try {
-      await Promise.allSettled([
-        axios.post(`${API_BASE_URL}/analytics/clear-demo`),
-        axios.post(`${API_BASE_URL}/faculty/clear-all`)
-      ]);
-    } catch (err) {
-      // Ignore
-    }
-  }, []);
-
-  const rescheduleTimetable = async (request) => {
-    setLoading(true);
-    setError(null);
-    setRescheduleNote("");
-
-    const payloadWithContext = {
-      ...request,
-      timetable_data: result,
-      teachers: teachers,
-    };
-
-    try {
-      const response = await axios.post(`${API_BASE_URL}/reschedule`, payloadWithContext, { timeout: 20000 });
-      const formatted = formatResult(response.data);
-      setResult(formatted);
-      const blocked = response.data.reschedule_note?.blocked?.length || 0;
-      setRescheduleNote(
-        `${request.teacher} unavailable rule applied to ${blocked} slot(s). Constraint solver re-optimized!`,
-      );
-      setActiveTab("timetable");
-    } catch (apiError) {
-      console.warn("Backend /reschedule call failed:", apiError);
-      setError(getErrorMessage(apiError));
-    } finally {
-      setLoading(false);
+      setError("Failed to save timetable to database.");
     }
   };
 
-  const assignProxy = async (request) => {
-    setLoading(true);
-    setError(null);
-    setRescheduleNote("");
-
-    const payloadWithContext = {
-      ...request,
-      timetable_data: result,
-      teachers: teachers,
-    };
-
-    try {
-      const response = await axios.post(`${API_BASE_URL}/proxy`, payloadWithContext, { timeout: 15000 });
-      const formatted = formatResult(response.data);
-      setResult(formatted);
-
-      // Background relational sync for real-time Make/Supabase distribution
-      try {
-        await syncRelationalData({ teachers, sections, subjects, rooms, timeSlots, result: formatted });
-      } catch (syncErr) {
-        console.warn("Relational sync warning after proxy:", syncErr);
-      }
-
-      setRescheduleNote(
-        response.data.reschedule_note?.message || `✨ Assigned substitute proxy (${request.proxy_teacher || 'Substitute'}) for ${request.teacher} on ${request.day}!`
-      );
-      setActiveTab("timetable");
-    } catch (apiError) {
-      console.warn("Backend /proxy call offline or sleeping, performing client-side proxy assignment:", apiError);
-
-      if (result && result.assignments) {
-        const targetSlots = request.slots && request.slots.length > 0 ? request.slots : null;
-        let count = 0;
-        const updatedAssignments = result.assignments.map((a) => {
-          if (a.day === request.day && a.teacher === request.teacher) {
-            if (!targetSlots || targetSlots.includes(a.slot)) {
-              count++;
-              return {
-                ...a,
-                original_teacher: request.teacher,
-                teacher: request.proxy_teacher || "Substitute Professor",
-                is_proxy: true,
-                proxy_reason: request.reason || "Substitution",
-              };
-            }
-          }
-          return a;
-        });
-
-        const fallbackResult = formatResult({
-          ...result,
-          assignments: updatedAssignments,
-        });
-
-        setResult(fallbackResult);
-        setRescheduleNote(
-          `✨ Assigned ${count} proxy class(es) for ${request.teacher} on ${request.day} (${request.proxy_teacher || 'Substitute'})!`
-        );
-        setActiveTab("timetable");
-      } else {
-        setError(getErrorMessage(apiError));
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ── Export to Excel & Save to DB ── */
   const exportToExcel = useCallback(async () => {
     if (!result) return;
-
-    // Dynamically import xlsx to reduce initial bundle size
     const XLSX = await import("xlsx");
-
-    // Find all unique sections in the assignments
     const sectionsSet = new Set();
     if (result.assignments) {
       result.assignments.forEach((a) => {
         if (a.section) sectionsSet.add(a.section);
       });
     }
-    // If no sections were used, provide a default
     if (sectionsSet.size === 0) sectionsSet.add("Default");
 
     const workbook = XLSX.utils.book_new();
 
     sectionsSet.forEach((section) => {
-      // 1. Header Info Row
-      const branchName = section.includes("-")
-        ? section.split("-")[0]
-        : "Default";
-      const sectionName = section.includes("-")
-        ? section.split("-")[1]
-        : section;
+      const branchName = section.includes("-") ? section.split("-")[0] : "Default";
+      const sectionName = section.includes("-") ? section.split("-")[1] : section;
       const sectionObj = sections.find((s) => s.name === section);
       const roomDisplay = sectionObj && sectionObj.room ? sectionObj.room : "Auto";
       const headerInfoRow = [
@@ -654,26 +185,19 @@ export default function App() {
         `Classes w.e.f.: ${new Date().toLocaleDateString()}`,
       ];
 
-      // 2. Period Numbers Row
       const periodNums = ["Day / (Period & Time)"];
       const timeSlotsRow = [""];
-      const lunchColIdxList = []; // store index where lunch is inserted
+      const lunchColIdxList = [];
 
       let periodCounter = 1;
       for (let i = 0; i < result.time_slots.length; i++) {
-        periodNums.push(
-          ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][
-            periodCounter - 1
-          ] || periodCounter.toString(),
-        );
+        periodNums.push(["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][periodCounter - 1] || periodCounter.toString());
         timeSlotsRow.push(result.time_slots[i]);
 
-        // Check for gap (lunch) between this slot and the next
         if (i < result.time_slots.length - 1) {
-          const endMatch = result.time_slots[i].split("-")[1].trim();
-          const nextStartMatch = result.time_slots[i + 1].split("-")[0].trim();
-          if (endMatch !== nextStartMatch) {
-            // We insert a LUNCH column here
+          const endMatch = result.time_slots[i].split("-")[1]?.trim();
+          const nextStartMatch = result.time_slots[i + 1].split("-")[0]?.trim();
+          if (endMatch && nextStartMatch && endMatch !== nextStartMatch) {
             periodNums.push("");
             timeSlotsRow.push("LUNCH");
             lunchColIdxList.push(timeSlotsRow.length - 1);
@@ -682,28 +206,22 @@ export default function App() {
         periodCounter++;
       }
 
-      const rows = [];
-      rows.push(headerInfoRow);
-      rows.push(periodNums);
-      rows.push(timeSlotsRow);
-
+      const rows = [headerInfoRow, periodNums, timeSlotsRow];
       const sectionSubjectsMap = new Map();
 
-      // 4. Grid Rows
       result.days.forEach((day) => {
         const row = [day];
         let slotCounter = 0;
 
         for (let i = 1; i < timeSlotsRow.length; i++) {
           if (lunchColIdxList.includes(i)) {
-            row.push(""); // Lunch cell
+            row.push("");
             continue;
           }
           const slotName = result.time_slots[slotCounter];
           const assignments = result.timetable?.[day]?.[slotName] || [];
           const secAssigned = assignments.find(
-            (a) =>
-              a.section === section || (!a.section && section === "Default"),
+            (a) => a.section === section || (!a.section && section === "Default"),
           );
 
           if (!secAssigned) {
@@ -722,16 +240,8 @@ export default function App() {
         rows.push(row);
       });
 
-      // 5. Blank Row
       rows.push([]);
-
-      // 6. Subjects Table
-      rows.push([
-        "Subjects as per University Scheme",
-        "",
-        "Lab. Room No.",
-        "Name of Faculty",
-      ]);
+      rows.push(["Subjects as per University Scheme", "", "Lab. Room No.", "Name of Faculty"]);
       rows.push(["Code No.", "Name of Subject", "", ""]);
 
       sectionSubjectsMap.forEach((info) => {
@@ -744,112 +254,16 @@ export default function App() {
       });
 
       const worksheet = XLSX.utils.aoa_to_sheet(rows);
-
-      // Add simple merges for the subjects table header
       if (!worksheet["!merges"]) worksheet["!merges"] = [];
-      const subjHeaderRowIdx = 4 + result.days.length; // 0-indexed: 3 rows top + days length + 1 blank
+      const subjHeaderRowIdx = 4 + result.days.length;
       worksheet["!merges"].push({
         s: { r: subjHeaderRowIdx, c: 0 },
         e: { r: subjHeaderRowIdx, c: 1 },
       });
 
-      // Sheet name max length is 31
       let sheetName = section.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 31);
       if (!sheetName) sheetName = "Sheet1";
       XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-      // Merge Lunch cells vertically if there is a lunch column
-      lunchColIdxList.forEach((colIdx) => {
-        // Merge from row 2 (timeSlotsRow) down to last day row
-        const startRow = 2; // index of timeSlotsRow
-        const endRow = 2 + result.days.length;
-        worksheet["!merges"].push({
-          s: { r: startRow, c: colIdx },
-          e: { r: endRow, c: colIdx },
-        });
-      });
-    });
-
-    // Generate Teacher Sheets
-    const teachersSet = new Set();
-    if (result.assignments) {
-      result.assignments.forEach((a) => {
-        if (a.teacher) teachersSet.add(a.teacher);
-      });
-    }
-
-    teachersSet.forEach((teacherName) => {
-      const headerInfoRow = [
-        `Teacher: ${teacherName}`,
-        "",
-        "",
-        "",
-        "",
-        "",
-        `Generated: ${new Date().toLocaleDateString()}`,
-      ];
-
-      const periodNums = ["Day / (Period & Time)"];
-      const timeSlotsRow = [""];
-      const lunchColIdxList = [];
-
-      let periodCounter = 1;
-      for (let i = 0; i < result.time_slots.length; i++) {
-        periodNums.push(
-          ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][
-            periodCounter - 1
-          ] || periodCounter.toString(),
-        );
-        timeSlotsRow.push(result.time_slots[i]);
-        if (i < result.time_slots.length - 1) {
-          const endMatch = result.time_slots[i].split("-")[1].trim();
-          const nextStartMatch = result.time_slots[i + 1].split("-")[0].trim();
-          if (endMatch !== nextStartMatch) {
-            periodNums.push("");
-            timeSlotsRow.push("LUNCH");
-            lunchColIdxList.push(timeSlotsRow.length - 1);
-          }
-        }
-        periodCounter++;
-      }
-
-      const rows = [];
-      rows.push(headerInfoRow);
-      rows.push(periodNums);
-      rows.push(timeSlotsRow);
-
-      result.days.forEach((day) => {
-        const row = [day];
-        let slotCounter = 0;
-
-        for (let i = 1; i < timeSlotsRow.length; i++) {
-          if (lunchColIdxList.includes(i)) {
-            row.push(""); // Lunch cell
-            continue;
-          }
-          const slotName = result.time_slots[slotCounter];
-          const assignments = result.timetable?.[day]?.[slotName] || [];
-          const teacherAssigned = assignments.find(
-            (a) => a.teacher === teacherName,
-          );
-
-          if (!teacherAssigned) {
-            row.push("");
-          } else {
-            const codeDisplay = teacherAssigned.code
-              ? teacherAssigned.code
-              : teacherAssigned.subject;
-            row.push(
-              `${codeDisplay} (${teacherAssigned.room}) [${teacherAssigned.section || "Auto"}]`,
-            );
-          }
-          slotCounter++;
-        }
-        rows.push(row);
-      });
-
-      const worksheet = XLSX.utils.aoa_to_sheet(rows);
-      if (!worksheet["!merges"]) worksheet["!merges"] = [];
 
       lunchColIdxList.forEach((colIdx) => {
         const startRow = 2;
@@ -859,190 +273,158 @@ export default function App() {
           e: { r: endRow, c: colIdx },
         });
       });
-
-      let sheetName = teacherName
-        .replace(/[^a-zA-Z0-9 ]/g, "")
-        .substring(0, 31);
-      if (!sheetName) sheetName = "Teacher1";
-      // ensure unique
-      while (workbook.SheetNames.includes(sheetName))
-        sheetName =
-          sheetName.substring(0, 28) + Math.floor(Math.random() * 100);
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
     });
 
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const data = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
-    });
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" });
     saveAs(data, `timetable_${new Date().toISOString().slice(0, 10)}.xlsx`);
   }, [result, sections]);
 
-  const saveToDatabase = async () => {
-    if (!result) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await axios.post(`${API_BASE_URL}/save`, {
-        name: `Timetable - ${new Date().toLocaleString()}`,
-        timetable_data: result,
-      });
-      setRescheduleNote(
-        "Timetable saved to free SQLite database successfully!",
-      );
-    } catch (e) {
-      setError(getErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+  return (
+    <div className="space-y-6">
+      {/* Solver Controls Header Bar */}
+      <div className="card p-5 bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-white">Academic Timetable Solver Workspace</h2>
+          <p className="text-xs text-slate-400 mt-0.5">Generate, optimize, view, and export constraint-validated timetable grids.</p>
+        </div>
 
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            className="btn-gradient text-xs py-2.5 px-5 font-bold flex items-center gap-2"
+            disabled={loading || teachers.length === 0 || subjects.length === 0}
+            onClick={generateTimetable}
+          >
+            {loading ? "Solving..." : "✨ Generate AI Timetable"}
+          </button>
+        </div>
+      </div>
 
-  const handleAddFaculty = useCallback((newTeacher) => {
-    if (!newTeacher || !newTeacher.name) return;
-    setTeachers(prev => {
-      const list = Array.isArray(prev) ? prev : [];
-      const exists = list.some(t => (t.name || t)?.trim().toLowerCase() === newTeacher.name?.trim().toLowerCase());
-      if (exists) return list;
-      const updated = [...list, newTeacher];
-      saveToCloud(true, { 
-        teachers: updated, 
-        sections: activeStateRef.current.sections, 
-        subjects: activeStateRef.current.subjects, 
-        rooms: activeStateRef.current.rooms, 
-        timeSlots: activeStateRef.current.timeSlots 
-      });
-      return updated;
-    });
-  }, [saveToCloud]);
+      {result && (
+        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center gap-4 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-semibold text-slate-300">Status: {result.solver_status}</span>
+          </div>
+          <div className="text-violet-300">Score: <strong className="text-white">{result.objective_score}</strong></div>
+          <div className="text-emerald-300">Scheduled Classes: <strong className="text-white">{result.assignments?.length || 0}</strong></div>
+        </div>
+      )}
 
-  const syncFacultyOnAuth = useCallback(async (sessionUser) => {
-    if (!sessionUser) return;
-    const meta = sessionUser.user_metadata || {};
-    const tName = meta.name || sessionUser.email.split('@')[0];
-    const role = meta.role || (sessionUser.email === "admin@lnctu.ac.in" ? "admin" : "teacher");
+      <TimetableGrid
+        result={result}
+        subjects={subjects}
+        loading={loading}
+        onExport={exportToExcel}
+        onSaveDb={saveToDatabase}
+        onNavigateToReschedule={handleNavigateToReschedule}
+      />
+    </div>
+  );
+}
 
-    if (role === "teacher") {
-      // 1. Sync to backend faculty database
-      try {
-        await axios.post(`${API_BASE_URL}/faculty/sync-account`, {
-          user_id: sessionUser.id,
-          name: tName,
-          teacher_name: tName,
-          email: sessionUser.email,
-          phone: meta.phone || "+91-9876543210",
-          employee_id: meta.employee_id || `EMP-LNCT-${Math.abs(tName.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
-          department: meta.department || "Computer Applications",
-          designation: meta.designation || "Assistant Professor",
-          status: "active",
-        });
-      } catch (err) {
-        console.warn("Silent backend account sync notice:", err);
-      }
+function FacultyDirectoryRoute() {
+  const navigate = useNavigate();
+  const {
+    teachers,
+    subjects,
+    result,
+    setSelectedFaculty,
+    handleAddFaculty,
+    handleTeachersChange
+  } = useAcademic();
 
-      // 2. Ensure present in active teachers list
-      setTeachers(prev => {
-        if (!Array.isArray(prev)) return [{ name: tName, email: sessionUser.email, department: meta.department || "Computer Applications" }];
-        if (prev.some(t => (t.name || t)?.trim().toLowerCase() === tName.toLowerCase())) return prev;
-        return [...prev, {
-          name: tName,
-          email: sessionUser.email,
-          department: meta.department || "Computer Applications",
-          designation: meta.designation || "Assistant Professor",
-          phone: meta.phone || "+91-9876543210",
-          employee_id: meta.employee_id,
-          free_periods: 1
-        }];
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    const isRecoveryUrl = typeof window !== 'undefined' && (window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery'));
-
-    // Check active session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user && !isRecoveryUrl) {
-        const role = session.user.user_metadata?.role || (session.user.email === "admin@lnctu.ac.in" ? "admin" : "teacher");
-        setUser({ 
-           role, 
-           name: session.user.user_metadata?.name || session.user.email,
-           email: session.user.email,
-           user_metadata: session.user.user_metadata || {},
-        });
-        setUserRole(role === "admin" ? "Admin" : "Faculty");
-        syncFacultyOnAuth(session.user);
-      }
-    });
-
-    // Listen for auth state changes (login/logout/signup/recovery)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        // Keep in login page to let the user set their new password
-        return;
-      }
-      if (session?.user) {
-        const role = session.user.user_metadata?.role || (session.user.email === "admin@lnctu.ac.in" ? "admin" : "teacher");
-        setUser({ 
-           role, 
-           name: session.user.user_metadata?.name || session.user.email,
-           email: session.user.email,
-           user_metadata: session.user.user_metadata || {},
-        });
-        setUserRole(role === "admin" ? "Admin" : "Faculty");
-        syncFacultyOnAuth(session.user);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [syncFacultyOnAuth]);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (e) {
-      console.error("Sign out error:", e);
-    }
-    setUser(null);
-  };
-
-  if (!user) {
-    return (
-      <Suspense fallback={<PageLoadingFallback />}>
-        <LoginPage />
-      </Suspense>
-    );
-  }
-
-  if (user.role === "teacher") {
-    return (
-      <Suspense fallback={<PageLoadingFallback />}>
-        <TeacherDashboard
-          user={user}
-          result={result}
+  return (
+    <div>
+      <FacultyDashboardStats />
+      <div className="space-y-8 mt-6">
+        <FacultyDirectory
           teachers={teachers}
-          onLogout={handleLogout}
-          theme={theme}
-          onToggleTheme={toggleTheme}
+          subjects={subjects}
+          result={result}
+          onSelectFaculty={(f) => {
+            setSelectedFaculty(f);
+            if (f?.id) navigate(`/faculty/${f.id}`);
+          }}
+          onAddFaculty={handleAddFaculty}
+          onTeachersChange={handleTeachersChange}
         />
-      </Suspense>
-    );
-  }
+        <AttendanceDashboard />
+      </div>
+    </div>
+  );
+}
+
+function FacultyProfileRoute() {
+  const { facultyId } = useParams();
+  const navigate = useNavigate();
+  const { selectedFaculty, setSelectedFaculty } = useAcademic();
+  const targetFaculty = selectedFaculty || { id: facultyId };
+
+  return (
+    <FacultyProfile
+      faculty={targetFaculty}
+      onBack={() => {
+        setSelectedFaculty(null);
+        navigate("/faculty");
+      }}
+    />
+  );
+}
+
+// ── Admin Shell Layout ──
+
+function AdminLayout() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const {
+    user,
+    userRole,
+    setUserRole,
+    teachers,
+    subjects,
+    setSubjects,
+    sections,
+    setSections,
+    rooms,
+    setRooms,
+    timeSlots,
+    setTimeSlots,
+    result,
+    setResult,
+    loading,
+    error,
+    rescheduleNote,
+    setRescheduleNote,
+    reschedulePreselect,
+    rescheduleTimetable,
+    assignProxy,
+    saveToCloud,
+    generateDemoTimetable,
+    handleRemoveDemoData,
+    generateTimetable,
+    handleAddFaculty,
+    handleLogout,
+    theme,
+    toggleTheme,
+  } = useAcademic();
+
+  const currentPath = location.pathname;
+  const breadcrumbs = getBreadcrumbsForPath(currentPath);
+
+  // Active page key for sidebar highlighting
+  const activePage = currentPath === "/" || currentPath === "/dashboard"
+    ? "dashboard"
+    : currentPath.replace(/^\/(academic\/|operations\/)?/, "");
 
   return (
     <AppShell
-      activePage={activeTab}
+      activePage={activePage}
       onSelectPage={(page, id) => {
-        setActiveTab(page);
-        if (id) setSelectedFaculty({ id });
+        if (id) navigate(`/faculty/${id}`);
       }}
-      pageTitle={getBreadcrumbsForPage(activeTab).slice(-1)[0]}
-      breadcrumbs={getBreadcrumbsForPage(activeTab)}
+      pageTitle={breadcrumbs.slice(-1)[0]}
+      breadcrumbs={breadcrumbs}
       userRole={userRole}
       onRoleChange={setUserRole}
       onSaveCloud={saveToCloud}
@@ -1067,186 +449,136 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Active Module Rendering ── */}
+      {/* Dynamic Module Content */}
       <Suspense fallback={<ModuleLoadingFallback />}>
-        {/* 1. DASHBOARD */}
-        {activeTab === "dashboard" && (
-          <InstitutionalDashboard
-            teachersCount={teachers.length}
-            sectionsCount={sections.length}
-            subjectsCount={subjects.length}
-            roomsCount={rooms.length}
-            hasResult={!!result}
-            onNavigate={(page) => setActiveTab(page)}
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/dashboard"
+            element={
+              <InstitutionalDashboard
+                teachersCount={teachers.length}
+                sectionsCount={sections.length}
+                subjectsCount={subjects.length}
+                roomsCount={rooms.length}
+                hasResult={!!result}
+                onNavigate={(page) => navigate(page === "timetable" ? "/timetable" : `/${page}`)}
+              />
+            }
           />
-        )}
-
-        {/* 2. TIMETABLE WORKSPACE */}
-        {activeTab === "timetable" && (
-          <div className="space-y-6">
-            {/* Solver Controls Header Bar */}
-            <div className="card p-5 bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-white">Academic Timetable Solver Workspace</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Generate, optimize, view, and export constraint-validated timetable grids.</p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  className="btn-gradient text-xs py-2.5 px-5 font-bold flex items-center gap-2"
-                  disabled={loading || teachers.length === 0 || subjects.length === 0}
-                  onClick={generateTimetable}
-                >
-                  {loading ? "Solving..." : "✨ Generate AI Timetable"}
-                </button>
-              </div>
-            </div>
-
-            {result && (
-              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center gap-4 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="font-semibold text-slate-300">Status: {result.solver_status}</span>
-                </div>
-                <div className="text-violet-300">Score: <strong className="text-white">{result.objective_score}</strong></div>
-                <div className="text-emerald-300">Scheduled Classes: <strong className="text-white">{result.assignments?.length || 0}</strong></div>
-              </div>
-            )}
-
-            <TimetableGrid
-              result={result}
-              subjects={subjects}
-              loading={loading}
-              onExport={exportToExcel}
-              onSaveDb={saveToDatabase}
-              onNavigateToReschedule={handleNavigateToReschedule}
-            />
-          </div>
-        )}
-
-        {/* 3. FACULTY SYSTEM */}
-        {activeTab === "faculty" && (
-          <div>
-            <FacultyDashboardStats />
-            {selectedFaculty ? (
-              <FacultyProfile faculty={selectedFaculty} onBack={() => setSelectedFaculty(null)} />
-            ) : (
-              <div className="space-y-8">
-                <FacultyDirectory
-                  teachers={teachers}
-                  subjects={subjects}
-                  result={result}
-                  onSelectFaculty={(f) => setSelectedFaculty(f)}
-                  onAddFaculty={handleAddFaculty}
-                  onTeachersChange={(updated) => { 
-                    setTeachers(updated); 
-                    saveToCloud(true, { 
-                      teachers: updated, 
-                      sections: activeStateRef.current.sections, 
-                      subjects: activeStateRef.current.subjects, 
-                      rooms: activeStateRef.current.rooms, 
-                      timeSlots: activeStateRef.current.timeSlots 
-                    }); 
-                  }}
-                />
+          <Route path="/timetable" element={<TimetableWorkspaceRoute />} />
+          <Route path="/faculty" element={<FacultyDirectoryRoute />} />
+          <Route path="/faculty/:facultyId" element={<FacultyProfileRoute />} />
+          <Route
+            path="/attendance"
+            element={
+              <div className="space-y-6">
+                <FacultyDashboardStats />
                 <AttendanceDashboard />
               </div>
-            )}
-          </div>
-        )}
-
-        {/* 4. ATTENDANCE WORKSPACE */}
-        {activeTab === "attendance" && (
-          <div className="space-y-6">
-            <FacultyDashboardStats />
-            <AttendanceDashboard />
-          </div>
-        )}
-
-        {/* 5. OPERATIONAL ANALYTICS 360° */}
-        {activeTab === "analytics" && (
-          <FacultyAnalyticsModule initialFacultyId={selectedFaculty?.id} />
-        )}
-
-        {/* 6. LEAVE MANAGEMENT */}
-        {activeTab === "leave" && (
-          <LeaveManagement isAdmin={true} />
-        )}
-
-        {/* 7. SUBSTITUTION CENTER */}
-        {activeTab === "substitutions" && (
-          <SubstitutionPanel />
-        )}
-
-        {/* 8. ACADEMIC SETUP: SUBJECTS */}
-        {activeTab === "subjects" && (
-          <SubjectsSection subjects={subjects} teachers={teachers} sections={sections} rooms={rooms} onChange={setSubjects} />
-        )}
-
-        {/* 9. ACADEMIC SETUP: SECTIONS */}
-        {activeTab === "sections" && (
-          <SectionsManagement
-            sections={sections}
-            rooms={rooms}
-            subjects={subjects}
-            teachers={teachers}
-            onChange={setSections}
-            onNavigate={(p) => setActiveTab(p)}
+            }
           />
-        )}
-
-        {/* 10. ACADEMIC SETUP: ROOMS */}
-        {activeTab === "rooms" && (
-          <RoomsSection rooms={rooms} onChange={setRooms} result={result} timeSlots={timeSlots} />
-        )}
-
-        {/* 11. ACADEMIC SETUP: SLOTS */}
-        {activeTab === "slots" && (
-          <TimeSlotsSection timeSlots={timeSlots} onChange={setTimeSlots} />
-        )}
-
-        {/* 12. OPERATIONS: RESCHEDULE */}
-        {activeTab === "reschedule" && (
-          <ReschedulePanel
-            teachers={teachers}
-            days={result?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]}
-            slots={result?.time_slots || timeSlots}
-            hasResult={!!result}
-            result={result}
-            loading={loading}
-            preselect={reschedulePreselect}
-            onBackToTimetable={() => setActiveTab("timetable")}
-            onReschedule={rescheduleTimetable}
-            onAssignProxy={assignProxy}
+          <Route path="/leave" element={<LeaveManagement isAdmin={true} />} />
+          <Route path="/substitutions" element={<SubstitutionPanel />} />
+          <Route path="/analytics" element={<FacultyAnalyticsModule />} />
+          <Route
+            path="/academic/subjects"
+            element={
+              <SubjectsSection
+                subjects={subjects}
+                teachers={teachers}
+                sections={sections}
+                rooms={rooms}
+                onChange={(updated) => {
+                  setSubjects(updated);
+                  saveToCloud(true, { subjects: updated });
+                }}
+              />
+            }
           />
-        )}
-
-        {/* 13. OPERATIONS: HISTORY */}
-        {activeTab === "history" && (
-          <HistorySection onSelectTimetable={(data) => { setResult(data); setActiveTab("timetable"); setRescheduleNote("Loaded saved timetable from database."); }} />
-        )}
-
-        {/* 14. OPERATIONS: INTEGRATIONS */}
-        {activeTab === "integrations" && (
-          <IntegrationsSection />
-        )}
-
-        {/* 15. SYSTEM SETTINGS */}
-        {activeTab === "settings" && (
-          <SystemSettings userRole={userRole} />
-        )}
-
-
-
-        {/* 16. REPORTS CENTER */}
-        {activeTab === "reports" && (
-          <ReportsCenter />
-        )}
+          <Route
+            path="/academic/sections"
+            element={
+              <SectionsManagement
+                sections={sections}
+                rooms={rooms}
+                subjects={subjects}
+                teachers={teachers}
+                onChange={(updated) => {
+                  setSections(updated);
+                  saveToCloud(true, { sections: updated });
+                }}
+                onNavigate={(p) => navigate(p === "timetable" ? "/timetable" : `/${p}`)}
+              />
+            }
+          />
+          <Route
+            path="/academic/rooms"
+            element={
+              <RoomsSection
+                rooms={rooms}
+                onChange={(updated) => {
+                  setRooms(updated);
+                  saveToCloud(true, { rooms: updated });
+                }}
+                result={result}
+                timeSlots={timeSlots}
+              />
+            }
+          />
+          <Route
+            path="/academic/slots"
+            element={
+              <TimeSlotsSection
+                timeSlots={timeSlots}
+                onChange={(updated) => {
+                  setTimeSlots(updated);
+                  saveToCloud(true, { timeSlots: updated });
+                }}
+              />
+            }
+          />
+          <Route
+            path="/operations/reschedule"
+            element={
+              <ReschedulePanel
+                teachers={teachers}
+                days={result?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]}
+                slots={result?.time_slots || timeSlots}
+                hasResult={!!result}
+                result={result}
+                loading={loading}
+                preselect={reschedulePreselect}
+                onBackToTimetable={() => navigate("/timetable")}
+                onReschedule={rescheduleTimetable}
+                onAssignProxy={assignProxy}
+              />
+            }
+          />
+          <Route
+            path="/operations/history"
+            element={
+              <HistorySection
+                onSelectTimetable={(data) => {
+                  setResult(data);
+                  navigate("/timetable");
+                  setRescheduleNote("Loaded saved timetable from database.");
+                }}
+              />
+            }
+          />
+          <Route path="/operations/integrations" element={<IntegrationsSection />} />
+          <Route path="/operations/settings" element={<SystemSettings userRole={userRole} />} />
+          <Route path="/reports" element={<ReportsCenter />} />
+          
+          {/* Universal Catch-All Route for Admin Layout */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
       </Suspense>
 
-      {/* AIChatBot Floating Assistant */}
+      {/* Floating AIChatBot Assistant */}
       <Suspense fallback={null}>
-        <AIChatBot 
+        <AIChatBot
           result={result}
           teachers={teachers}
           subjects={subjects}
@@ -1259,122 +591,76 @@ export default function App() {
           onAddFaculty={handleAddFaculty}
           onExtractedData={(data) => {
             if (!data) return;
-
-            // 1. Merge and persist teachers
             if (data.teachers && data.teachers.length > 0) {
-              setTeachers(prev => {
-                const map = new Map();
-                (Array.isArray(prev) ? prev : []).forEach(t => {
-                  const n = (t.name || t)?.trim();
-                  if (n) map.set(n.toLowerCase(), typeof t === 'object' ? t : { name: n, free_periods: 1 });
-                });
-                data.teachers.forEach(t => {
-                  const n = (t.name || t)?.trim();
-                  if (n) {
-                    const existing = map.get(n.toLowerCase()) || {};
-                    map.set(n.toLowerCase(), {
-                      ...existing,
-                      ...(typeof t === 'object' ? t : { name: n }),
-                      name: n,
-                      free_periods: isNaN(parseInt(t.free_periods)) ? (existing.free_periods || 1) : Math.max(0, parseInt(t.free_periods))
-                    });
-                  }
-                });
-                return Array.from(map.values());
-              });
-
-              // Auto-sync extracted teachers to backend Faculty Directory
-              data.teachers.forEach(async (t) => {
-                const tName = (t.name || t)?.trim();
-                if (!tName) return;
-                try {
-                  await axios.post(`${API_BASE_URL}/faculty/sync-account`, {
-                    teacher_name: tName,
-                    name: tName,
-                    employee_id: t.employee_id || `EMP-AI-${Math.floor(1000 + Math.random() * 9000)}`,
-                    department: t.department || "Computer Applications",
-                    designation: t.designation || "Assistant Professor",
-                    phone: t.phone || "+91-9876543210",
-                    email: t.email || `${tName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
-                    status: "active"
-                  });
-                } catch (err) {
-                  // Ignore
-                }
-              });
+              data.teachers.forEach(t => handleAddFaculty(t));
             }
-
-            // 2. Merge and persist subjects
             if (data.subjects && data.subjects.length > 0) {
-              setSubjects(prev => {
-                const existing = Array.isArray(prev) ? [...prev] : [];
-                data.subjects.forEach(newSub => {
-                  const subCode = (newSub.code || newSub.name)?.trim().toLowerCase();
-                  const matchIdx = existing.findIndex(s => (s.code || s.name)?.trim().toLowerCase() === subCode);
-                  if (matchIdx >= 0) {
-                    existing[matchIdx] = { ...existing[matchIdx], ...newSub };
-                  } else {
-                    existing.push(newSub);
-                  }
-                });
-                return existing;
-              });
+              setSubjects(data.subjects);
             }
-
-            // 3. Merge and persist sections
             if (data.sections && data.sections.length > 0) {
-              setSections(prev => {
-                const existing = Array.isArray(prev) ? [...prev] : [];
-                data.sections.forEach(newSec => {
-                  const secName = (newSec.name || newSec)?.trim().toLowerCase();
-                  const matchIdx = existing.findIndex(s => (s.name || s)?.trim().toLowerCase() === secName);
-                  if (matchIdx >= 0) {
-                    existing[matchIdx] = typeof newSec === 'object' ? { ...existing[matchIdx], ...newSec } : existing[matchIdx];
-                  } else {
-                    existing.push(typeof newSec === 'object' ? newSec : { name: newSec, room: "308/MCA", lab_room: "Lab Room No. 006" });
-                  }
-                });
-                return existing;
-              });
+              setSections(data.sections);
             }
-
-            // 4. Merge and persist rooms
             if (data.rooms && data.rooms.length > 0) {
-              setRooms(prev => {
-                const set = new Set((Array.isArray(prev) ? prev : []).map(r => (typeof r === 'string' ? r : r.name)?.trim()));
-                data.rooms.forEach(r => {
-                  const rName = (typeof r === 'string' ? r : r.name)?.trim();
-                  if (rName) set.add(rName);
-                });
-                return Array.from(set);
-              });
+              setRooms(data.rooms);
             }
-
-            // 5. Merge timeSlots
-            if (data.timeSlots && data.timeSlots.length > 0) {
-              setTimeSlots(data.timeSlots);
-            }
-
-            saveToCloud(true);
-            setRescheduleNote("✨ AI Co-Pilot applied changes and synchronized active academic datasets!");
           }}
         />
       </Suspense>
-
-
-
-      {/* Global Loading Overlay */}
-      {loading && activeTab !== "timetable" && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 backdrop-blur-md animate-fade-in">
-          <div className="card p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl animate-scale-in max-w-sm w-full mx-4">
-            <GooeyLoader
-              size="lg"
-              text="AI Engine Processing"
-              subtitle="Optimizing academic constraints & solving schedule matrix..."
-            />
-          </div>
-        </div>
-      )}
     </AppShell>
+  );
+}
+
+// ── Root Application Router Component ──
+
+function AppContent() {
+  const { user, userRole, handleLogout, theme, toggleTheme, teachers, result } = useAcademic();
+
+  // If user is not logged in, render the login page
+  if (!user) {
+    return (
+      <Suspense fallback={<PageLoadingFallback />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<LoginPage />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
+  // If user is logged in as Faculty / Teacher, render TeacherDashboard
+  if (userRole === "Faculty" || userRole === "Teacher" || userRole === "teacher" || user.role === "teacher") {
+    return (
+      <Suspense fallback={<PageLoadingFallback />}>
+        <Routes>
+          <Route
+            path="/portal"
+            element={
+              <TeacherDashboard
+                user={user}
+                result={result}
+                teachers={teachers}
+                onLogout={handleLogout}
+                theme={theme}
+                onToggleTheme={toggleTheme}
+              />
+            }
+          />
+          <Route path="*" element={<Navigate to="/portal" replace />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
+  // Admin / Dean portal
+  return <AdminLayout />;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AcademicProvider>
+        <AppContent />
+      </AcademicProvider>
+    </BrowserRouter>
   );
 }

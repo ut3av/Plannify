@@ -1,18 +1,40 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
+const PAGE_ROUTE_MAP = {
+  dashboard: "/dashboard",
+  timetable: "/timetable",
+  faculty: "/faculty",
+  attendance: "/attendance",
+  leave: "/leave",
+  substitutions: "/substitutions",
+  analytics: "/analytics",
+  subjects: "/academic/subjects",
+  sections: "/academic/sections",
+  rooms: "/academic/rooms",
+  slots: "/academic/slots",
+  reschedule: "/operations/reschedule",
+  integrations: "/operations/integrations",
+  history: "/operations/history",
+  settings: "/operations/settings",
+  reports: "/reports",
+};
+
 const QUICK_ACTIONS = [
-  { type: "action", label: "Open Timetable Workspace", page: "timetable", icon: "grid" },
-  { type: "action", label: "View Faculty Directory", page: "faculty", icon: "users" },
-  { type: "action", label: "Open Attendance Dashboard", page: "attendance", icon: "clock" },
-  { type: "action", label: "View Operational Analytics", page: "analytics", icon: "bar-chart" },
-  { type: "action", label: "Academic Setup: Subjects", page: "subjects", icon: "book-open" },
-  { type: "action", label: "Academic Setup: Classrooms", page: "rooms", icon: "building" },
+  { type: "action", label: "Open Timetable Workspace", page: "timetable", path: "/timetable", icon: "grid" },
+  { type: "action", label: "View Faculty Directory", page: "faculty", path: "/faculty", icon: "users" },
+  { type: "action", label: "Open Attendance Dashboard", page: "attendance", path: "/attendance", icon: "clock" },
+  { type: "action", label: "View Operational Analytics", page: "analytics", path: "/analytics", icon: "bar-chart" },
+  { type: "action", label: "Academic Setup: Subjects", page: "subjects", path: "/academic/subjects", icon: "book-open" },
+  { type: "action", label: "Academic Setup: Classrooms", page: "rooms", path: "/academic/rooms", icon: "building" },
+  { type: "action", label: "Open Reports Hub", page: "reports", path: "/reports", icon: "file-text" },
 ];
 
 export default function CommandPaletteModal({ isOpen, onClose, onNavigate }) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -92,7 +114,9 @@ export default function CommandPaletteModal({ isOpen, onClose, onNavigate }) {
               <button
                 key={idx}
                 onClick={() => {
-                  onNavigate(item.page, item.id);
+                  const targetPath = item.path || PAGE_ROUTE_MAP[item.page] || (item.page ? `/${item.page}` : '/dashboard');
+                  navigate(targetPath);
+                  if (onNavigate) onNavigate(item.page, item.id);
                   onClose();
                 }}
                 className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-800/80 text-left transition-all text-slate-200 group border border-transparent hover:border-slate-700"
