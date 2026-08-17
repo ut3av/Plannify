@@ -130,7 +130,7 @@ export default function SectionsManagement({
                     <tr key={i} className="hover:bg-slate-800/40 transition-colors">
                       <td className="p-3 font-bold text-white">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-indigo-600/30 text-indigo-300 font-black text-xs flex items-center justify-center border border-indigo-500/40">
+                          <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-indigo-600/30 text-amber-800 dark:text-indigo-300 font-black text-xs flex items-center justify-center border border-amber-300 dark:border-indigo-500/40">
                             {sec.name ? sec.name.slice(0, 3) : 'SEC'}
                           </div>
                           <div>
@@ -140,17 +140,17 @@ export default function SectionsManagement({
                         </div>
                       </td>
                       <td className="p-3">
-                        <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-bold text-[11px]">
+                        <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-indigo-500/10 border border-amber-200 dark:border-indigo-500/30 text-amber-800 dark:text-indigo-300 font-bold text-[11px]">
                           🏛️ {dept}
                         </span>
                       </td>
                       <td className="p-3">
-                        <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-indigo-300 font-medium">
+                        <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-800 dark:text-indigo-300 font-medium">
                           {sec.room || "Auto Assigned"}
                         </span>
                       </td>
                       <td className="p-3">
-                        <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-purple-300 font-medium">
+                        <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-purple-800 dark:text-purple-300 font-medium">
                           {sec.lab_room || "Auto Assigned"}
                         </span>
                       </td>
@@ -167,13 +167,13 @@ export default function SectionsManagement({
                       <td className="p-3 flex items-center gap-2">
                         <button
                           onClick={() => onNavigate && onNavigate("timetable")}
-                          className="px-2.5 py-1 rounded bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 font-semibold text-[11px] border border-indigo-500/30 transition-all flex items-center gap-1"
+                          className="px-2.5 py-1 rounded bg-amber-100 dark:bg-indigo-600/30 hover:bg-amber-600 dark:hover:bg-indigo-600 text-amber-800 dark:text-indigo-200 hover:text-white font-semibold text-[11px] border border-amber-300 dark:border-indigo-500/30 transition-all flex items-center gap-1"
                         >
                           📅 Timetable
                         </button>
                         <button
                           onClick={() => handleDelete(i)}
-                          className="p-1.5 rounded hover:bg-rose-500/20 text-rose-400 transition-colors"
+                          className="p-1.5 rounded hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 transition-colors"
                           title="Delete Section"
                         >
                           🗑️

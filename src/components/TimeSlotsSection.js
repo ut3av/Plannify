@@ -205,7 +205,7 @@ export default function TimeSlotsSection({ timeSlots = [], onChange }) {
             <div>
               <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
                 Time Slots & Bell Schedule
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30">
                   DRAG & DROP
                 </span>
               </h1>
@@ -234,12 +234,12 @@ export default function TimeSlotsSection({ timeSlots = [], onChange }) {
           {timeSlots.length > 0 && (
             <button
               onClick={clearAllSlots}
-              className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-xs font-bold text-rose-400 transition-all flex items-center gap-1"
+              className="px-3 py-2 rounded-xl bg-rose-100 dark:bg-rose-500/10 hover:bg-rose-200 dark:hover:bg-rose-500/20 border border-rose-300 dark:border-rose-500/30 text-xs font-bold text-rose-700 dark:text-rose-400 transition-all flex items-center gap-1"
             >
               🗑️ Clear
             </button>
           )}
-          <span className="px-3 py-2 rounded-xl bg-slate-800/80 border border-slate-700/80 text-xs font-bold text-amber-300">
+          <span className="px-3 py-2 rounded-xl bg-slate-800/80 border border-slate-700/80 text-xs font-bold text-amber-800 dark:text-amber-300">
             📊 {timeSlots.length} Active Periods/Day
           </span>
         </div>
@@ -274,7 +274,7 @@ export default function TimeSlotsSection({ timeSlots = [], onChange }) {
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="px-2 py-0.5 rounded-md font-black bg-amber-500/20 text-amber-300 text-[10px] border border-amber-500/30">
+                    <span className="px-2 py-0.5 rounded-md font-black bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] border border-amber-300 dark:border-amber-500/30">
                       Period {pNum}
                     </span>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -516,7 +516,7 @@ export default function TimeSlotsSection({ timeSlots = [], onChange }) {
                     </span>
                     <button
                       onClick={() => applyTemplate(tmpl.slots)}
-                      className="px-3 py-1 rounded-lg text-xs font-bold bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 transition-all flex items-center gap-1"
+                      className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-100 dark:bg-indigo-600/30 hover:bg-amber-600 dark:hover:bg-indigo-600 text-amber-800 dark:text-indigo-300 hover:text-white border border-amber-300 dark:border-indigo-500/40 transition-all flex items-center gap-1"
                     >
                       Apply Template ➔
                     </button>

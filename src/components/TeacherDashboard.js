@@ -177,7 +177,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
               
               <div className="card p-6 bg-slate-900/80 border border-slate-800">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Schedule Sync</span>
-                <div className="text-xl font-black text-emerald-400 uppercase tracking-tight italic mt-2 flex items-center gap-2">
+                <div className="text-xl font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-tight italic mt-2 flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -187,13 +187,13 @@ export default function TeacherDashboard({ user, result, onLogout }) {
 
               <div className="md:col-span-2 card p-6 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 border-indigo-500/20">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-amber-700 dark:text-indigo-400 shrink-0">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 block mb-1">Personalized Optimization</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-indigo-400 block mb-1">Personalized Optimization</span>
                     <p className="text-xs font-medium text-slate-300 leading-relaxed italic">
                       "Based on your current load of {totalClasses} assigned classes, free periods are clustered to minimize continuous teaching fatigue."
                     </p>
@@ -208,7 +208,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
                 <h3 className="text-base font-black text-white tracking-tight">INDIVIDUAL CLASS SCHEDULE</h3>
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Live Workspace Sync</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 dark:text-indigo-300">Live Workspace Sync</span>
                 </div>
               </div>
 
@@ -244,7 +244,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
                               <td key={slot} className="px-3 py-3 min-w-[180px]">
                                 {cell ? (
                                   <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-600/15 to-purple-600/15 border border-indigo-500/30 group-hover:border-indigo-500/50 transition-all shadow-md">
-                                    <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{cell.code}</div>
+                                    <div className="text-[10px] font-black text-amber-700 dark:text-indigo-400 uppercase tracking-widest mb-1">{cell.code}</div>
                                     <div className="text-sm font-black text-white leading-tight mb-2">{cell.subject}</div>
                                     <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
                                       <span>🏛️ {cell.room}</span>
@@ -279,7 +279,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
                   <h3 className="text-lg font-black text-white">Individual Attendance Record</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Track your daily punches, attendance %, and monthly compliance.</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
                   Attendance: 96.4%
                 </span>
               </div>
@@ -300,7 +300,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
 
               <div className="card p-6 bg-slate-900/90 border border-slate-800">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Workload Classification</span>
-                <h3 className="text-3xl font-black text-indigo-400 mt-2">
+                <h3 className="text-3xl font-black text-amber-700 dark:text-indigo-400 mt-2">
                   {totalClasses > 18 ? "Heavy Load" : totalClasses < 12 ? "Light Load" : "Optimal Load"}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">Standard target: 14 - 18 lectures / week</p>
@@ -308,7 +308,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
 
               <div className="card p-6 bg-slate-900/90 border border-slate-800">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">OR-Tools Health Score</span>
-                <h3 className="text-3xl font-black text-emerald-400 mt-2">100% Solved</h3>
+                <h3 className="text-3xl font-black text-emerald-700 dark:text-emerald-400 mt-2">100% Solved</h3>
                 <p className="text-xs text-slate-500 mt-1">Zero constraint violations or double-bookings.</p>
               </div>
             </div>
@@ -324,7 +324,7 @@ export default function TeacherDashboard({ user, result, onLogout }) {
                   <h3 className="text-lg font-black text-white">Leave Application & Balances</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Submit casual, medical, or earned leave requests and track review status.</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-indigo-500/20 text-amber-800 dark:text-indigo-300 border border-amber-300 dark:border-indigo-500/30">
                   Teacher Self-Service
                 </span>
               </div>

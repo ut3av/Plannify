@@ -110,19 +110,19 @@ export default function InstitutionalDashboard({
 
         <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">
           <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">On Leave</p>
-          <h3 className="text-2xl font-black text-amber-400 mt-1">{onLeaveToday}</h3>
+          <h3 className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1">{onLeaveToday}</h3>
           <p className="text-[10px] text-slate-500 mt-1">Approved Leave</p>
         </div>
 
         <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">
           <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Pending Leave</p>
-          <h3 className="text-2xl font-black text-rose-400 mt-1">{pendingLeaves}</h3>
+          <h3 className="text-2xl font-black text-rose-700 dark:text-rose-400 mt-1">{pendingLeaves}</h3>
           <p className="text-[10px] text-slate-500 mt-1">Review Required</p>
         </div>
 
         <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">
           <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Substitutions</p>
-          <h3 className="text-2xl font-black text-teal-400 mt-1">3</h3>
+          <h3 className="text-2xl font-black text-teal-700 dark:text-teal-400 mt-1">3</h3>
           <p className="text-[10px] text-slate-500 mt-1">Proxy Slots Today</p>
         </div>
       </div>
@@ -144,19 +144,19 @@ export default function InstitutionalDashboard({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700/60">
                 <p className="text-slate-400 font-bold uppercase text-[10px]">Timetable Status</p>
-                <p className="font-bold text-emerald-400 mt-1 text-sm">{hasResult ? "Active & Solved" : "Draft Ready"}</p>
+                <p className="font-bold text-emerald-700 dark:text-emerald-400 mt-1 text-sm">{hasResult ? "Active & Solved" : "Draft Ready"}</p>
                 <p className="text-slate-500 text-[11px] mt-0.5">Constraint Engine Validated</p>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700/60">
                 <p className="text-slate-400 font-bold uppercase text-[10px]">Active Classes</p>
-                <p className="font-bold text-indigo-300 mt-1 text-sm">{sectionsCount} Parallel Sections</p>
+                <p className="font-bold text-amber-800 dark:text-indigo-300 mt-1 text-sm">{sectionsCount} Parallel Sections</p>
                 <p className="text-slate-500 text-[11px] mt-0.5">Slots 1 to 5 Scheduled</p>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700/60">
                 <p className="text-slate-400 font-bold uppercase text-[10px]">Room Capacity</p>
-                <p className="font-bold text-purple-300 mt-1 text-sm">{roomsCount} Rooms Utilized</p>
+                <p className="font-bold text-purple-800 dark:text-purple-300 mt-1 text-sm">{roomsCount} Rooms Utilized</p>
                 <p className="text-slate-500 text-[11px] mt-0.5">0 Overlaps Detected</p>
               </div>
             </div>
@@ -191,18 +191,18 @@ export default function InstitutionalDashboard({
               {pendingLeaves > 0 ? (
                 <div
                   onClick={() => onNavigate("leave")}
-                  className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs cursor-pointer hover:bg-amber-500/20 transition-all flex items-start justify-between"
+                  className="p-3.5 rounded-xl bg-amber-100 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-500/20 transition-all flex items-start justify-between"
                 >
                   <div>
                     <p className="font-bold">{pendingLeaves} Leave Applications Awaiting Review</p>
-                    <p className="text-[11px] text-amber-300/80 mt-0.5">Click to approve or assign substitute faculty.</p>
+                    <p className="text-[11px] text-amber-700 dark:text-amber-300/80 mt-0.5">Click to approve or assign substitute faculty.</p>
                   </div>
-                  <span className="text-amber-400 font-bold">→</span>
+                  <span className="text-amber-700 dark:text-amber-400 font-bold">→</span>
                 </div>
               ) : (
                 <div className="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-300 text-xs flex items-center justify-between">
                   <span>Leave Queue: All requests cleared</span>
-                  <span className="text-emerald-400 font-bold">✓</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 font-bold">✓</span>
                 </div>
               )}
 
@@ -210,10 +210,10 @@ export default function InstitutionalDashboard({
                 <div
                   key={i}
                   onClick={() => onNavigate("analytics")}
-                  className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-200 text-xs cursor-pointer hover:bg-indigo-500/20 transition-all"
+                  className="p-3.5 rounded-xl bg-amber-50 dark:bg-indigo-500/10 border border-amber-200 dark:border-indigo-500/30 text-amber-900 dark:text-indigo-200 text-xs cursor-pointer hover:bg-amber-100 dark:hover:bg-indigo-500/20 transition-all"
                 >
                   <p className="font-bold">{ins.title}</p>
-                  <p className="text-[11px] text-indigo-300/80 mt-0.5 leading-relaxed">{ins.message}</p>
+                  <p className="text-[11px] text-amber-700 dark:text-indigo-300/80 mt-0.5 leading-relaxed">{ins.message}</p>
                 </div>
               ))}
             </div>

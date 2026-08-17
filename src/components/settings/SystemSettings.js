@@ -46,7 +46,7 @@ export default function SystemSettings({ userRole = "Super Admin" }) {
       </div>
 
       {savedNote && (
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+        <div className="p-4 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
           ✓ {savedNote}
         </div>
       )}
@@ -108,7 +108,7 @@ export default function SystemSettings({ userRole = "Super Admin" }) {
                 <p className="font-bold text-white">Admin</p>
                 <p className="text-[10px] text-slate-400">Full institutional operations, timetable solver, faculty management, & settings</p>
               </div>
-              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Admin Scope</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">Admin Scope</span>
             </div>
 
             <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between">
@@ -116,7 +116,7 @@ export default function SystemSettings({ userRole = "Super Admin" }) {
                 <p className="font-bold text-white">Faculty Member</p>
                 <p className="text-[10px] text-slate-400">Personal timetable schedule, individual attendance, workload analytics, & Leave Apply</p>
               </div>
-              <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-bold">Faculty Scope</span>
+              <span className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-[10px] font-bold">Faculty Scope</span>
             </div>
           </div>
         </div>

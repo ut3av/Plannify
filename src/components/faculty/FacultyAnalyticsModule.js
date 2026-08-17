@@ -345,8 +345,8 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {insights.map((item) => (
                 <div key={item.id} className={`p-4 rounded-xl border text-xs space-y-1.5 ${
-                  item.severity === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' :
-                  (item.severity === 'info' ? 'bg-blue-500/10 border-blue-500/30 text-blue-200' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200')
+                  item.severity === 'warning' ? 'bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30 text-amber-900 dark:text-amber-200' :
+                  (item.severity === 'info' ? 'bg-blue-100 dark:bg-blue-500/10 border-blue-300 dark:border-blue-500/30 text-blue-900 dark:text-blue-200' : 'bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-200')
                 }`}>
                   <div className="flex items-center justify-between font-bold">
                     <span>{item.title}</span>
@@ -457,13 +457,13 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
                     <td className="p-3">{f.department_name}</td>
                     <td className="p-3 font-bold text-emerald-400">{f.attendance_percentage}%</td>
                     <td className="p-3 text-indigo-300 font-semibold">{f.present_days}</td>
-                    <td className="p-3 text-amber-400">{f.late_days}</td>
-                    <td className="p-3 text-purple-300">{f.leave_days}</td>
+                    <td className="p-3 text-amber-700 dark:text-amber-400">{f.late_days}</td>
+                    <td className="p-3 text-purple-800 dark:text-purple-300">{f.leave_days}</td>
                     <td className="p-3">{f.classes_conducted}</td>
                     <td className="p-3">{f.substitutions_provided}</td>
                     <td className="p-3">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        f.workload_status === 'High' ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'
+                        f.workload_status === 'High' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300' : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
                       }`}>
                         {f.weekly_workload} p/wk ({f.workload_status})
                       </span>
@@ -471,7 +471,7 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
                     <td className="p-3">
                       <button
                         onClick={() => { setSelectedFacultyId(f.id); setActiveTab("profile"); }}
-                        className="px-2.5 py-1 rounded bg-indigo-600/30 hover:bg-indigo-600 border border-indigo-500/40 text-indigo-200 text-[11px] font-bold transition-all"
+                        className="px-2.5 py-1 rounded bg-amber-100 dark:bg-indigo-600/30 hover:bg-amber-600 dark:hover:bg-indigo-600 border border-amber-300 dark:border-indigo-500/40 text-amber-800 dark:text-indigo-200 hover:text-white text-[11px] font-bold transition-all"
                       >
                         View Profile
                       </button>

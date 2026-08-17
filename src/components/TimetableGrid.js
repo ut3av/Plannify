@@ -192,7 +192,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
                 </span>
                 Master Timetable Workspace
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
                 {result.solver_status || "OPTIMAL"}
               </span>
             </div>
@@ -263,7 +263,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
                   key={slot}
                   className="p-3 text-center font-bold text-slate-300 border border-slate-800/80 bg-slate-900/90 min-w-[170px]"
                 >
-                  <div className="font-mono text-indigo-300 font-bold text-[11px]">
+                  <div className="font-mono text-amber-800 dark:text-indigo-300 font-bold text-[11px]">
                     Period #{i + 1}
                   </div>
                   <div className="text-[10px] font-mono text-slate-400 mt-0.5">
@@ -276,7 +276,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
           <tbody>
             {days.map((day) => (
               <tr key={day} className="hover:bg-slate-900/30 transition-colors">
-                <td className="p-3 font-mono font-black text-indigo-400 border border-slate-800/80 bg-slate-900/60 align-middle text-center uppercase tracking-wider">
+                <td className="p-3 font-mono font-black text-amber-700 dark:text-indigo-400 border border-slate-800/80 bg-slate-900/60 align-middle text-center uppercase tracking-wider">
                   <div className="text-sm">{day}</div>
                   <div className="text-[10px] text-slate-500 font-normal">
                     {timeSlots.reduce((acc, slot) => acc + (displayTimetable[day][slot]?.length || 0), 0)} classes

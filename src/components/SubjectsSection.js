@@ -171,7 +171,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
             <div>
               <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
                 Subjects & Curriculum Matrix
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-indigo-500/20 text-amber-800 dark:text-indigo-300 border border-amber-300 dark:border-indigo-500/30">
                   DRAG & DROP PRIORITY
                 </span>
               </h1>
@@ -183,7 +183,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <span className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-indigo-300">
+          <span className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-800 dark:text-indigo-300">
             📚 {subjects.length} Subjects ({totalSlotsSum} weekly periods)
           </span>
         </div>
@@ -197,18 +197,18 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
           <p className="text-[11px] text-slate-400 mt-1">Across all departments</p>
         </div>
         <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-sky-400">Theory Lectures</p>
-          <h3 className="text-2xl font-black text-sky-400 mt-1">{theoryCount}</h3>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400">Theory Lectures</p>
+          <h3 className="text-2xl font-black text-sky-700 dark:text-sky-400 mt-1">{theoryCount}</h3>
           <p className="text-[11px] text-slate-400 mt-1">Standard 1-slot periods</p>
         </div>
         <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Practical Labs</p>
-          <h3 className="text-2xl font-black text-emerald-400 mt-1">{labCount}</h3>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Practical Labs</p>
+          <h3 className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">{labCount}</h3>
           <p className="text-[11px] text-slate-400 mt-1">Continuous 2-slot blocks</p>
         </div>
         <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-purple-400">Total Period Load</p>
-          <h3 className="text-2xl font-black text-purple-400 mt-1">{totalSlotsSum}</h3>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">Total Period Load</p>
+          <h3 className="text-2xl font-black text-purple-700 dark:text-purple-400 mt-1">{totalSlotsSum}</h3>
           <p className="text-[11px] text-slate-400 mt-1">Weekly scheduled periods</p>
         </div>
       </div>
@@ -438,11 +438,11 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
                         </span>
                       )}
                       {sub.is_lab ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
                           <span>🔬</span> Lab (2-Slot)
                         </span>
                       ) : (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-500/30">
                           📖 Theory
                         </span>
                       )}
