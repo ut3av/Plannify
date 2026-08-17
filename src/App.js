@@ -897,6 +897,47 @@ export default function App() {
     saveToCloud(true);
   }, [saveToCloud]);
 
+  const syncFacultyOnAuth = useCallback(async (sessionUser) => {
+    if (!sessionUser) return;
+    const meta = sessionUser.user_metadata || {};
+    const tName = meta.name || sessionUser.email.split('@')[0];
+    const role = meta.role || (sessionUser.email === "admin@lnctu.ac.in" ? "admin" : "teacher");
+
+    if (role === "teacher") {
+      // 1. Sync to backend faculty database
+      try {
+        await axios.post(`${API_BASE_URL}/faculty/sync-account`, {
+          user_id: sessionUser.id,
+          name: tName,
+          teacher_name: tName,
+          email: sessionUser.email,
+          phone: meta.phone || "+91-9876543210",
+          employee_id: meta.employee_id || `EMP-LNCT-${Math.abs(tName.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
+          department: meta.department || "Computer Applications",
+          designation: meta.designation || "Assistant Professor",
+          status: "active",
+        });
+      } catch (err) {
+        console.warn("Silent backend account sync notice:", err);
+      }
+
+      // 2. Ensure present in active teachers list
+      setTeachers(prev => {
+        if (!Array.isArray(prev)) return [{ name: tName, email: sessionUser.email, department: meta.department || "Computer Applications" }];
+        if (prev.some(t => (t.name || t)?.trim().toLowerCase() === tName.toLowerCase())) return prev;
+        return [...prev, {
+          name: tName,
+          email: sessionUser.email,
+          department: meta.department || "Computer Applications",
+          designation: meta.designation || "Assistant Professor",
+          phone: meta.phone || "+91-9876543210",
+          employee_id: meta.employee_id,
+          free_periods: 1
+        }];
+      });
+    }
+  }, []);
+
   useEffect(() => {
     const isRecoveryUrl = typeof window !== 'undefined' && (window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery'));
 
@@ -911,6 +952,7 @@ export default function App() {
            user_metadata: session.user.user_metadata || {},
         });
         setUserRole(role === "admin" ? "Admin" : "Faculty");
+        syncFacultyOnAuth(session.user);
       }
     });
 
@@ -929,13 +971,14 @@ export default function App() {
            user_metadata: session.user.user_metadata || {},
         });
         setUserRole(role === "admin" ? "Admin" : "Faculty");
+        syncFacultyOnAuth(session.user);
       } else {
         setUser(null);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [syncFacultyOnAuth]);
 
   const handleLogout = async () => {
     try {

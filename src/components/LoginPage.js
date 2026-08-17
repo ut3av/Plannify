@@ -145,11 +145,13 @@ export default function LoginPage() {
           throw new Error("This email is already registered.");
         }
 
-        // 2. Auto-Registration Hook: Insert into Faculty Directory (backend database)
+        // 2. Auto-Registration Hook: Seamlessly insert into Faculty Directory & database
         if (portalRole === "teacher") {
           try {
-            await axios.post(`${API_BASE_URL}/faculty/`, {
+            await axios.post(`${API_BASE_URL}/faculty/sync-account`, {
+              user_id: data?.user?.id,
               teacher_name: teacherName,
+              name: teacherName,
               email: email,
               phone: phone || "+91-9876543210",
               employee_id: empId,
@@ -157,6 +159,7 @@ export default function LoginPage() {
               employment_type: "full-time",
               status: "active",
               qualification: "M.Tech / Ph.D",
+              department: department,
               department_name: department
             });
           } catch (apiErr) {
@@ -171,8 +174,8 @@ export default function LoginPage() {
               .eq('id', 'draft')
               .single();
 
+            let tList = [];
             if (cloudData) {
-              let tList = [];
               const rawTeachers = cloudData.teachers ?? cloudData.room;
               if (rawTeachers) {
                 try {
@@ -181,28 +184,32 @@ export default function LoginPage() {
                   tList = [];
                 }
               }
-              if (Array.isArray(tList) && !tList.some(t => (t.name || t) === teacherName)) {
-                tList.push({
-                  name: teacherName,
-                  department: department || "Computer Applications",
-                  phone: phone || "+91-9876543210",
-                  email: email,
-                  employee_id: empId,
-                  designation: designation,
-                  free_periods: 1
+            }
+            if (!Array.isArray(tList)) tList = [];
+            if (!tList.some(t => (t.name || t)?.trim().toLowerCase() === teacherName.trim().toLowerCase())) {
+              tList.push({
+                name: teacherName,
+                department: department || "Computer Applications",
+                phone: phone || "+91-9876543210",
+                email: email,
+                employee_id: empId,
+                designation: designation || "Assistant Professor",
+                free_periods: 1
+              });
+              await supabase
+                .from('timetable_state')
+                .upsert({
+                  id: 'draft',
+                  teachers: tList,
+                  updated_at: new Date().toISOString()
                 });
-                await supabase
-                  .from('timetable_state')
-                  .update({ teachers: tList, updated_at: new Date().toISOString() })
-                  .eq('id', 'draft');
-              }
             }
           } catch (cloudErr) {
             console.warn("Cloud state sync for new faculty:", cloudErr);
           }
         }
 
-        setSuccessMessage("Account created & synchronized with Faculty Directory! You can now sign in.");
+        setSuccessMessage("✨ Faculty account created & seamlessly registered with the University Faculty Directory! You can now sign in.");
       } else {
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,

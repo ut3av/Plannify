@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import { supabase } from "../../supabaseClient";
 import DispatchPreviewModal from "../common/DispatchPreviewModal";
 import GooeyLoader from "../common/GooeyLoader";
 
@@ -17,8 +18,11 @@ export default function FacultyDirectory({
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [syncingAccounts, setSyncingAccounts] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [createdAccountInfo, setCreatedAccountInfo] = useState(null);
+  const [copiedCredentials, setCopiedCredentials] = useState(false);
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -36,6 +40,8 @@ export default function FacultyDirectory({
     joining_date: new Date().toISOString().split("T")[0],
     phone: "",
     email: "",
+    createAuthAccount: true,
+    accountPassword: "Plannify@2026",
   });
 
   useEffect(() => {
@@ -188,10 +194,40 @@ export default function FacultyDirectory({
     syncMissing();
   }, [allFaculty]);
 
+  const handleSyncAccounts = async () => {
+    try {
+      setSyncingAccounts(true);
+      setErrorMessage("");
+      setSuccessMessage("");
+      const [facRes, deptRes] = await Promise.all([
+        axios.get(`${API}/faculty/`),
+        axios.get(`${API}/faculty/departments`)
+      ]);
+      if (facRes.data) setFaculty(facRes.data);
+      if (deptRes.data) setDepartments(deptRes.data);
+      setSuccessMessage(`✅ Faculty Directory synchronized! ${facRes.data?.length || 0} registered faculty records refreshed.`);
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (e) {
+      console.error("Failed to sync accounts:", e);
+      setErrorMessage("Failed to refresh faculty accounts from backend.");
+    } finally {
+      setSyncingAccounts(false);
+    }
+  };
+
+  const handleCopyCredentials = () => {
+    if (!createdAccountInfo) return;
+    const text = `Plannify Faculty Portal Credentials:\n━━━━━━━━━━━━━━━━━━━━━\nName: ${createdAccountInfo.name}\nEmail / Login ID: ${createdAccountInfo.email}\nInitial Password: ${createdAccountInfo.password}\nPortal Link: ${window.location.origin}\n━━━━━━━━━━━━━━━━━━━━━\nLog in with role 'Faculty Member' to view your timetable schedule & attendance.`;
+    navigator.clipboard.writeText(text);
+    setCopiedCredentials(true);
+    setTimeout(() => setCopiedCredentials(false), 3000);
+  };
+
   const handleAdd = async (e) => {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
+    setCreatedAccountInfo(null);
     setIsSubmitting(true);
 
     const newTeacherName = form.teacher_name.trim();
@@ -206,6 +242,7 @@ export default function FacultyDirectory({
     const empId = form.employee_id.trim() || `EMP-LNCT-${Math.floor(1000 + Math.random() * 9000)}`;
     const teacherEmail = form.email.trim() || `${newTeacherName.toLowerCase().replace(/[^a-z0-9]/g, '.') || 'faculty'}@lnctu.ac.in`;
     const teacherPhone = form.phone.trim() || "+91-9876543210";
+    const initialPassword = form.accountPassword || "Plannify@2026";
     const generatedId = `fac_${Date.now()}`;
 
     // 1. Immediately create and register new teacher object in client state
@@ -222,6 +259,7 @@ export default function FacultyDirectory({
       joining_date: form.joining_date || new Date().toISOString().split("T")[0],
       free_periods: 1,
       status: "active",
+      has_account: !!form.createAuthAccount,
     };
 
     if (onAddFaculty) {
@@ -247,10 +285,49 @@ export default function FacultyDirectory({
         status: "active",
         email: teacherEmail,
         phone: teacherPhone,
+        has_account: !!form.createAuthAccount,
       }
     ]);
 
-    setSuccessMessage(`✨ Faculty "${newTeacherName}" registered successfully & active across academic panels!`);
+    // 2. Auto-Provision Login Account in Supabase Auth if requested
+    let authAccountCreated = false;
+    if (form.createAuthAccount && teacherEmail) {
+      try {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: teacherEmail,
+          password: initialPassword,
+          options: {
+            data: {
+              role: "teacher",
+              name: newTeacherName,
+              phone: teacherPhone,
+              department: deptName,
+              designation: form.designation || "Assistant Professor",
+              employee_id: empId,
+            }
+          }
+        });
+        if (!signUpError) {
+          authAccountCreated = true;
+          setCreatedAccountInfo({
+            name: newTeacherName,
+            email: teacherEmail,
+            password: initialPassword,
+            employee_id: empId,
+            department: deptName,
+            designation: form.designation || "Assistant Professor",
+          });
+        }
+      } catch (authErr) {
+        console.warn("Supabase auth auto-provision notice:", authErr);
+      }
+    }
+
+    setSuccessMessage(
+      authAccountCreated
+        ? `✨ Faculty "${newTeacherName}" onboarded with active login account!`
+        : `✨ Faculty "${newTeacherName}" registered successfully & active across academic panels!`
+    );
     setShowAddForm(false);
     setForm({
       teacher_name: "",
@@ -262,15 +339,18 @@ export default function FacultyDirectory({
       joining_date: new Date().toISOString().split("T")[0],
       phone: "",
       email: "",
+      createAuthAccount: true,
+      accountPassword: "Plannify@2026",
     });
     setIsSubmitting(false);
 
-    // 2. Asynchronously sync to backend DB without blocking or crashing the UI on network hiccups
+    // 3. Asynchronously sync to backend DB without blocking or crashing the UI
     try {
       const payload = {
         teacher_name: newTeacherName,
         employee_id: empId,
         department_id: form.department_id || null,
+        department_name: deptName,
         designation: form.designation || "Assistant Professor",
         qualification: form.qualification.trim() || "M.Tech / Ph.D",
         employment_type: form.employment_type || "full-time",
@@ -280,13 +360,12 @@ export default function FacultyDirectory({
         status: "active",
       };
 
-      const res = await axios.post(`${API}/faculty/`, payload, { timeout: 10000 });
+      const res = await axios.post(`${API}/faculty/sync-account`, payload, { timeout: 10000 });
       if (res?.data?.id) {
-        // Update local record ID with persisted backend ID
         setFaculty(prev => prev.map(item => item.id === generatedId ? { ...item, id: res.data.id } : item));
       }
     } catch (err) {
-      console.warn("Backend /faculty sync notice (faculty kept safely in active cloud state):", err);
+      console.warn("Backend /faculty sync notice:", err);
     }
   };
 
@@ -315,26 +394,101 @@ export default function FacultyDirectory({
 
   const getInitials = (name) => {
     return (name || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
-  };  return (
+  };
+
+  return (
     <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Faculty Directory</h2>
-          <p className="text-sm text-slate-500 mt-1">{filtered.length} active faculty profiles registered • Click any faculty to view portal or details</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <span>Faculty Directory</span>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-medium">
+              Live Connected
+            </span>
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">{filtered.length} active faculty profiles registered • Real-time database & auth account sync</p>
         </div>
-        <button
-          onClick={() => {
-            setShowAddForm(!showAddForm);
-            setErrorMessage("");
-            setSuccessMessage("");
-          }}
-          className="btn-primary gap-2"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          {showAddForm ? "Close Form" : "Add Faculty"}
-        </button>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleSyncAccounts}
+            disabled={syncingAccounts || loading}
+            title="Refresh and sync all registered accounts from backend & Supabase"
+            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700/80 transition-all flex items-center gap-2 shadow-sm"
+          >
+            <span className={syncingAccounts ? "animate-spin inline-block" : ""}>🔄</span>
+            <span>{syncingAccounts ? "Syncing..." : "Sync Accounts"}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setShowAddForm(!showAddForm);
+              setErrorMessage("");
+              setSuccessMessage("");
+              setCreatedAccountInfo(null);
+            }}
+            className="btn-primary gap-2"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {showAddForm ? "Close Form" : "Add Faculty"}
+          </button>
+        </div>
       </div>
+
+      {/* Created Account Credentials Card */}
+      {createdAccountInfo && (
+        <div className="animate-slide-down p-5 mb-6 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-slate-900/90 to-indigo-950/80 border border-emerald-500/40 shadow-xl backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-lg text-emerald-400 shrink-0">
+                🔑
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>Faculty Login Account Created & Activated!</span>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Ready to Sign In
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-300 mt-1">
+                  Faculty member <strong>{createdAccountInfo.name}</strong> can now log in to the Faculty Portal. Share their initial credentials:
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+                  <div className="bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800 font-mono text-slate-300">
+                    <span className="text-slate-500 font-sans text-[11px] mr-1.5">Email:</span>
+                    <strong className="text-emerald-400">{createdAccountInfo.email}</strong>
+                  </div>
+                  <div className="bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800 font-mono text-slate-300">
+                    <span className="text-slate-500 font-sans text-[11px] mr-1.5">Password:</span>
+                    <strong className="text-amber-300">{createdAccountInfo.password}</strong>
+                  </div>
+                  <div className="bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800 font-mono text-slate-300">
+                    <span className="text-slate-500 font-sans text-[11px] mr-1.5">Emp ID:</span>
+                    <strong className="text-indigo-300">{createdAccountInfo.employee_id}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleCopyCredentials}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-1.5"
+              >
+                <span>{copiedCredentials ? "✓ Copied!" : "📋 Copy Login Details"}</span>
+              </button>
+              <button
+                onClick={() => setCreatedAccountInfo(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+                title="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success Alert Banner */}
       {successMessage && (
@@ -364,7 +518,7 @@ export default function FacultyDirectory({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">New Faculty Member Registration</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Registering here immediately synchronizes with both the backend DB and the active timetable solver.</p>
+              <p className="text-xs text-slate-400 mt-0.5">Registering here immediately synchronizes with both the backend DB, Supabase Auth, and the active timetable solver.</p>
             </div>
             <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">
               Admin Onboarding
@@ -464,6 +618,33 @@ export default function FacultyDirectory({
                 onChange={e => setForm({ ...form, joining_date: e.target.value })}
               />
             </div>
+
+            {/* Account Provisioning Section */}
+            <div className="md:col-span-2 lg:col-span-3 p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-200">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  checked={form.createAuthAccount}
+                  onChange={e => setForm({ ...form, createAuthAccount: e.target.checked })}
+                />
+                <span>🔑 Auto-Provision Login Account for Faculty (Enables instant Faculty Portal sign-in)</span>
+              </label>
+
+              {form.createAuthAccount && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[11px] text-slate-400 font-sans">Initial Password:</span>
+                  <input
+                    type="text"
+                    className="input py-1 px-2.5 text-xs font-mono w-40 bg-slate-900 border-slate-700 text-amber-300"
+                    placeholder="Plannify@2026"
+                    value={form.accountPassword}
+                    onChange={e => setForm({ ...form, accountPassword: e.target.value })}
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="flex items-end gap-3 md:col-span-2 lg:col-span-3 pt-2">
               <button
                 type="submit"
@@ -477,7 +658,7 @@ export default function FacultyDirectory({
                   </>
                 ) : (
                   <>
-                    <span>✨ Save & Synchronize Faculty Profile</span>
+                    <span>✨ Save & Provision Faculty Account</span>
                   </>
                 )}
               </button>
@@ -599,10 +780,17 @@ export default function FacultyDirectory({
 
               {/* Bottom Quick-Action Buttons */}
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  Verified Faculty
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Verified Faculty
+                  </span>
+                  {(f.has_account || f.user_id || f.email) && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                      ⚡ Account Active
+                    </span>
+                  )}
+                </div>
 
                 <div className="flex items-center gap-1.5">
                   <button
@@ -649,7 +837,12 @@ export default function FacultyDirectory({
                       <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0">
                         {getInitials(f.teacher_name)}
                       </div>
-                      <span className="font-bold text-white">{f.teacher_name}</span>
+                      <div>
+                        <span className="font-bold text-white block">{f.teacher_name}</span>
+                        {(f.has_account || f.user_id || f.email) && (
+                          <span className="text-[10px] font-semibold text-emerald-400">⚡ Login Account Active</span>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td><span className="font-mono text-xs text-indigo-300">{f.employee_id}</span></td>

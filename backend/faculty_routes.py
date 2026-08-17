@@ -11,6 +11,7 @@ try:
     )
     from .faculty_db import (
         list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty, delete_faculty, clear_all_faculty,
+        sync_account_profile,
         list_departments, create_department, update_department, delete_department,
         get_leave_balances, get_attendance_summary, initialize_leave_balances,
         get_dashboard_stats,
@@ -22,6 +23,7 @@ except ImportError:
     )
     from faculty_db import (
         list_faculty, get_faculty, create_faculty, update_faculty, deactivate_faculty, delete_faculty, clear_all_faculty,
+        sync_account_profile,
         list_departments, create_department, update_department, delete_department,
         get_leave_balances, get_attendance_summary, initialize_leave_balances,
         get_dashboard_stats,
@@ -191,4 +193,14 @@ def purge_all_faculty():
         return clear_all_faculty()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/sync-account")
+def sync_faculty_account(data: dict):
+    """Seamlessly creates or updates a faculty profile when a user account is created or authenticated."""
+    try:
+        return sync_account_profile(data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 

@@ -319,6 +319,10 @@ def _sanitize_faculty_payload(data: dict) -> dict:
 
 def create_faculty(data: dict) -> dict:
     clean_data = _sanitize_faculty_payload(data)
+    emp_id = clean_data.get("employee_id")
+    email = clean_data.get("email")
+    teacher_name = clean_data.get("teacher_name")
+
     sb = get_supabase()
     if sb:
         try:
@@ -333,6 +337,34 @@ def create_faculty(data: dict) -> dict:
             try:
                 res = sb.table("faculty_profiles").insert(sb_payload).execute()
             except Exception as insert_err:
+                # Check if duplicate by email or employee_id
+                existing = None
+                if email:
+                    try:
+                        existing = sb.table("faculty_profiles").select("*").eq("email", email).limit(1).execute()
+                    except Exception:
+                        pass
+                if not existing or not existing.data:
+                    if emp_id:
+                        try:
+                            existing = sb.table("faculty_profiles").select("*").eq("employee_id", emp_id).limit(1).execute()
+                        except Exception:
+                            pass
+
+                if existing and existing.data:
+                    f = existing.data[0]
+                    # Update fields if provided
+                    up_data = {k: v for k, v in sb_payload.items() if k not in ("id", "employee_id") and v}
+                    if up_data:
+                        try:
+                            sb.table("faculty_profiles").update(up_data).eq("id", f["id"]).execute()
+                        except Exception:
+                            pass
+                    f["joining_date"] = _norm_date(f.get("joining_date"))
+                    f["created_at"] = _norm_datetime(f.get("created_at"))
+                    f["updated_at"] = _norm_datetime(f.get("updated_at"))
+                    return f
+
                 # If error is due to missing email column in Supabase schema, retry without email
                 if "email" in sb_payload and "email" in str(insert_err):
                     sb_payload_no_email = {k: v for k, v in sb_payload.items() if k != "email"}
@@ -346,13 +378,12 @@ def create_faculty(data: dict) -> dict:
             f["updated_at"] = _norm_datetime(f.get("updated_at"))
             return f
         except Exception as e:
-            # If duplicate employee_id, fetch existing
+            # If duplicate employee_id or email, fetch existing
             try:
-                emp_id = clean_data.get("employee_id")
                 if emp_id:
-                    existing = sb.table("faculty_profiles").select("*").eq("employee_id", emp_id).single().execute()
+                    existing = sb.table("faculty_profiles").select("*").eq("employee_id", emp_id).limit(1).execute()
                     if existing.data:
-                        f = existing.data
+                        f = existing.data[0]
                         f["joining_date"] = _norm_date(f.get("joining_date"))
                         f["created_at"] = _norm_datetime(f.get("created_at"))
                         f["updated_at"] = _norm_datetime(f.get("updated_at"))
@@ -363,9 +394,16 @@ def create_faculty(data: dict) -> dict:
 
     conn = get_connection()
     cursor = conn.cursor()
-    emp_id = clean_data.get("employee_id")
+    
+    # Check SQLite for existing by employee_id or email
     if emp_id:
         cursor.execute("SELECT id FROM faculty_profiles WHERE employee_id = ?", (emp_id,))
+        existing_row = cursor.fetchone()
+        if existing_row:
+            conn.close()
+            return get_faculty(existing_row["id"]) or {}
+    if email:
+        cursor.execute("SELECT id FROM faculty_profiles WHERE email = ?", (email,))
         existing_row = cursor.fetchone()
         if existing_row:
             conn.close()
@@ -383,7 +421,7 @@ def create_faculty(data: dict) -> dict:
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         fid, clean_data.get("user_id"), clean_data.get("teacher_name"), emp_id,
-        clean_data.get("department_id"), clean_data.get("designation", "Lecturer"),
+        clean_data.get("department_id"), clean_data.get("designation", "Assistant Professor"),
         clean_data.get("qualification"), clean_data.get("employment_type", "full-time"),
         joining_date, clean_data.get("phone"), clean_data.get("emergency_contact"),
         clean_data.get("address"), clean_data.get("photo_url"), clean_data.get("status", "active"),
@@ -393,6 +431,44 @@ def create_faculty(data: dict) -> dict:
     conn.commit()
     conn.close()
     return get_faculty(fid) or {}
+
+
+def sync_account_profile(data: dict) -> dict:
+    """Seamlessly creates or updates a faculty profile when a user account is created or authenticated."""
+    teacher_name = data.get("name") or data.get("teacher_name") or (data.get("email", "").split("@")[0] if data.get("email") else "Faculty Member")
+    email = data.get("email")
+    emp_id = data.get("employee_id") or f"EMP-LNCT-{abs(hash(email or teacher_name)) % 9000 + 1000}"
+    dept_id = data.get("department_id")
+
+    # If department name provided, find or match department ID
+    dept_name = data.get("department") or data.get("department_name")
+    if not dept_id and dept_name:
+        all_depts = list_departments()
+        match_dept = next((d for d in all_depts if d.get("name", "").lower() == dept_name.lower()), None)
+        if match_dept:
+            dept_id = match_dept.get("id")
+
+    payload = {
+        "user_id": data.get("user_id"),
+        "teacher_name": teacher_name,
+        "email": email,
+        "phone": data.get("phone", "+91-9876543210"),
+        "employee_id": emp_id,
+        "department_id": dept_id,
+        "designation": data.get("designation", "Assistant Professor"),
+        "employment_type": data.get("employment_type", "full-time"),
+        "qualification": data.get("qualification", "M.Tech / Ph.D"),
+        "status": "active",
+    }
+
+    result = create_faculty(payload)
+    if result and result.get("id"):
+        try:
+            initialize_leave_balances(result["id"])
+        except Exception:
+            pass
+
+    return result or payload
 
 
 def update_faculty(faculty_id: str, data: dict) -> dict:
