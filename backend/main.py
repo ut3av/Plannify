@@ -1459,12 +1459,155 @@ def delete_saved_timetable(tid: int):
     return {"message": "Timetable deleted successfully"}
 
 def generate_expert_fallback_reply(user_msg: str, context: dict) -> str:
-    msg_lower = (user_msg or "").lower()
+    msg_lower = (user_msg or "").lower().strip()
     assignments = context.get("assignments", [])
     score = context.get("objective_score", 0)
     status = context.get("solver_status", "FEASIBLE")
 
-    if "workload" in msg_lower or "teacher" in msg_lower:
+    # 1. Check for "Add Teacher / Faculty" commands
+    if any(k in msg_lower for k in ["add teacher", "add faculty", "create teacher", "new teacher", "add prof", "add dr"]):
+        import re
+        # Try to extract name
+        cleaned = re.sub(r'^(please\s+)?(add|create|new)\s+(teacher|faculty|professor|prof|dr\.?)\s+', '', user_msg, flags=re.IGNORECASE).strip()
+        name_match = re.split(r'\b(in|dept|department|phone|email|for|with)\b', cleaned, flags=re.IGNORECASE)[0].strip()
+        teacher_name = name_match if len(name_match) > 2 else "Dr. New Faculty"
+        dept_match = re.search(r'\b(?:in|department|dept)\s+([A-Za-z\s]+)', user_msg, re.IGNORECASE)
+        dept_name = dept_match.group(1).strip() if dept_match else "Computer Applications"
+        
+        json_payload = json.dumps({
+            "action": "add_data",
+            "teachers": [
+                {
+                    "name": teacher_name,
+                    "department": dept_name,
+                    "designation": "Assistant Professor",
+                    "free_periods": 1,
+                    "email": f"{teacher_name.lower().replace(' ', '.').replace('dr.', '').strip('.')}@lnctu.ac.in",
+                    "phone": "+91-9876543210"
+                }
+            ]
+        }, indent=2)
+
+        return (
+            f"### ✨ Faculty Member Added Successfully!\n\n"
+            f"I have registered **{teacher_name}** in the `{dept_name}` department and synchronized them with your active timetable workspace and Faculty Directory.\n\n"
+            f"```json\n{json_payload}\n```\n\n"
+            f"- **Department**: `{dept_name}`\n"
+            f"- **Workload Quota**: `1 free period constraint preserved`\n"
+            f"- **Status**: Active & Ready for subject assignment"
+        )
+
+    # 2. Check for "Add Subject / Course" commands
+    if any(k in msg_lower for k in ["add subject", "add course", "create subject", "new subject"]):
+        import re
+        is_lab = "lab" in msg_lower or "practical" in msg_lower
+        cleaned = re.sub(r'^(please\s+)?(add|create|new)\s+(subject|course|lab)\s+', '', user_msg, flags=re.IGNORECASE).strip()
+        parts = re.split(r'\b(code|for|taught by|teacher|section|slots|in)\b', cleaned, flags=re.IGNORECASE)
+        sub_name = parts[0].strip() if parts else "New Academic Subject"
+        if len(sub_name) < 2: sub_name = "Cloud Computing"
+
+        teacher_match = re.search(r'\b(?:taught by|teacher|prof|dr)\s+([A-Za-z\.\s]+)', user_msg, re.IGNORECASE)
+        teacher_name = teacher_match.group(1).strip() if teacher_match else "Dr. Arvind Sharma"
+
+        code_match = re.search(r'\b(?:code)\s+([A-Za-z0-9\-]+)', user_msg, re.IGNORECASE)
+        sub_code = code_match.group(1).strip() if code_match else f"CS-{abs(hash(sub_name)) % 800 + 100}"
+
+        sec_match = re.search(r'\b(?:section|sec|for)\s+([A-Za-z0-9\-]+)', user_msg, re.IGNORECASE)
+        sec_name = sec_match.group(1).strip() if sec_match else "CSE-A"
+
+        json_payload = json.dumps({
+            "action": "add_data",
+            "subjects": [
+                {
+                    "code": sub_code,
+                    "name": sub_name,
+                    "teacher": teacher_name,
+                    "section": sec_name,
+                    "required_slots": 4,
+                    "is_lab": is_lab,
+                    "colorIndex": abs(hash(sub_name)) % 8
+                }
+            ]
+        }, indent=2)
+
+        return (
+            f"### 📚 Subject Added to Curriculum!\n\n"
+            f"I have configured **{sub_name}** (`{sub_code}`) for Section **{sec_name}**, instructed by **{teacher_name}**.\n\n"
+            f"```json\n{json_payload}\n```\n\n"
+            f"- **Subject Code**: `{sub_code}`\n"
+            f"- **Instructor**: `{teacher_name}`\n"
+            f"- **Weekly Requirement**: `4 Slots` {'(Laboratory Session)' if is_lab else '(Theory Lecture)'}"
+        )
+
+    # 3. Check for "Add Section / Batch" commands
+    if any(k in msg_lower for k in ["add section", "create section", "new section", "add batch"]):
+        import re
+        cleaned = re.sub(r'^(please\s+)?(add|create|new)\s+(section|batch)\s+', '', user_msg, flags=re.IGNORECASE).strip()
+        sec_name = re.split(r'\b(with|room|in|lab)\b', cleaned, flags=re.IGNORECASE)[0].strip()
+        if len(sec_name) < 1: sec_name = "CSE-B"
+
+        room_match = re.search(r'\b(?:room|classroom)\s+([A-Za-z0-9\/\-\s]+)', user_msg, re.IGNORECASE)
+        room_name = room_match.group(1).strip() if room_match else "308/MCA"
+
+        json_payload = json.dumps({
+            "action": "add_data",
+            "sections": [
+                {
+                    "name": sec_name,
+                    "room": room_name,
+                    "lab_room": "Lab Room No. 006"
+                }
+            ],
+            "rooms": [room_name]
+        }, indent=2)
+
+        return (
+            f"### 🏛️ Academic Section Registered!\n\n"
+            f"I have created Section **{sec_name}** with primary lecture hall **{room_name}** and lab facility **Lab Room No. 006**.\n\n"
+            f"```json\n{json_payload}\n```"
+        )
+
+    # 4. Check for "Add Room / Lab" commands
+    if any(k in msg_lower for k in ["add room", "create room", "new room", "add lab", "create lab"]):
+        import re
+        cleaned = re.sub(r'^(please\s+)?(add|create|new)\s+(room|lab|classroom|hall)\s+', '', user_msg, flags=re.IGNORECASE).strip()
+        room_names = [r.strip() for r in re.split(r'[,&and]+', cleaned) if len(r.strip()) > 1]
+        if not room_names: room_names = ["Room 205", "Lab 4"]
+
+        json_payload = json.dumps({
+            "action": "add_data",
+            "rooms": room_names
+        }, indent=2)
+
+        return (
+            f"### 🏢 Classroom & Lab Facilities Added!\n\n"
+            f"I have provisioned the following room resources in your institutional facility matrix:\n"
+            f"{''.join([f'- `{r}`\\n' for r in room_names])}\n\n"
+            f"```json\n{json_payload}\n```"
+        )
+
+    # 5. Check for "Generate Timetable / Solve" commands
+    if any(k in msg_lower for k in ["generate timetable", "solve timetable", "generate schedule", "optimize schedule", "create timetable"]):
+        json_payload = json.dumps({ "action": "generate_timetable" }, indent=2)
+        return (
+            f"### 🚀 Launching AI Constraint Solver!\n\n"
+            f"I am now invoking the Google OR-Tools constraint satisfaction engine on your active academic matrix (Faculty, Sections, Subjects, and Rooms).\n\n"
+            f"```json\n{json_payload}\n```\n\n"
+            f"- Optimizing hard room and teacher collision constraints.\n"
+            f"- Balancing daily consecutive periods and free period allocations."
+        )
+
+    # 6. Check for "Load Demo" or "Remove Demo" commands
+    if "load demo" in msg_lower or "seed demo" in msg_lower:
+        json_payload = json.dumps({ "action": "load_demo" }, indent=2)
+        return f"### 🚀 Loading Full Academic Demo Dataset...\n\n```json\n{json_payload}\n```"
+
+    if "remove demo" in msg_lower or "clear demo" in msg_lower or "reset workspace" in msg_lower:
+        json_payload = json.dumps({ "action": "clear_demo" }, indent=2)
+        return f"### 🧹 Resetting Workspace to Clean Real Implementation...\n\n```json\n{json_payload}\n```"
+
+    # Default Contextual Intelligence
+    if "workload" in msg_lower or "teacher" in msg_lower or "faculty" in msg_lower:
         return (
             "### 📊 Faculty Workload & Allocation Analysis\n\n"
             f"Based on your active timetable state:\n"
@@ -1474,7 +1617,7 @@ def generate_expert_fallback_reply(user_msg: str, context: dict) -> str:
             "1. Faculty weekly load distribution is balanced across active departments.\n"
             "2. Maximum daily consecutive slots per teacher are restricted to `2 periods`.\n"
             "3. Daily free period constraints are respected across all faculty profiles.\n\n"
-            "💡 *Tip: Navigate to **Main -> Operational Analytics 360°** to adjust department workload thresholds.*"
+            "💡 *Tip: You can ask me `Add teacher Dr. Neha Sharma in CSE` or `Optimize schedule`.*"
         )
     elif "substitute" in msg_lower or "proxy" in msg_lower or "find" in msg_lower:
         return (
@@ -1485,23 +1628,17 @@ def generate_expert_fallback_reply(user_msg: str, context: dict) -> str:
             "3. The system automatically identifies free faculty members who teach in the same department without room conflicts.\n\n"
             "✨ *Selected proxy assignments will automatically reflect on teacher dashboards and Make WhatsApp alerts.*"
         )
-    elif "optimize" in msg_lower or "schedule" in msg_lower or "timetable" in msg_lower:
-        return (
-            "### ✨ Timetable Optimization Report\n\n"
-            f"**Current Status**: `{status}` • **Objective Score**: `{score}`\n\n"
-            "**Optimization Recommendations**:\n"
-            "- **Hard Constraints**: 0 Hard conflicts detected (Rooms, Teachers, & Sections mapped 1:1).\n"
-            "- **Soft Constraints**: Heavy lab sessions are allocated in morning slots for optimal resource utilization.\n\n"
-            "🚀 *Click **✨ Generate AI Timetable** in the Timetable Workspace to re-run OR-Tools constraint solver.*"
-        )
     else:
         return (
             "### 🤖 Planify AI Intelligence Assistant\n\n"
             f"I have analyzed your active operational context (`{len(assignments)} scheduled sessions` across active departments).\n\n"
-            "- **Timetable Workspace**: Click **Timetable Workspace** to inspect grid assignments.\n"
-            "- **Academic Setup**: Manage **Departments**, **Sections**, **Subjects**, and **Rooms**.\n"
-            "- **Automation**: Connect Make webhooks in **Operations -> Automation & Broadcast**.\n\n"
-            "💡 *For live LLM conversational reasoning, configure `GROQ_API_KEY` in `backend/.env`.*"
+            "**You can command me to perform any action directly**:\n"
+            "- 👨‍🏫 `Add teacher Dr. Ananya in Data Science`\n"
+            "- 📚 `Add subject Machine Learning code CS701 taught by Dr. Arvind for section CSE-A`\n"
+            "- 🏛️ `Add section BCA-2 with room Room 102`\n"
+            "- 🏢 `Add rooms Lab-3, Room-204, Auditorium`\n"
+            "- ✨ `Generate timetable now`\n"
+            "- 🚀 `Load demo data` or 🗑️ `Remove demo data`"
         )
 
 
@@ -1510,6 +1647,24 @@ def chat_with_groq(request: ChatRequest):
     api_key = os.getenv("GROQ_API_KEY")
     ctx = request.context or {}
     
+    system_instruction = (
+        "You are an elite, highly intelligent AI Timetable Scheduling & Academic Operations Assistant powered by Groq. "
+        "You have FULL OPERATIONAL POWERS over the university timetable system:\n"
+        "1. Adding/Managing Teachers and Faculty profiles.\n"
+        "2. Adding/Managing Subjects, Labs, and Course Workloads.\n"
+        "3. Adding/Managing Sections, Batches, and Classrooms.\n"
+        "4. Adding/Managing Rooms and Facilities.\n"
+        "5. Generating and Solving Academic Timetables with Google OR-Tools.\n\n"
+        "Whenever the user asks to add, update, generate, or modify any scheduling entities, YOU MUST ALWAYS provide a friendly markdown summary AND a STRICT JSON block in ```json ... ``` with any of these keys as needed:\n"
+        "- `teachers`: list of objects with `name`, `department`, `designation`, `email`, `phone`, `free_periods`\n"
+        "- `subjects`: list of objects with `code`, `name`, `teacher`, `section`, `required_slots`, `is_lab`, `colorIndex`\n"
+        "- `sections`: list of objects with `name`, `room`, `lab_room`\n"
+        "- `rooms`: list of strings (e.g. ['Room 101', 'Lab 2'])\n"
+        "- `timeSlots`: list of strings\n"
+        "- `action`: 'add_data' | 'generate_timetable' | 'load_demo' | 'clear_demo'\n\n"
+        "If an image is uploaded for OCR, extract all scheduling details into this exact JSON format."
+    )
+
     if not api_key or api_key == "your_api_key_here" or len(api_key) < 20:
         fallback_reply = generate_expert_fallback_reply(request.message, ctx)
         return {"reply": fallback_reply}
@@ -1517,20 +1672,6 @@ def chat_with_groq(request: ChatRequest):
     try:
         client = Groq(api_key=api_key)
         
-        system_instruction = (
-            "You are an elite, highly intelligent AI Timetable Scheduling Assistant powered by Groq. "
-            "You MUST provide GENUINE, intelligent, and highly optimized scheduling suggestions based on the current context. "
-            "You MUST use Markdown heavily to make your responses beautiful, readable, and structured. "
-            "If the user uploads an image or pdf of a timetable, YOU MUST ACT AS AN ADVANCED OCR SYSTEM. "
-            "Extract all scheduling data from the image into a STRICT JSON block. "
-            "The JSON block MUST be enclosed in ```json ... ``` and contain the following exact keys: "
-            "`teachers` (list of objects with `name` and `free_periods`), "
-            "`subjects` (list of objects with `code`, `name`, `teacher`, `section`, `required_slots`, `is_lab`, `colorIndex`), "
-            "`rooms` (list of strings), "
-            "`sections` (list of objects with `name`, `room`, `lab_room`), "
-            "`timeSlots` (list of strings). "
-            "ALWAYS provide a helpful markdown message summarizing your actions or suggestions alongside the JSON."
-        )
         if ctx:
             system_instruction += f"\nCurrent Timetable State:\n- Objective Score: {ctx.get('objective_score', 'N/A')}\n- Total Classes: {len(ctx.get('assignments', []))}\n"
             if ctx.get("ai_suggestions"):

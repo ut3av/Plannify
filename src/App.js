@@ -1226,61 +1226,116 @@ export default function App() {
       {/* AIChatBot Floating Assistant */}
       <Suspense fallback={null}>
         <AIChatBot 
-          result={result} 
+          result={result}
+          teachers={teachers}
+          subjects={subjects}
+          sections={sections}
+          rooms={rooms}
+          timeSlots={timeSlots}
           onLoadDemo={generateDemoTimetable}
           onRemoveDemo={handleRemoveDemoData}
+          onGenerateTimetable={generateTimetable}
+          onAddFaculty={handleAddFaculty}
           onExtractedData={(data) => {
-            const teacherMap = new Map();
+            if (!data) return;
 
-            // 1. Process explicit teacher list
+            // 1. Merge and persist teachers
             if (data.teachers && data.teachers.length > 0) {
-              data.teachers.forEach(t => {
-                if (t.name && t.name.trim()) {
-                  let parsedFP = parseInt(t.free_periods);
-                  teacherMap.set(t.name.trim(), {
-                    name: t.name.trim(),
-                    free_periods: isNaN(parsedFP) ? 1 : Math.max(0, parsedFP)
-                  });
-                }
+              setTeachers(prev => {
+                const map = new Map();
+                (Array.isArray(prev) ? prev : []).forEach(t => {
+                  const n = (t.name || t)?.trim();
+                  if (n) map.set(n.toLowerCase(), typeof t === 'object' ? t : { name: n, free_periods: 1 });
+                });
+                data.teachers.forEach(t => {
+                  const n = (t.name || t)?.trim();
+                  if (n) {
+                    const existing = map.get(n.toLowerCase()) || {};
+                    map.set(n.toLowerCase(), {
+                      ...existing,
+                      ...(typeof t === 'object' ? t : { name: n }),
+                      name: n,
+                      free_periods: isNaN(parseInt(t.free_periods)) ? (existing.free_periods || 1) : Math.max(0, parseInt(t.free_periods))
+                    });
+                  }
+                });
+                return Array.from(map.values());
               });
-            }
 
-            // 2. Process subjects to extract any assigned teacher names
-            if (data.subjects && data.subjects.length > 0) {
-              data.subjects.forEach(s => {
-                if (s.teacher && s.teacher.trim() && !teacherMap.has(s.teacher.trim())) {
-                  teacherMap.set(s.teacher.trim(), {
-                    name: s.teacher.trim(),
-                    free_periods: 1
-                  });
-                }
-              });
-              setSubjects(data.subjects);
-            }
-
-            const cleanTeachers = Array.from(teacherMap.values());
-            if (cleanTeachers.length > 0) {
-              setTeachers(cleanTeachers);
               // Auto-sync extracted teachers to backend Faculty Directory
-              cleanTeachers.forEach(async (t) => {
+              data.teachers.forEach(async (t) => {
+                const tName = (t.name || t)?.trim();
+                if (!tName) return;
                 try {
-                  await axios.post(`${API_BASE_URL}/faculty/`, {
-                    teacher_name: t.name,
-                    employee_id: `EMP-AI-${Math.floor(1000 + Math.random() * 9000)}`,
-                    designation: "Lecturer",
-                    employment_type: "full-time",
+                  await axios.post(`${API_BASE_URL}/faculty/sync-account`, {
+                    teacher_name: tName,
+                    name: tName,
+                    employee_id: t.employee_id || `EMP-AI-${Math.floor(1000 + Math.random() * 9000)}`,
+                    department: t.department || "Computer Applications",
+                    designation: t.designation || "Assistant Professor",
+                    phone: t.phone || "+91-9876543210",
+                    email: t.email || `${tName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
                     status: "active"
                   });
                 } catch (err) {
-                  // Ignore duplicate creation
+                  // Ignore
                 }
               });
             }
 
-            if (data.sections && data.sections.length > 0) setSections(data.sections);
-            if (data.rooms && data.rooms.length > 0) setRooms(data.rooms);
-            if (data.timeSlots && data.timeSlots.length > 0) setTimeSlots(data.timeSlots);
-            setRescheduleNote("AI OCR successfully extracted timetable data and synced faculty with Faculty Directory!");
+            // 2. Merge and persist subjects
+            if (data.subjects && data.subjects.length > 0) {
+              setSubjects(prev => {
+                const existing = Array.isArray(prev) ? [...prev] : [];
+                data.subjects.forEach(newSub => {
+                  const subCode = (newSub.code || newSub.name)?.trim().toLowerCase();
+                  const matchIdx = existing.findIndex(s => (s.code || s.name)?.trim().toLowerCase() === subCode);
+                  if (matchIdx >= 0) {
+                    existing[matchIdx] = { ...existing[matchIdx], ...newSub };
+                  } else {
+                    existing.push(newSub);
+                  }
+                });
+                return existing;
+              });
+            }
+
+            // 3. Merge and persist sections
+            if (data.sections && data.sections.length > 0) {
+              setSections(prev => {
+                const existing = Array.isArray(prev) ? [...prev] : [];
+                data.sections.forEach(newSec => {
+                  const secName = (newSec.name || newSec)?.trim().toLowerCase();
+                  const matchIdx = existing.findIndex(s => (s.name || s)?.trim().toLowerCase() === secName);
+                  if (matchIdx >= 0) {
+                    existing[matchIdx] = typeof newSec === 'object' ? { ...existing[matchIdx], ...newSec } : existing[matchIdx];
+                  } else {
+                    existing.push(typeof newSec === 'object' ? newSec : { name: newSec, room: "308/MCA", lab_room: "Lab Room No. 006" });
+                  }
+                });
+                return existing;
+              });
+            }
+
+            // 4. Merge and persist rooms
+            if (data.rooms && data.rooms.length > 0) {
+              setRooms(prev => {
+                const set = new Set((Array.isArray(prev) ? prev : []).map(r => (typeof r === 'string' ? r : r.name)?.trim()));
+                data.rooms.forEach(r => {
+                  const rName = (typeof r === 'string' ? r : r.name)?.trim();
+                  if (rName) set.add(rName);
+                });
+                return Array.from(set);
+              });
+            }
+
+            // 5. Merge timeSlots
+            if (data.timeSlots && data.timeSlots.length > 0) {
+              setTimeSlots(data.timeSlots);
+            }
+
+            saveToCloud(true);
+            setRescheduleNote("✨ AI Co-Pilot applied changes and synchronized active academic datasets!");
           }}
         />
       </Suspense>
