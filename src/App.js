@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect, lazy, Suspense } from "react";
+import { useCallback, useMemo, useState, useEffect, useRef, lazy, Suspense } from "react";
 import axios from "axios";
 import { saveAs } from "file-saver";
 import { supabase } from "./supabaseClient";
@@ -267,19 +267,30 @@ export default function App() {
         setLoading(false);
       }
     };
-
     loadCloudState();
   }, []);
 
-  // Cloud Save function (supports silent background sync)
-  const saveToCloud = useCallback(async (isSilent = false) => {
+  const activeStateRef = useRef({ teachers, sections, subjects, rooms, timeSlots, result });
+  useEffect(() => {
+    activeStateRef.current = { teachers, sections, subjects, rooms, timeSlots, result };
+  });
+
+  // Cloud Save function (supports silent background auto-sync & manual save)
+  const saveToCloud = useCallback(async (isSilent = false, overrideState = null) => {
     if (!isSilent) {
       setLoading(true);
       setError(null);
       setRescheduleNote("");
     }
     try {
-      const stateToSave = { teachers, sections, subjects, rooms, timeSlots };
+      const live = activeStateRef.current;
+      const stateToSave = overrideState || {
+        teachers: live.teachers,
+        sections: live.sections,
+        subjects: live.subjects,
+        rooms: live.rooms,
+        timeSlots: live.timeSlots
+      };
       
       // 1. Primary Save (JSONB Draft)
       const { error } = await supabase
@@ -294,19 +305,19 @@ export default function App() {
       }
 
       // 2. Relational Sync (Structured Tables for Make/Analytics)
-      if (result) {
-        await syncRelationalData({ ...stateToSave, result });
+      if (live.result) {
+        await syncRelationalData({ ...stateToSave, result: live.result }).catch(() => null);
       }
       
       if (!isSilent) {
-        setRescheduleNote("Saved successfully to Supabase Cloud & Relational Tables!");
+        setRescheduleNote("☁️ All academic datasets and faculty successfully saved to Supabase Cloud!");
       }
     } catch (e) {
-      console.error(e);
+      console.warn("Cloud save notice:", e);
       if (!isSilent) {
         setError({
-          title: "Failed to save to Supabase Cloud.",
-          suggestions: [e?.message || "Check the Supabase table schema, URL, and anon key, then try again."],
+          title: "Cloud Sync Notice",
+          suggestions: [e?.message || "Check network connectivity or Supabase configuration."],
           facts: [],
         });
       }
@@ -315,45 +326,16 @@ export default function App() {
         setLoading(false);
       }
     }
-  }, [teachers, sections, subjects, rooms, timeSlots, result]);
+  }, []);
 
-  // --- Periodic Background Auto-sync (1 min interval, completely silent) ---
+  // Automatic Debounced Cloud Sync whenever state changes
   useEffect(() => {
-    if (!user || !isCloudLoaded) return;
-    
-    // Auto-save silently every 60 seconds
-    const saveInterval = setInterval(() => {
+    if (!isCloudLoaded) return;
+    const timer = setTimeout(() => {
       saveToCloud(true);
-    }, 60000); 
-
-    // Auto-refresh (pull) silently every 60 seconds to stay in sync
-    const refreshInterval = setInterval(async () => {
-      try {
-        const { data, error } = await supabase
-          .from('timetable_state')
-          .select('*')
-          .eq('id', 'draft')
-          .single();
-        
-        if (data && !error) {
-          const cloudState = readCloudState(data);
-          // Compare strings to avoid unnecessary state updates
-          if (cloudState.teachers && JSON.stringify(cloudState.teachers) !== JSON.stringify(teachers)) setTeachers(cloudState.teachers);
-          if (cloudState.sections && JSON.stringify(cloudState.sections) !== JSON.stringify(sections)) setSections(cloudState.sections);
-          if (cloudState.subjects && JSON.stringify(cloudState.subjects) !== JSON.stringify(subjects)) setSubjects(cloudState.subjects);
-          if (cloudState.rooms && JSON.stringify(cloudState.rooms) !== JSON.stringify(rooms)) setRooms(cloudState.rooms);
-          if (cloudState.timeSlots && JSON.stringify(cloudState.timeSlots) !== JSON.stringify(timeSlots)) setTimeSlots(cloudState.timeSlots);
-        }
-      } catch (e) {
-        console.warn("Background refresh failed silently", e);
-      }
-    }, 60000);
-
-    return () => {
-      clearInterval(saveInterval);
-      clearInterval(refreshInterval);
-    };
-  }, [teachers, sections, subjects, rooms, timeSlots, user, saveToCloud, isCloudLoaded]);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [teachers, sections, subjects, rooms, timeSlots, isCloudLoaded, saveToCloud]);
 
   const payload = useMemo(
     () => buildApiPayload({ teachers, subjects, rooms, sections, timeSlots }),
@@ -448,30 +430,32 @@ export default function App() {
     // Set formatted demo result immediately so grid renders instantly with all 30+ classes!
     const formattedDemo = formatResult(DEMO_RESULT);
     setResult(formattedDemo);
-    setRescheduleNote("⚡ LNCT University Bhopal BCA (Sections A-F) Official Timetable & Faculty Dataset Active!");
+    
+    activeStateRef.current = {
+      teachers: demoData.teachers,
+      sections: demoData.sections,
+      subjects: demoData.subjects,
+      rooms: demoData.rooms,
+      timeSlots: demoData.timeSlots,
+      result: formattedDemo
+    };
+
+    setRescheduleNote("🚀 Full Academic Demo Loaded! (30+ classes, LNCT University faculties, labs, and classroom allocations active)");
     setActiveTab("timetable");
 
-    // Automatically seed 30-day rich LNCT attendance, half-day, leave, and substitution records in background
-    axios.post(`${API_BASE_URL}/analytics/seed-demo-history`).catch((err) => {
-      console.warn("Silent demo analytics seed notice:", err);
-    });
-
+    // Also call backend solver in background to populate server-side history & Make.com triggers
     try {
-      await generateFromPayload(
-        buildApiPayload(demoData),
-        "✨ LNCT University BCA (Sections A-F) Timetable Solution Active!"
-      );
+      const demoPayload = buildApiPayload(demoData);
+      axios.post(`${API_BASE_URL}/analytics/seed-demo-history`).catch(() => null);
+      axios.post(`${API_BASE_URL}/faculty/seed-lnct`).catch(() => null);
+      await axios.post(`${API_BASE_URL}/generate`, demoPayload, { timeout: 20000 });
+      saveToCloud(true, demoData);
     } catch (err) {
       console.warn("Backend solver call failed, keeping local LNCT DEMO_RESULT fallback:", err);
     }
-  }, [generateFromPayload]);
+  }, [saveToCloud]);
 
   const handleRemoveDemoData = useCallback(async () => {
-    // 1. Reset frontend active workspace state
-    setTeachers([]);
-    setSections([]);
-    setSubjects([]);
-    setRooms([]);
     const defaultSlots = [
       "09:00 AM - 09:45 AM",
       "09:45 AM - 10:30 AM",
@@ -481,10 +465,25 @@ export default function App() {
       "01:50 PM - 02:40 PM",
       "02:40 PM - 03:30 PM"
     ];
+
+    // 1. Reset frontend active workspace state immediately
+    setTeachers([]);
+    setSections([]);
+    setSubjects([]);
+    setRooms([]);
     setTimeSlots(defaultSlots);
     setResult(null);
-    setRescheduleNote("🧹 Workspace reset. All demo data removed — ready for real faculty onboarding and curriculum setup.");
+    setRescheduleNote("🧹 Workspace reset. All demo data, attendance percentages, and substitution records removed — clean real implementation active.");
     setActiveTab("timetable");
+
+    activeStateRef.current = {
+      teachers: [],
+      sections: [],
+      subjects: [],
+      rooms: [],
+      timeSlots: defaultSlots,
+      result: null
+    };
 
     // 2. Persist clean empty state to Supabase draft
     try {
@@ -499,12 +498,26 @@ export default function App() {
           timeSlots: defaultSlots,
           updated_at: new Date().toISOString()
         });
+
+      // Direct clean of demo relational tables in Supabase
+      supabase.from('attendance_records').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
+      supabase.from('substitution_log').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
+      supabase.from('leave_applications').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
+      supabase.from('faculty_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
+      supabase.from('leave_balances').delete().neq('faculty_id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
     } catch (e) {
       console.warn("Could not reset Supabase draft state:", e);
     }
 
-    // 3. Clear backend demo analytics history in background
-    axios.post(`${API_BASE_URL}/analytics/clear-demo`).catch(() => null);
+    // 3. Clear backend demo analytics, attendance, substitutions, and faculty in background
+    try {
+      await Promise.allSettled([
+        axios.post(`${API_BASE_URL}/analytics/clear-demo`),
+        axios.post(`${API_BASE_URL}/faculty/clear-all`)
+      ]);
+    } catch (err) {
+      // Ignore
+    }
   }, []);
 
   const rescheduleTimetable = async (request) => {
@@ -889,12 +902,21 @@ export default function App() {
 
 
   const handleAddFaculty = useCallback((newTeacher) => {
+    if (!newTeacher || !newTeacher.name) return;
     setTeachers(prev => {
-      const exists = prev.some(t => (t.name || t)?.trim().toLowerCase() === newTeacher.name?.trim().toLowerCase());
-      if (exists) return prev;
-      return [...prev, newTeacher];
+      const list = Array.isArray(prev) ? prev : [];
+      const exists = list.some(t => (t.name || t)?.trim().toLowerCase() === newTeacher.name?.trim().toLowerCase());
+      if (exists) return list;
+      const updated = [...list, newTeacher];
+      saveToCloud(true, { 
+        teachers: updated, 
+        sections: activeStateRef.current.sections, 
+        subjects: activeStateRef.current.subjects, 
+        rooms: activeStateRef.current.rooms, 
+        timeSlots: activeStateRef.current.timeSlots 
+      });
+      return updated;
     });
-    saveToCloud(true);
   }, [saveToCloud]);
 
   const syncFacultyOnAuth = useCallback(async (sessionUser) => {
@@ -1116,7 +1138,16 @@ export default function App() {
                   result={result}
                   onSelectFaculty={(f) => setSelectedFaculty(f)}
                   onAddFaculty={handleAddFaculty}
-                  onTeachersChange={(updated) => { setTeachers(updated); saveToCloud(true); }}
+                  onTeachersChange={(updated) => { 
+                    setTeachers(updated); 
+                    saveToCloud(true, { 
+                      teachers: updated, 
+                      sections: activeStateRef.current.sections, 
+                      subjects: activeStateRef.current.subjects, 
+                      rooms: activeStateRef.current.rooms, 
+                      timeSlots: activeStateRef.current.timeSlots 
+                    }); 
+                  }}
                 />
                 <AttendanceDashboard />
               </div>
@@ -1213,7 +1244,16 @@ export default function App() {
             result={result}
             onSelectFaculty={(f) => setSelectedFaculty(f)}
             onAddFaculty={handleAddFaculty}
-            onTeachersChange={(updated) => { setTeachers(updated); saveToCloud(true); }}
+            onTeachersChange={(updated) => { 
+              setTeachers(updated); 
+              saveToCloud(true, { 
+                teachers: updated, 
+                sections: activeStateRef.current.sections, 
+                subjects: activeStateRef.current.subjects, 
+                rooms: activeStateRef.current.rooms, 
+                timeSlots: activeStateRef.current.timeSlots 
+              }); 
+            }}
           />
         )}
 

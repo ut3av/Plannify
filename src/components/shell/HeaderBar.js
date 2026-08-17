@@ -13,7 +13,7 @@ export default function HeaderBar({
   onRoleChange,
   onOpenSearch,
   onOpenNotifications,
-  unreadNotificationsCount = 3,
+  unreadNotificationsCount = 0,
   onSaveCloud,
   isCloudSaving,
   onLoadDemo,

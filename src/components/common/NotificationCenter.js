@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import { API_BASE_URL } from "../../apiConfig";
 import { supabase } from "../../supabaseClient";
 
 export default function NotificationCenter({
@@ -16,17 +14,23 @@ export default function NotificationCenter({
     try {
       const notifList = [];
 
-      // 1. Fetch real pending & recent leaves from database
+      // 1. Fetch real pending & recent leaves from database or Supabase
       try {
-        const leaveRes = await axios.get(`${API_BASE_URL}/leaves/`);
-        if (Array.isArray(leaveRes.data)) {
-          leaveRes.data.slice(0, 5).forEach((l) => {
+        const { data: leaves } = await supabase
+          .from("leave_applications")
+          .select("*, faculty_profiles(teacher_name, department)")
+          .order("created_at", { ascending: false })
+          .limit(6);
+
+        if (Array.isArray(leaves) && leaves.length > 0) {
+          leaves.forEach((l) => {
             const isPending = l.status === "pending";
+            const facultyName = l.faculty_profiles?.teacher_name || l.faculty_name || "Faculty Member";
             notifList.push({
               id: `leave-${l.id}`,
               type: "leave",
-              title: isPending ? "🏖️ Pending Leave Application" : "✓ Leave " + (l.status || "Updated"),
-              description: `${l.faculty_name || l.teachers?.name || "Faculty Member"} applied for ${l.leave_type_name || l.leave_type || "Leave"} (${l.days_count || 1} day${l.days_count > 1 ? "s" : ""}): "${l.reason || "Personal work"}"`,
+              title: isPending ? "🏖️ Pending Leave Application" : `✓ Leave ${l.status || "Updated"}`,
+              description: `${facultyName} applied for ${l.leave_type || "Leave"}: "${l.reason || "Personal work"}" (${l.from_date} to ${l.to_date})`,
               timestamp: l.created_at ? new Date(l.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Recently",
               unread: isPending,
               actionTarget: "leave",
@@ -38,7 +42,33 @@ export default function NotificationCenter({
         // Fallback handled
       }
 
-      // 2. Fetch real automation / webhook delivery logs
+      // 2. Fetch real substitution / proxy logs
+      try {
+        const { data: subs } = await supabase
+          .from("substitution_log")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+        if (Array.isArray(subs) && subs.length > 0) {
+          subs.forEach((s) => {
+            notifList.push({
+              id: `sub-${s.id}`,
+              type: "substitution",
+              title: "⚡ Proxy Substitution Assigned",
+              description: `Proxy assigned: ${s.proxy_teacher_name || "Faculty"} taking ${s.subject || "Class"} for ${s.original_teacher_name || "Teacher"} on ${s.date || "scheduled date"}.`,
+              timestamp: s.created_at ? new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Recently",
+              unread: false,
+              actionTarget: "substitutions",
+              badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+            });
+          });
+        }
+      } catch {
+        // Fallback handled
+      }
+
+      // 3. Fetch real automation / webhook delivery logs
       try {
         const { data: logs } = await supabase
           .from("automation_logs")
@@ -64,41 +94,34 @@ export default function NotificationCenter({
         // Fallback handled
       }
 
-      // 3. If list is empty, supply default institutional operational alerts
-      if (notifList.length === 0) {
-        notifList.push(
-          {
-            id: "notif-1",
-            type: "leave",
-            title: "🏖️ Pending Leave Application",
-            description: "Prof Ripusoodan Sharma applied for Medical Leave on Wednesday (Auto-Proxy Ready).",
-            timestamp: "Just now",
-            unread: true,
-            actionTarget: "leave",
-            badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-          },
-          {
-            id: "notif-2",
-            type: "substitution",
-            title: "⚡ AI Proxy Recommendation",
-            description: "Prof Mohit Kubade matched conflict-free for BCA Sec-A Object Oriented Programming.",
-            timestamp: "10 mins ago",
-            unread: true,
-            actionTarget: "substitutions",
-            badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-          },
-          {
-            id: "notif-3",
-            type: "automation",
-            title: "✉️ Timetable Distribution Completed",
-            description: "Personalized PDF schedules broadcasted to all 17 LNCT faculty emails.",
-            timestamp: "1 hour ago",
-            unread: false,
-            actionTarget: "integrations",
-            badgeColor: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-          },
-        );
+      // 4. Fetch newly registered faculty accounts
+      try {
+        const { data: faculties } = await supabase
+          .from("faculty_profiles")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(3);
+
+        if (Array.isArray(faculties) && faculties.length > 0) {
+          faculties.forEach((f) => {
+            notifList.push({
+              id: `fac-${f.id}`,
+              type: "faculty",
+              title: "👨‍🏫 Faculty Profile Active",
+              description: `${f.teacher_name || "Faculty"} registered in ${f.department || "Academic Department"}.`,
+              timestamp: f.created_at ? new Date(f.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Active",
+              unread: false,
+              actionTarget: "faculty",
+              badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+            });
+          });
+        }
+      } catch {
+        // Fallback handled
       }
+
+      // Sort all notifications by most recent
+      notifList.sort((a, b) => (b.id > a.id ? 1 : -1));
 
       setNotifications(notifList);
       const unread = notifList.filter((n) => n.unread).length;
@@ -110,11 +133,31 @@ export default function NotificationCenter({
     }
   }, [onUpdateUnreadCount]);
 
-  // Polling every 7 seconds for real-time notification updates
+  // Real-time Supabase live stream subscription & fallback polling
   useEffect(() => {
     fetchRealtimeNotifications();
-    const interval = setInterval(fetchRealtimeNotifications, 7000);
-    return () => clearInterval(interval);
+
+    const channel = supabase
+      .channel("public_notifications_channel")
+      .on("postgres_changes", { event: "*", schema: "public", table: "leave_applications" }, () => {
+        fetchRealtimeNotifications();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "substitution_log" }, () => {
+        fetchRealtimeNotifications();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "automation_logs" }, () => {
+        fetchRealtimeNotifications();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "faculty_profiles" }, () => {
+        fetchRealtimeNotifications();
+      })
+      .subscribe();
+
+    const interval = setInterval(fetchRealtimeNotifications, 8000);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [fetchRealtimeNotifications]);
 
   if (!isOpen) return null;
@@ -172,6 +215,16 @@ export default function NotificationCenter({
           <div className="py-8 text-center text-slate-400">
             <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
             <p className="text-xs">Fetching live alerts...</p>
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="py-12 text-center text-slate-400">
+            <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-xl mx-auto mb-3 shadow-inner">
+              ✨
+            </div>
+            <p className="text-sm font-bold text-slate-200">No active notifications</p>
+            <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+              All operational alerts, leave applications, and webhook broadcasts are up to date.
+            </p>
           </div>
         ) : (
           <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
