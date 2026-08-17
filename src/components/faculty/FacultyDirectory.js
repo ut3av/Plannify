@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import { supabase } from "../../supabaseClient";
+import { provisioningAuthClient } from "../../supabaseClient";
 import DispatchPreviewModal from "../common/DispatchPreviewModal";
 import GooeyLoader from "../common/GooeyLoader";
 
@@ -293,7 +293,7 @@ export default function FacultyDirectory({
     let authAccountCreated = false;
     if (form.createAuthAccount && teacherEmail) {
       try {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await provisioningAuthClient.auth.signUp({
           email: teacherEmail,
           password: initialPassword,
           options: {

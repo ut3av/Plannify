@@ -7,3 +7,13 @@ const fallbackKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabaseAnonKey = (process.env.REACT_APP_SUPABASE_ANON_KEY || fallbackKey).trim()
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Isolated client without session persistence for admin direct account provisioning
+export const provisioningAuthClient = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+    storageKey: 'supabase_provisioning_temp',
+  },
+})
