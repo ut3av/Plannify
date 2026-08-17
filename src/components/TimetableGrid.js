@@ -41,14 +41,14 @@ function EmptyState({ loading }) {
   );
 }
 
-function AssignmentCard({ item, subjects }) {
+function AssignmentCard({ item, subjects, onNavigateToReschedule }) {
   const subject = subjects?.find(s => s.name === item.subject || s.code === item.code);
   const colorIndex = subject?.colorIndex ?? 0;
   const c = getSubjectColor(colorIndex, true);
 
   return (
     <div
-      className="assignment-card-print relative rounded-xl p-2.5 transition-all duration-200 hover:translate-y-[-2px] hover:shadow-md cursor-default border text-left"
+      className="assignment-card-print relative rounded-xl p-2.5 transition-all duration-200 hover:translate-y-[-2px] hover:shadow-md cursor-default border text-left group"
       style={{
         backgroundColor: c.bg,
         borderColor: c.border,
@@ -59,7 +59,7 @@ function AssignmentCard({ item, subjects }) {
           {item.code ? <span className="mr-1 opacity-90 font-mono font-black">[{item.code}]</span> : null}
           {item.subject}
         </p>
-        <div className="flex gap-1 shrink-0 no-print">
+        <div className="flex gap-1 shrink-0 no-print items-center">
           {item.is_proxy && (
             <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-amber-600/20 text-amber-800 dark:text-amber-300 border border-amber-500/40">
               Proxy
@@ -69,6 +69,18 @@ function AssignmentCard({ item, subjects }) {
             <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-emerald-600/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40">
               🔬 Lab
             </span>
+          )}
+          {onNavigateToReschedule && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigateToReschedule({ teacher: item.teacher, day: item.day, slot: item.slot });
+              }}
+              title="Reschedule this class or assign a substitute proxy"
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-amber-500/20 hover:bg-amber-500/40 text-amber-700 dark:text-amber-300 text-[10px] ml-0.5"
+            >
+              🔄
+            </button>
           )}
         </div>
       </div>
@@ -98,8 +110,10 @@ function AssignmentCard({ item, subjects }) {
   );
 }
 
-export default function TimetableGrid({ result, subjects = [], loading, onExport, onSaveDb }) {
+export default function TimetableGrid({ result, subjects = [], loading, onExport, onSaveDb, onNavigateToReschedule }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSectionFilter, setSelectedSectionFilter] = useState("ALL");
+  const [selectedTeacherFilter, setSelectedTeacherFilter] = useState("ALL");
 
   if (!result || (!result.assignments && !result.timetable)) {
     return <EmptyState loading={loading} />;
@@ -117,8 +131,18 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
   ];
   const assignments = result.assignments || [];
 
-  // Filter assignments based on search query
+  // Extract unique sections and teachers for filtering
+  const allSectionsList = Array.from(new Set(assignments.map(a => a.section).filter(Boolean))).sort();
+  const allTeachersList = Array.from(new Set(assignments.map(a => a.teacher).filter(Boolean))).sort();
+
+  // Filter assignments based on search query, section filter, and teacher filter
   const filteredAssignments = assignments.filter(item => {
+    if (selectedSectionFilter !== "ALL" && item.section !== selectedSectionFilter) {
+      return false;
+    }
+    if (selectedTeacherFilter !== "ALL" && item.teacher !== selectedTeacherFilter && item.original_teacher !== selectedTeacherFilter) {
+      return false;
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchSub = (item.subject || "").toLowerCase().includes(q);
@@ -197,11 +221,22 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              Consolidated Academic View ({filteredAssignments.length} scheduled lectures & laboratory sessions)
+              Consolidated Academic View ({filteredAssignments.length} of {assignments.length} scheduled lectures & laboratory sessions)
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            {/* Quick Reschedule Action Button */}
+            {onNavigateToReschedule && (
+              <button
+                onClick={() => onNavigateToReschedule({})}
+                className="btn-gradient text-xs px-3.5 py-2 font-bold shadow-md flex items-center gap-1.5"
+                title="Open Dynamic Solver & Substitution Center"
+              >
+                <span>🔄</span> AI Reschedule / Proxy
+              </button>
+            )}
+
             {/* Quick Search Box */}
             <div className="relative">
               <input
@@ -209,7 +244,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search subject, teacher, room..."
-                className="input-premium text-xs py-1.5 pl-8 pr-3 bg-slate-800 border-slate-700 text-white placeholder-slate-500 w-52 md:w-64"
+                className="input-premium text-xs py-1.5 pl-8 pr-3 bg-slate-800 border-slate-700 text-white placeholder-slate-500 w-44 md:w-56"
               />
               <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
@@ -235,7 +270,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                 <rect x="6" y="14" width="12" height="8" />
               </svg>
-              Print Clean View
+              Print
             </button>
 
             {onExport && (
@@ -247,6 +282,50 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
               </button>
             )}
           </div>
+        </div>
+
+        {/* ── Section & Teacher Filter Selector Bar ── */}
+        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-800/80 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Filter Section:</span>
+            <select
+              value={selectedSectionFilter}
+              onChange={(e) => setSelectedSectionFilter(e.target.value)}
+              className="input-premium text-xs py-1 px-2.5 bg-slate-800 border-slate-700 text-white cursor-pointer rounded-lg"
+            >
+              <option value="ALL">All Sections (Master Matrix)</option>
+              {allSectionsList.map(sec => (
+                <option key={sec} value={sec}>{sec}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Filter Faculty:</span>
+            <select
+              value={selectedTeacherFilter}
+              onChange={(e) => setSelectedTeacherFilter(e.target.value)}
+              className="input-premium text-xs py-1 px-2.5 bg-slate-800 border-slate-700 text-white cursor-pointer rounded-lg max-w-[220px]"
+            >
+              <option value="ALL">All Faculty Members</option>
+              {allTeachersList.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+
+          {(selectedSectionFilter !== "ALL" || selectedTeacherFilter !== "ALL" || searchQuery) && (
+            <button
+              onClick={() => {
+                setSelectedSectionFilter("ALL");
+                setSelectedTeacherFilter("ALL");
+                setSearchQuery("");
+              }}
+              className="text-[11px] text-amber-400 hover:underline font-bold ml-auto"
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
       </div>
 
@@ -301,6 +380,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
                               key={idx}
                               item={item}
                               subjects={subjects}
+                              onNavigateToReschedule={onNavigateToReschedule}
                             />
                           ))}
                         </div>

@@ -8,6 +8,8 @@ export default function ReschedulePanel({
   hasResult,
   result,
   loading,
+  preselect,
+  onBackToTimetable,
   onReschedule,
   onAssignProxy,
 }) {
@@ -18,18 +20,34 @@ export default function ReschedulePanel({
   const [selectedProxy, setSelectedProxy] = useState("");
 
   useEffect(() => {
-    if (teachers && teachers.length > 0) {
-      setTeacher((c) => {
-        if (c) return c;
-        const first = teachers[0];
-        return typeof first === "string" ? first : (first?.name || "");
-      });
+    if (preselect) {
+      if (preselect.teacher) setTeacher(preselect.teacher);
+      if (preselect.day) setDay(preselect.day);
+      if (preselect.slot) setSelectedSlots([preselect.slot]);
     }
-  }, [teachers]);
+  }, [preselect]);
+
+  useEffect(() => {
+    if (teachers && teachers.length > 0 && !teacher) {
+      const first = teachers[0];
+      setTeacher(typeof first === "string" ? first : (first?.name || ""));
+    }
+  }, [teachers, teacher]);
 
   useEffect(() => {
     setDay((c) => (days.includes(c) ? c : days[0] || "Mon"));
   }, [days]);
+
+  // Compute selected teacher's full weekly class distribution across Monday-Friday
+  const teacherWeeklySchedule = useMemo(() => {
+    if (!result?.assignments || !teacher) return { total: 0, byDay: {} };
+    const classes = result.assignments.filter((a) => a.teacher === teacher);
+    const byDay = {};
+    days.forEach((d) => {
+      byDay[d] = classes.filter((a) => a.day === d).length;
+    });
+    return { total: classes.length, byDay };
+  }, [result, teacher, days]);
 
   const toggleSlot = (slot) => {
     setSelectedSlots((c) =>
@@ -157,9 +175,19 @@ export default function ReschedulePanel({
           </div>
         </div>
 
-        <span className="px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300">
-          ⚡ AI Conflict-Free Matcher
-        </span>
+        <div className="flex items-center gap-2.5">
+          {onBackToTimetable && (
+            <button
+              onClick={onBackToTimetable}
+              className="btn-secondary text-xs px-3.5 py-2 font-bold shadow-sm flex items-center gap-2"
+            >
+              <span>📅</span> Live Timetable
+            </button>
+          )}
+          <span className="px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300">
+            ⚡ AI Conflict-Free Matcher
+          </span>
+        </div>
       </div>
 
       {!hasResult ? (
@@ -232,6 +260,31 @@ export default function ReschedulePanel({
                   </select>
                 </div>
               </div>
+
+              {/* Weekly Workload Distribution Pills */}
+              {teacher && (
+                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="text-slate-400 font-medium">
+                    Weekly Workload: <strong className="text-amber-300 font-bold">{teacherWeeklySchedule.total} scheduled classes</strong>
+                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {days.map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setDay(d)}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                          day === d
+                            ? "bg-amber-500 text-slate-950 font-black shadow-sm shadow-amber-500/20"
+                            : "bg-slate-800 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {d}: {teacherWeeklySchedule.byDay[d] || 0}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">

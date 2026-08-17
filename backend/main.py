@@ -93,7 +93,15 @@ except ImportError:
     )
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
-DEFAULT_SLOTS = ["9-10", "10-11", "11-12", "12-1", "2-3"]
+DEFAULT_SLOTS = [
+    "09:00 AM - 09:45 AM",
+    "09:45 AM - 10:30 AM",
+    "10:30 AM - 11:20 AM",
+    "11:20 AM - 12:10 PM",
+    "01:00 PM - 01:50 PM",
+    "01:50 PM - 02:40 PM",
+    "02:40 PM - 03:30 PM",
+]
 
 app = FastAPI(title="Plannify — Academic Operations Platform", version="2.0.0")
 
