@@ -115,26 +115,27 @@ export default function SectionsManagement({
                       <td className="p-3">
                         <div className="space-y-1">
                           <div className="text-slate-300 font-semibold">
-                            📚 {linkedSubs.length} Subjects: <span className="text-slate-400 font-normal">{linkedSubs.map(s => s.name).join(", ") || "None assigned yet"}</span>
+                            {linkedSubs.length} Subjects: <span className="text-slate-400 font-normal">{linkedSubs.map(s => s.name).join(", ") || "None assigned yet"}</span>
                           </div>
                           <div className="text-slate-400 text-[10px]">
-                            👨‍🏫 Faculty: {teacherNames.join(", ") || "Unassigned"}
+                            Faculty: {teacherNames.join(", ") || "Unassigned"}
                           </div>
                         </div>
                       </td>
                       <td className="p-3 flex items-center gap-2">
                         <button
                           onClick={() => onNavigate && onNavigate("timetable")}
-                          className="px-2.5 py-1 rounded bg-amber-100 dark:bg-indigo-600/30 hover:bg-amber-600 dark:hover:bg-indigo-600 text-amber-800 dark:text-indigo-200 hover:text-white font-semibold text-[11px] border border-amber-300 dark:border-indigo-500/30 transition-all flex items-center gap-1"
+                          className="px-2.5 py-1 rounded bg-amber-100 dark:bg-indigo-600/30 hover:bg-amber-600 dark:hover:bg-indigo-600 text-amber-800 dark:text-indigo-200 hover:text-white font-semibold text-[11px] border border-amber-300 dark:border-indigo-500/30 transition-all flex items-center gap-1.5"
                         >
-                          📅 Timetable
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                          Timetable
                         </button>
                         <button
                           onClick={() => handleDelete(i)}
-                          className="p-1.5 rounded hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 transition-colors"
                           title="Delete Section"
                         >
-                          🗑️
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
                       </td>
                     </tr>
@@ -156,7 +157,9 @@ export default function SectionsManagement({
           <div className="card p-6 bg-slate-900 border border-slate-700 max-w-md w-full space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-lg font-bold text-white">Add New Section / Class</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">✕</button>
+              <button onClick={() => setShowAddModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             </div>
             
             <form onSubmit={handleAdd} className="space-y-4 text-xs">

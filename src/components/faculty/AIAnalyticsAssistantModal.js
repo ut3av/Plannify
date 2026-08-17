@@ -41,7 +41,7 @@ export default function AIAnalyticsAssistantModal({ rangeKey, departmentId, onCl
       setMessages(prev => [...prev, { sender: "bot", text: replyText }]);
     } catch (e) {
       console.error("AI Analytics Assistant error:", e);
-      setMessages(prev => [...prev, { sender: "bot", text: "⚠️ Error contacting AI Analytics service. Please verify your backend server status." }]);
+      setMessages(prev => [...prev, { sender: "bot", text: "Error contacting AI Analytics service. Please verify your backend server status." }]);
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,9 @@ export default function AIAnalyticsAssistantModal({ rangeKey, departmentId, onCl
           </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         )}
       </div>
 
@@ -72,7 +74,7 @@ export default function AIAnalyticsAssistantModal({ rangeKey, departmentId, onCl
             onClick={() => handleSend(prompt)}
             className="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:border-indigo-500/40 hover:bg-slate-800 text-[11px] text-indigo-300 transition-all text-left"
           >
-            💬 "{prompt}"
+            "{prompt}"
           </button>
         ))}
       </div>

@@ -70,7 +70,7 @@ export default function IntegrationsSection() {
       const response = await axios.post(`${API_BASE_URL}/make/email-all`);
       setDistributeStatus({
         success: true,
-        message: response.data?.message || "✨ Bulk distribution triggered! Make is now sending timetables to all 17 teachers via Email & WhatsApp."
+        message: response.data?.message || "Bulk distribution triggered successfully. Dispatching timetables to registered faculty."
       });
       fetchLogs();
     } catch (err) {
@@ -117,7 +117,7 @@ export default function IntegrationsSection() {
             disabled={loading}
             className="btn-secondary text-xs py-2.5 px-4 font-bold flex items-center gap-2"
           >
-            <span>⚡</span>
+            <svg className="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             {loading ? "Testing..." : "Test Make Webhook"}
           </button>
           <button
@@ -125,8 +125,8 @@ export default function IntegrationsSection() {
             disabled={distributing}
             className="btn-gradient text-xs py-2.5 px-4 font-bold flex items-center gap-2 shadow-lg shadow-amber-500/20"
           >
-            <span>📢</span>
-            {distributing ? "Distributing..." : "Broadcast Timetables to All Faculty"}
+            <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            {distributing ? "Distributing..." : "Broadcast Timetables to Faculty"}
           </button>
         </div>
       </div>
@@ -134,14 +134,14 @@ export default function IntegrationsSection() {
       {/* Alert Notices */}
       {status && (
         <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 animate-slide-down ${status.success ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-red-500/10 border-red-500/30 text-red-300"}`}>
-          <span>⚡</span>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
           <span>{status.message || status.error}</span>
         </div>
       )}
 
       {distributeStatus && (
         <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 animate-slide-down ${distributeStatus.success ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-red-500/10 border-red-500/30 text-red-300"}`}>
-          <span>{distributeStatus.success ? "📢" : "⚠️"}</span>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
           <span>{distributeStatus.message || distributeStatus.error}</span>
         </div>
       )}
@@ -181,16 +181,18 @@ export default function IntegrationsSection() {
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
-              <span>📜</span> Automation Audit & Delivery Logs
+              <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Automation Audit & Delivery Logs
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">Real-time webhook triggers, email dispatches, and substitution broadcasts.</p>
           </div>
           <button
             onClick={fetchLogs}
             disabled={logsLoading}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-300"
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-300 flex items-center gap-1.5"
           >
-            {logsLoading ? "Refreshing..." : "🔄 Refresh Logs"}
+            <svg className="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            {logsLoading ? "Refreshing..." : "Refresh Logs"}
           </button>
         </div>
 
@@ -222,7 +224,7 @@ export default function IntegrationsSection() {
                   </td>
                   <td className="py-3 px-3 text-right">
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      ✓ Delivered
+                      Delivered
                     </span>
                   </td>
                 </tr>

@@ -63,7 +63,7 @@ export default function LoginPage() {
 
       if (resetError) throw resetError;
 
-      setSuccessMessage("✨ Password reset link sent! Please check your email inbox (and spam/junk folder).");
+      setSuccessMessage("Password reset link sent! Please check your email inbox (and spam/junk folder).");
     } catch (err) {
       setError(err.message || "Failed to send reset email. Please verify your email address.");
     } finally {
@@ -97,7 +97,7 @@ export default function LoginPage() {
 
       if (updateError) throw updateError;
 
-      setSuccessMessage("✅ Password successfully updated! Redirecting to your workspace...");
+      setSuccessMessage("Password successfully updated! Redirecting to your workspace...");
       setTimeout(() => {
         setIsRecoveryMode(false);
         setIsForgotPassword(false);
@@ -209,7 +209,7 @@ export default function LoginPage() {
           }
         }
 
-        setSuccessMessage("✨ Faculty account created & seamlessly registered with the University Faculty Directory! You can now sign in.");
+        setSuccessMessage("Faculty account created & seamlessly registered with the University Faculty Directory! You can now sign in.");
       } else {
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -258,15 +258,21 @@ export default function LoginPage() {
 
           <div className="space-y-3 pt-6 border-t border-[#332219] text-xs text-[#E8DDD0]">
             <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px]">✓</div>
+              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
               <span>Google OR-Tools Constraint Solver</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[10px]">✓</div>
+              <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[10px]">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
               <span>Role-Based Portal Access</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-[10px]">✓</div>
+              <div className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-[10px]">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
               <span>Supabase Cloud Integration</span>
             </div>
           </div>
@@ -312,14 +318,14 @@ export default function LoginPage() {
           {/* Alert Messages */}
           {error && (
             <div className="p-3.5 rounded-xl font-semibold border text-xs bg-rose-500/10 border-rose-500/30 text-rose-300 animate-slide-down flex items-start gap-2">
-              <span className="text-sm">⚠️</span>
+              <svg className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               <span>{error}</span>
             </div>
           )}
 
           {successMessage && (
             <div className="p-3.5 rounded-xl font-semibold border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-300 animate-slide-down flex items-start gap-2">
-              <span className="text-sm">✨</span>
+              <svg className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
               <span>{successMessage}</span>
             </div>
           )}
@@ -443,7 +449,10 @@ export default function LoginPage() {
                     }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold">🛡️ Admin</span>
+                    <span className="text-sm font-bold flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      Admin
+                    </span>
                     {portalRole === "admin" && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
                   </div>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-tight">
@@ -460,7 +469,10 @@ export default function LoginPage() {
                     }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold">👨‍🏫 Faculty Member</span>
+                    <span className="text-sm font-bold flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      Faculty Member
+                    </span>
                     {portalRole === "teacher" && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
                   </div>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-tight">

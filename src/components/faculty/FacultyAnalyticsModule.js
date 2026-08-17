@@ -115,24 +115,24 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
 
   const [seeding, setSeeding] = useState(false);
 
-  const handleSeedDemo = async () => {
+  const seedDemoHistory = async () => {
     try {
       setSeeding(true);
       const res = await axios.post(`${API}/analytics/seed-demo-history`);
-      alert("✅ " + (res.data?.message || "30-Day LNCT Operational Demo Dataset successfully seeded!"));
+      alert(res.data?.message || "30-Day LNCT Operational Demo Dataset successfully seeded.");
       fetchDashboard();
       fetchInsights();
       fetchDirectory();
-    } catch (e) {
-      console.error(e);
-      alert("Failed to seed 30-day demo data.");
+    } catch (err) {
+      console.error("Seed demo error:", err);
+      alert("Failed to seed demo history: " + (err.response?.data?.detail || err.message));
     } finally {
       setSeeding(false);
     }
   };
 
   const handleExport = () => {
-    window.open(`${API}/analytics/export?range_key=${rangeKey}&format_type=excel`, '_blank');
+    window.open(`${API}/analytics/export?range=${rangeKey}&format=csv`, '_blank');
   };
 
   const handleSort = (column) => {
@@ -146,27 +146,27 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-100">
-      {/* ── MODULE HEADER & DATE RANGE SELECTOR ── */}
-      <div className="card p-6 bg-slate-900 border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      {/* ── HEADER & RANGE CONTROLS ── */}
+      <div className="card p-6 bg-slate-900 border border-slate-800 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-              Faculty Performance & Operational Analytics
+              Faculty Workload & Operational Analytics
             </h1>
-            <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/30">
-              ERP Grade
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              ERP 360°
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Comprehensive operational history, attendance tracking, workload balance, and substitution analytics.
+            Real-time multi-dimensional tracking: attendance rates, lecture workloads, substitution burdens, and proxy hours.
           </p>
         </div>
 
-        {/* Global Date Range Selector Controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          <button 
-            onClick={handleSeedDemo} 
-            disabled={seeding} 
+        {/* Global Range & Action Selectors */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={seedDemoHistory}
+            disabled={seeding}
             className="px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/30 transition-all flex items-center gap-1.5"
           >
             {seeding ? (
@@ -176,8 +176,8 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
               </>
             ) : (
               <>
-                <span>⚡</span>
-                <span>Seed 30-Day LNCT Demo</span>
+                <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Seed 30-Day Demo</span>
               </>
             )}
           </button>
@@ -222,20 +222,23 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
             </div>
           )}
 
-          <button onClick={handleExport} className="btn-secondary text-xs py-2 px-3 gap-2">
-            📥 Export Report
+          <button onClick={handleExport} className="btn-secondary text-xs py-2 px-3 gap-2 flex items-center">
+            <svg className="w-3.5 h-3.5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export Report
           </button>
 
-          <button onClick={() => setShowConfigModal(true)} className="p-2.5 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-all text-xs" title="Workload Threshold Settings">
-            ⚙️ Thresholds
+          <button onClick={() => setShowConfigModal(true)} className="p-2.5 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-all text-xs flex items-center gap-1.5" title="Workload Threshold Settings">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Thresholds
           </button>
         </div>
       </div>
 
       {/* SELECTED PERIOD BADGE */}
       <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
-        <span className="font-bold text-indigo-300">
-          📍 {dashboardData?.time_period?.formatted || "Analytics Period Loading..."}
+        <span className="font-bold text-indigo-300 flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          {dashboardData?.time_period?.formatted || "Analytics Period Loading..."}
         </span>
         <span className="text-slate-400 text-[11px]">
           Derived deterministically from Supabase Attendance, Leave, & Substitution logs.
@@ -300,7 +303,7 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
               : "text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20"
           }`}
         >
-          ✨ AI Analytics Assistant
+          AI Analytics Assistant
         </button>
 
         {selectedFacultyId && (
@@ -312,7 +315,7 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
                 : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
-            👤 Individual Faculty Profile
+            Individual Faculty Profile
           </button>
         )}
       </div>
@@ -341,7 +344,7 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
                     <span className="uppercase text-[9px] px-2 py-0.5 rounded bg-black/30">{item.type}</span>
                   </div>
                   <p className="text-slate-300 leading-relaxed">{item.message}</p>
-                  <p className="text-[11px] font-semibold text-slate-400 italic">💡 Action: {item.recommendation}</p>
+                  <p className="text-[11px] font-semibold text-slate-400 italic">Action Plan: {item.recommendation}</p>
                 </div>
               ))}
             </div>

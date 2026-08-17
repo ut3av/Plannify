@@ -157,7 +157,7 @@ export default function AttendanceDashboard({ facultyId, isTeacherView = false }
                 </>
               ) : (
                 <>
-                  <span>⚡</span>
+                  <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                   Simulate Morning Influx (Live Demo)
                 </>
               )}
@@ -180,7 +180,7 @@ export default function AttendanceDashboard({ facultyId, isTeacherView = false }
         <div className="card p-4 mb-6 animate-slide-down border-l-4 border-l-amber-500 bg-amber-500/10">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-xl">⚡</span>
+              <svg className="w-5 h-5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               <div>
                 <p className="font-semibold text-slate-900 dark:text-white text-sm">Live Biometric Simulation Active</p>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">

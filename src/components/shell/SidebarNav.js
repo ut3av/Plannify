@@ -195,14 +195,14 @@ export default function SidebarNav({
               <p className={`text-xs font-black truncate uppercase tracking-wide font-display ${
                 isWarm ? 'text-amber-100' : 'text-white'
               }`}>
-                LNCT University
+                Data Dynamos
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span className={`text-[10px] font-bold ${
                   isWarm ? 'text-amber-300/80' : 'text-slate-400'
                 }`}>
-                  Solver Core Online
+                  We The Th3ee!
                 </span>
               </div>
             </div>

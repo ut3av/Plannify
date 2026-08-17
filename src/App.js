@@ -294,7 +294,17 @@ function TimetableWorkspaceRoute() {
             disabled={loading || teachers.length === 0 || subjects.length === 0}
             onClick={generateTimetable}
           >
-            {loading ? "Solving..." : "✨ Generate AI Timetable"}
+            {loading ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Solving...
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Generate AI Timetable
+              </>
+            )}
           </button>
         </div>
       </div>

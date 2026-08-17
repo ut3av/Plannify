@@ -259,7 +259,7 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
                             className="mt-1 cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all hover:scale-105"
                             title="Click to view affected periods and available substitute faculty"
                           >
-                            <span>⚠️</span>
+                            <svg className="w-3 h-3 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                             <span>
                               <strong>{impact.affected_lectures_count}</strong> Lectures Affected — <strong>{impact.available_substitutes_count}</strong> Available Subs
                             </span>
@@ -321,7 +321,7 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
           <div className="card max-w-lg w-full p-6 shadow-2xl border border-slate-700 bg-slate-900 text-slate-200 animate-scale-in">
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <div className="flex items-center gap-2">
-                <span className="text-xl">⚠️</span>
+                <svg className="w-5 h-5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 <div>
                   <h3 className="text-lg font-bold text-white">Timetable Substitution Impact</h3>
                   <p className="text-xs text-slate-400">{activeImpactModal.faculty_name} ({activeImpactModal.from_date} → {activeImpactModal.to_date})</p>

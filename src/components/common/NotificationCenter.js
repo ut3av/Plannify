@@ -29,7 +29,7 @@ export default function NotificationCenter({
             notifList.push({
               id: `leave-${l.id}`,
               type: "leave",
-              title: isPending ? "🏖️ Pending Leave Application" : `✓ Leave ${l.status || "Updated"}`,
+              title: isPending ? "Pending Leave Application" : `Leave ${l.status || "Updated"}`,
               description: `${facultyName} applied for ${l.leave_type || "Leave"}: "${l.reason || "Personal work"}" (${l.from_date} to ${l.to_date})`,
               timestamp: l.created_at ? new Date(l.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Recently",
               unread: isPending,
@@ -55,7 +55,7 @@ export default function NotificationCenter({
             notifList.push({
               id: `sub-${s.id}`,
               type: "substitution",
-              title: "⚡ Proxy Substitution Assigned",
+              title: "Proxy Substitution Assigned",
               description: `Proxy assigned: ${s.proxy_teacher_name || "Faculty"} taking ${s.subject || "Class"} for ${s.original_teacher_name || "Teacher"} on ${s.date || "scheduled date"}.`,
               timestamp: s.created_at ? new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Recently",
               unread: false,
@@ -81,7 +81,7 @@ export default function NotificationCenter({
             notifList.push({
               id: `auto-${log.id}`,
               type: "automation",
-              title: "✉️ Make Automation Webhook",
+              title: "Make Automation Webhook",
               description: `${log.event_type || "SCHEDULE_BROADCAST"}: Dispatched to ${log.teacher_name || "Faculty"} via ${log.channel || "Make Webhook"}`,
               timestamp: new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               unread: false,
@@ -107,7 +107,7 @@ export default function NotificationCenter({
             notifList.push({
               id: `fac-${f.id}`,
               type: "faculty",
-              title: "👨‍🏫 Faculty Profile Active",
+              title: "Faculty Profile Active",
               description: `${f.teacher_name || "Faculty"} registered in ${f.department || "Academic Department"}.`,
               timestamp: f.created_at ? new Date(f.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Active",
               unread: false,
@@ -190,7 +190,7 @@ export default function NotificationCenter({
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
             <span className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-sm">
-              🔔
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             </span>
             <div>
               <h3 className="text-base font-black text-white flex items-center gap-2">
@@ -204,9 +204,9 @@ export default function NotificationCenter({
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs"
+            className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-colors"
           >
-            ✕
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
@@ -219,7 +219,7 @@ export default function NotificationCenter({
         ) : notifications.length === 0 ? (
           <div className="py-12 text-center text-slate-400">
             <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-xl mx-auto mb-3 shadow-inner">
-              ✨
+              <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <p className="text-sm font-bold text-slate-200">No active notifications</p>
             <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
@@ -251,7 +251,7 @@ export default function NotificationCenter({
                     {item.description}
                   </p>
                   <span className="text-[11px] text-indigo-400 font-bold mt-2 inline-block group-hover:underline">
-                    Open {item.actionTarget.toUpperCase()} ➔
+                    Open {item.actionTarget.toUpperCase()} →
                   </span>
                 </div>
                 {item.unread && (
@@ -273,10 +273,10 @@ export default function NotificationCenter({
           <div className="flex items-center gap-2">
             <button
               onClick={fetchRealtimeNotifications}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs"
+              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs transition-colors"
               title="Refresh alerts"
             >
-              🔄
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </button>
             <button
               onClick={onClose}

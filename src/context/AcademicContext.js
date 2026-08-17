@@ -219,7 +219,7 @@ export function AcademicProvider({ children }) {
       }
       
       if (!isSilent) {
-        setRescheduleNote("☁️ All academic datasets and faculty successfully saved to Supabase Cloud!");
+        setRescheduleNote("All academic datasets and faculty successfully synchronized with cloud storage.");
       }
     } catch (e) {
       console.warn("Cloud save notice:", e);
@@ -267,7 +267,7 @@ export function AcademicProvider({ children }) {
         console.warn("Relational sync failed after generation", syncErr);
       }
 
-      setRescheduleNote(successMessage || "✨ Optimal Timetable Generated Successfully by AI Solver!");
+      setRescheduleNote(successMessage || "Optimal timetable generated successfully by constraint solver.");
     } catch (apiError) {
       console.warn("Backend solver offline/sleeping, activating client-side scheduler:", apiError);
       
@@ -311,7 +311,7 @@ export function AcademicProvider({ children }) {
         });
 
         setResult(fallbackResult);
-        setRescheduleNote(successMessage || "✨ Timetable Loaded Successfully (Client-Side Engine Active)");
+        setRescheduleNote(successMessage || "Timetable generated successfully (Local engine active).");
       } else {
         setError(getErrorMessage(apiError));
       }
@@ -345,7 +345,7 @@ export function AcademicProvider({ children }) {
       result: formattedDemo
     };
 
-    setRescheduleNote("🚀 Full Academic Demo Loaded! (30+ classes, LNCT University faculties, labs, and classroom allocations active)");
+    setRescheduleNote("Academic demonstration dataset loaded (30+ courses, faculty profiles, and venues configured).");
 
     try {
       const demoPayload = buildApiPayload(demoData);
@@ -375,7 +375,7 @@ export function AcademicProvider({ children }) {
     setRooms([]);
     setTimeSlots(defaultSlots);
     setResult(null);
-    setRescheduleNote("🧹 Workspace reset. All demo data, attendance percentages, and substitution records removed — clean real implementation active.");
+    setRescheduleNote("Workspace reset complete. All demo data, attendance percentages, and substitution records cleared.");
 
     activeStateRef.current = {
       teachers: [],
@@ -471,7 +471,7 @@ export function AcademicProvider({ children }) {
 
     const updatedResult = { ...result, assignments: updatedAssignments };
     setResult(updatedResult);
-    setRescheduleNote(`⚡ Proxy assigned successfully: ${proxyTeacher} will cover ${leaveAssignment.subject} (${leaveAssignment.section}) on ${leaveAssignment.day} at ${leaveAssignment.slot}`);
+    setRescheduleNote(`Proxy assigned successfully: ${proxyTeacher} will cover ${leaveAssignment.subject} (${leaveAssignment.section}) on ${leaveAssignment.day} at ${leaveAssignment.slot}`);
     
     syncRelationalData({ teachers, sections, subjects, rooms, timeSlots, result: updatedResult }).catch(() => null);
   }, [result, teachers, sections, subjects, rooms, timeSlots]);
@@ -488,7 +488,7 @@ export function AcademicProvider({ children }) {
       if (res.data) {
         const formatted = formatResult(res.data);
         setResult(formatted);
-        setRescheduleNote("✨ Schedule Rescheduled & Optimized Successfully!");
+        setRescheduleNote("Schedule rescheduled and optimized successfully.");
       }
     } catch (err) {
       console.warn("Reschedule API offline, applying client swap:", err);
@@ -504,7 +504,7 @@ export function AcademicProvider({ children }) {
           return a;
         });
         setResult({ ...result, assignments: updated });
-        setRescheduleNote("✨ Slot swapped successfully!");
+        setRescheduleNote("Slot swapped successfully.");
       } else {
         setError(getErrorMessage(err));
       }

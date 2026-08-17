@@ -99,8 +99,9 @@ export default function FacultyAnalyticsProfile({ facultyId, rangeKey, startDate
           </div>
 
           <div className="text-right">
-            <div className="px-3.5 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs font-semibold text-slate-300 inline-block">
-              📅 {time_period.formatted}
+            <div className="px-3.5 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs font-semibold text-slate-300 inline-flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              {time_period.formatted}
             </div>
             <p className="text-[11px] text-slate-400 mt-2">Joining Date: {faculty.joining_date || 'N/A'}</p>
           </div>
@@ -269,7 +270,8 @@ export default function FacultyAnalyticsProfile({ facultyId, rangeKey, startDate
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
                 <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                  📅 30-Day Operational Biometric Punch Matrix
+                  <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  30-Day Operational Biometric Punch Matrix
                 </h4>
                 <p className="text-xs text-slate-400">Chronological daily check-in records, punch times, and leave events</p>
               </div>
@@ -288,16 +290,16 @@ export default function FacultyAnalyticsProfile({ facultyId, rangeKey, startDate
                 const isLeave = row.status === 'on-leave' || row.status === 'absent';
                 
                 let bgClass = "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:border-emerald-400";
-                let statusIcon = "✓";
+                let statusIcon = "P";
                 if (isLate) {
                   bgClass = "bg-amber-500/20 border-amber-500/40 text-amber-300 hover:border-amber-400";
-                  statusIcon = "⏱️";
+                  statusIcon = "L";
                 } else if (isHalfDay) {
                   bgClass = "bg-blue-500/20 border-blue-500/40 text-blue-300 hover:border-blue-400";
                   statusIcon = "½";
                 } else if (isLeave) {
                   bgClass = "bg-purple-500/20 border-purple-500/40 text-purple-300 hover:border-purple-400";
-                  statusIcon = "🏖️";
+                  statusIcon = "A";
                 }
 
                 return (

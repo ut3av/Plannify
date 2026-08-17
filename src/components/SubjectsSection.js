@@ -186,7 +186,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
 
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-800 dark:text-indigo-300">
-            📚 {subjects.length} Subjects ({totalSlotsSum} weekly periods)
+            {subjects.length} Subjects ({totalSlotsSum} weekly periods)
           </span>
         </div>
       </div>
@@ -218,7 +218,8 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
       {/* ── CREATE / ADD SUBJECT COMPACT WIZARD ── */}
       <form onSubmit={addSubject} className="card p-6 bg-slate-900 border border-slate-800 space-y-4">
         <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
-          <span>✨</span> Add New Subject to Curriculum
+          <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Add New Subject to Curriculum
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end">
@@ -310,7 +311,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
               }}
             />
             <span className="text-xs font-bold text-slate-200">
-              🔬 Laboratory Course (Schedules continuous 2-period lab blocks in dedicated lab room)
+              Laboratory Course (Schedules continuous 2-period lab blocks in dedicated lab room)
             </span>
           </label>
 
@@ -322,7 +323,8 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
                 onClick={() => setIsSectionOpen(!isSectionOpen)}
                 className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-300 flex items-center gap-2"
               >
-                <span>👥 Assign Sections:</span>
+                <svg className="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>Assign Sections:</span>
                 <span className="text-indigo-400 font-bold">
                   {selectedSections.length === 0 ? "All Sections" : `${selectedSections.length} Selected`}
                 </span>
@@ -440,12 +442,12 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
                         </span>
                       )}
                       {sub.is_lab ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
-                          <span>🔬</span> Lab (2-Slot)
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+                          Lab (2-Slot)
                         </span>
                       ) : (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-500/30">
-                          📖 Theory
+                          Theory
                         </span>
                       )}
                     </div>
@@ -456,14 +458,14 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
                         className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white"
                         title="Duplicate for another section"
                       >
-                        📋
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                       </button>
                       <button
                         onClick={() => removeSubject(originalIndex)}
                         className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
                         title="Remove subject"
                       >
-                        🗑️
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                       </button>
                     </div>
                   </div>
@@ -476,14 +478,15 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
                   {/* Assigned Teacher */}
                   <div className="flex items-center gap-2 mt-2 text-xs text-slate-300">
                     <span className="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px]">
-                      👨‍🏫
+                      <svg className="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </span>
                     <span className="font-semibold truncate">{sub.teacher}</span>
                   </div>
 
                   {/* Section Badge */}
-                  <p className="text-[11px] text-slate-400 mt-2 truncate">
-                    👥 {secDisplay}
+                  <p className="text-[11px] text-slate-400 mt-2 truncate flex items-center gap-1">
+                    <svg className="w-3 h-3 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    <span>{secDisplay}</span>
                   </p>
                 </div>
 

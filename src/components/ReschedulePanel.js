@@ -183,28 +183,19 @@ export default function ReschedulePanel({
               onClick={onBackToTimetable}
               className="btn-secondary text-xs px-3.5 py-2 font-bold shadow-sm flex items-center gap-2"
             >
-              <span>📅</span> Live Timetable
+              <svg className="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Live Timetable
             </button>
           )}
-          <span className="px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300">
-            ⚡ AI Conflict-Free Matcher
+          <span className="px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            AI Conflict-Free Matcher
           </span>
         </div>
       </div>
 
       {!hasResult ? (
         <div className="text-center py-12 text-slate-500 bg-slate-900/50 rounded-2xl border border-slate-800">
-          <svg
-            className="w-12 h-12 mx-auto mb-3 opacity-30 text-amber-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          >
-            <polyline points="23 4 23 10 17 10" />
-            <polyline points="1 20 1 14 7 14" />
-            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-          </svg>
           <p className="text-sm font-semibold">
             Generate or load a timetable first to enable dynamic AI
             rescheduling.
@@ -212,11 +203,11 @@ export default function ReschedulePanel({
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Absence Setup (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
             <div className="card p-6 bg-slate-900 border border-slate-800 space-y-5">
               <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                <span>📋</span> Step 1: Mark Teacher Absence & Scope
+                <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                Step 1: Mark Teacher Absence & Scope
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -225,20 +216,15 @@ export default function ReschedulePanel({
                     Select Absent Faculty *
                   </label>
                   <select
-                    className="input-premium w-full text-xs bg-slate-800 border-slate-700 text-white cursor-pointer"
+                    className="input-premium bg-slate-800 border-slate-700 text-white text-xs w-full"
                     value={teacher}
                     onChange={(e) => setTeacher(e.target.value)}
                   >
                     {teachers.map((t) => {
                       const tName = typeof t === "string" ? t : t.name;
-                      const tDept = typeof t === "string" ? "Faculty" : (t.department || "Faculty");
                       return (
-                        <option
-                          key={tName}
-                          value={tName}
-                          className="bg-slate-900"
-                        >
-                          {tName} ({tDept})
+                        <option key={tName} value={tName}>
+                          {tName}
                         </option>
                       );
                     })}
@@ -250,12 +236,12 @@ export default function ReschedulePanel({
                     Day of Absence *
                   </label>
                   <select
-                    className="input-premium w-full text-xs bg-slate-800 border-slate-700 text-white cursor-pointer"
+                    className="input-premium bg-slate-800 border-slate-700 text-white text-xs w-full"
                     value={day}
                     onChange={(e) => setDay(e.target.value)}
                   >
                     {days.map((d) => (
-                      <option key={d} value={d} className="bg-slate-900">
+                      <option key={d} value={d}>
                         {d}
                       </option>
                     ))}
@@ -263,7 +249,6 @@ export default function ReschedulePanel({
                 </div>
               </div>
 
-              {/* Weekly Workload Distribution Pills */}
               {teacher && (
                 <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="text-slate-400 font-medium">
@@ -315,12 +300,11 @@ export default function ReschedulePanel({
                 </div>
               </div>
 
-              {/* Impacted Classes Scanner */}
-              <div className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/80 space-y-3">
+              <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
-                    <span>⚠️</span> Impacted Classes on {day} (
-                    {teacherImpactedClasses.length} Scheduled)
+                    <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Impacted Classes on {day} ({teacherImpactedClasses.length} Scheduled)
                   </h4>
                   {teacherImpactedClasses.length > 0 && (
                     <button
@@ -361,7 +345,7 @@ export default function ReschedulePanel({
                               </span>
                             </p>
                             <p className="text-[11px] text-slate-400 mt-0.5">
-                              👥 {c.section} • 📍 {c.room}
+                              Section {c.section} • Room {c.room}
                             </p>
                           </div>
                           <div className="text-right shrink-0">
@@ -369,7 +353,7 @@ export default function ReschedulePanel({
                               {c.slot}
                             </span>
                             <p className="text-[10px] mt-1 font-bold">
-                              {isSelected ? "🔴 Marked Absent" : "⚪ Regular"}
+                              {isSelected ? "Marked Absent" : "Regular"}
                             </p>
                           </div>
                         </div>
@@ -381,23 +365,17 @@ export default function ReschedulePanel({
             </div>
           </div>
 
-          {/* Right Column: AI Resolution Actions (5 cols) */}
           <div className="lg:col-span-5 space-y-6">
-            {/* Resolution Option 1: AI Substitute Proxy Matcher */}
             <div className="card p-6 bg-slate-900 border border-slate-800 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                  <span>🤖</span> AI Proxy Recommendation
+                  <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  AI Proxy Recommendation
                 </h3>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
                   CONFLICT-FREE
                 </span>
               </div>
-
-              <p className="text-xs text-slate-400">
-                AI scans all faculty timetables to find free professors in the
-                same discipline with zero period clashes:
-              </p>
 
               <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
                 {availableProxies.length === 0 ? (
@@ -424,16 +402,13 @@ export default function ReschedulePanel({
                             </span>
                           )}
                         </div>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          {p.department}
-                        </p>
                       </div>
 
                       <span className="text-xs">
                         {(selectedProxy || availableProxies[0]?.name) ===
                         p.name ? (
                           <span className="text-emerald-400 font-bold">
-                            ✓ Selected
+                            Selected
                           </span>
                         ) : (
                           <span className="text-slate-500 text-[11px]">
@@ -451,25 +426,22 @@ export default function ReschedulePanel({
                 onClick={submitProxy}
                 disabled={!teacher || teacherImpactedClasses.length === 0}
               >
-                <span>⚡</span> Assign Substitute Proxy (Instant)
+                <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Assign Substitute Proxy (Instant)
               </button>
             </div>
 
-            {/* Resolution Option 2: Full Schedule Optimization */}
             <div className="card p-5 bg-slate-900 border border-slate-800 space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
                 Alternative: Full Section Re-optimization
               </h3>
-              <p className="text-[11px] text-slate-400">
-                Let the constraint solver re-distribute these classes to another
-                free period in the week for the section.
-              </p>
               <button
                 className="px-4 py-2.5 w-full rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-all flex items-center justify-center gap-2"
                 onClick={submit}
                 disabled={!teacher}
               >
-                <span>🔄</span> Run Full Solver Re-Optimization
+                <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Run Full Solver Re-Optimization
               </button>
             </div>
           </div>

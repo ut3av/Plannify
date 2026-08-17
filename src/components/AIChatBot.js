@@ -2,25 +2,78 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-
-import { compressImage } from '../utils/imageOptimizer';
+import BrandLogo, { PlannifyIconMark } from './common/BrandLogo';
 import { API_BASE_URL } from '../apiConfig';
-import BrandLogo from './common/BrandLogo';
 
-export default function AIChatBot({ 
-  result, 
-  teachers = [], 
-  subjects = [], 
-  sections = [], 
-  rooms = [], 
-  timeSlots = [], 
-  onExtractedData, 
-  onLoadDemo, 
-  onRemoveDemo, 
+const compressImage = (file, maxWidth = 1200, quality = 0.82) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        const base64 = dataUrl.split(",")[1];
+        resolve({ dataUrl, base64 });
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+function SuggestionIcon({ type }) {
+  const className = "w-3.5 h-3.5 shrink-0";
+  switch (type) {
+    case "database":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>;
+    case "trash":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>;
+    case "camera":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>;
+    case "user-plus":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>;
+    case "zap":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+    case "bar-chart":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>;
+    case "calendar":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+    case "clock":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+    case "users":
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>;
+    default:
+      return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>;
+  }
+}
+
+export default function AIChatBot({
+  result,
+  teachers = [],
+  subjects = [],
+  sections = [],
+  rooms = [],
+  timeSlots = [],
+  onLoadDemo,
+  onRemoveDemo,
   onGenerateTimetable,
   onAddFaculty,
-  isTeacherView = false, 
-  teacherName = "" 
+  onExtractedData,
+  isTeacherView = false,
+  teacherName = ""
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -28,8 +81,8 @@ export default function AIChatBot({
     {
       id: "welcome",
       text: isTeacherView
-        ? `👋 **Hello ${teacherName || "Faculty Member"}! I am your Personal Academic Assistant.**\n\nI can help you review your weekly classes, check workload balance, find proxy substitutes, and answer timetable queries.\n\n*How can I assist you today?*`
-        : "👋 **Hello! I am your Plannify.exe AI Co-Pilot.**\n\nI specialize in academic timetable optimization, teacher workload balancing, substitution management, and automated timetable OCR image extraction.\n\n*How can I assist your institution today?*",
+        ? `**Welcome ${teacherName || "Faculty Member"}!**\n\nI am your academic assistant. I can help review your weekly schedule, check free periods, find proxy substitutes, and answer timetable queries.\n\n*How can I assist you today?*`
+        : "**Welcome to Plannify Academic Co-Pilot.**\n\nI specialize in timetable constraint solving, faculty workload balancing, substitution management, and automated timetable OCR image extraction.\n\n*How can I assist your institution today?*",
       sender: 'bot',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
@@ -81,9 +134,9 @@ export default function AIChatBot({
       const name = addTeacherMatch[1].trim().replace(/^(dr\.|prof\.|mr\.|mrs\.|ms\.)\s*/i, "");
       const email = `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`;
       return {
-        reply: `✅ **Added Faculty Member: Dr. ${name}**\n\nI have successfully registered **${name}** in the Faculty Directory and synchronized their profile with Supabase cloud.\n\n\`\`\`json\n{\n  "teachers": [\n    {\n      "name": "${name}",\n      "email": "${email}",\n      "department": "Computer Applications",\n      "designation": "Assistant Professor",\n      "free_periods": 1\n    }\n  ]\n}\n\`\`\`\n\n*The faculty list and cloud draft have been updated.*`,
+        reply: `**Faculty Member Registered: Dr. ${name}**\n\nI have registered **${name}** in the Faculty Directory and synchronized the profile with cloud storage.\n\n\`\`\`json\n{\n  "teachers": [\n    {\n      "name": "${name}",\n      "email": "${email}",\n      "designation": "Assistant Professor",\n      "free_periods": 1\n    }\n  ]\n}\n\`\`\`\n\n*The faculty list and cloud draft have been updated.*`,
         data: {
-          teachers: [{ name, email, department: "Computer Applications", designation: "Assistant Professor", free_periods: 1 }]
+          teachers: [{ name, email, designation: "Assistant Professor", free_periods: 1 }]
         }
       };
     }
@@ -93,7 +146,7 @@ export default function AIChatBot({
     if (addSectionMatch && addSectionMatch[1]) {
       const secName = addSectionMatch[1].trim();
       return {
-        reply: `✅ **Added Academic Section: ${secName}**\n\n\`\`\`json\n{\n  "sections": [\n    {\n      "name": "${secName}",\n      "room": "Room 308",\n      "lab_room": "Lab 006"\n    }\n  ]\n}\n\`\`\`\n\n*Section registered for timetable constraint solving.*`,
+        reply: `**Academic Section Added: ${secName}**\n\n\`\`\`json\n{\n  "sections": [\n    {\n      "name": "${secName}",\n      "room": "Room 308",\n      "lab_room": "Lab 006"\n    }\n  ]\n}\n\`\`\`\n\n*Section registered for timetable constraint solving.*`,
         data: {
           sections: [{ name: secName, room: "Room 308", lab_room: "Lab 006" }]
         }
@@ -106,7 +159,7 @@ export default function AIChatBot({
       const subName = addSubjectMatch[1].trim();
       const defaultTeacher = activeTeachers[0]?.name || (typeof activeTeachers[0] === 'string' ? activeTeachers[0] : "Prof. Ripusoodan Sharma");
       return {
-        reply: `✅ **Added Subject: ${subName}**\n\n\`\`\`json\n{\n  "subjects": [\n    {\n      "name": "${subName}",\n      "code": "CS-${Math.floor(100 + Math.random() * 899)}",\n      "teacher": "${defaultTeacher}",\n      "required_slots": 3,\n      "is_lab": ${p.includes("lab")}\n    }\n  ]\n}\n\`\`\`\n\n*Subject added to course catalog.*`,
+        reply: `**Course Added to Catalog: ${subName}**\n\n\`\`\`json\n{\n  "subjects": [\n    {\n      "name": "${subName}",\n      "code": "CS-${Math.floor(100 + Math.random() * 899)}",\n      "teacher": "${defaultTeacher}",\n      "required_slots": 3,\n      "is_lab": ${p.includes("lab")}\n    }\n  ]\n}\n\`\`\`\n\n*Subject added to course catalog.*`,
         data: {
           subjects: [{ name: subName, code: `CS-${Math.floor(100 + Math.random() * 899)}`, teacher: defaultTeacher, required_slots: 3, is_lab: p.includes("lab") }]
         }
@@ -116,7 +169,7 @@ export default function AIChatBot({
     // 4. GENERATE / SOLVE TIMETABLE
     if (p.includes("generate") || p.includes("solve") || p.includes("schedule") || p.includes("create timetable")) {
       return {
-        reply: "⚡ **Triggering Timetable Generation...**\n\nExecuting Google OR-Tools constraint satisfaction algorithms across all active faculty, section batches, and classroom capacities.\n\n*Optimization objective: Maximize slot preferences and balance teacher daily distributions.*",
+        reply: "**Timetable Solver Initialized**\n\nExecuting constraint satisfaction engine across active faculty, section batches, and classroom capacities.\n\n*Objective: Maximize slot preferences and balance teacher daily distributions.*",
         action: "generate"
       };
     }
@@ -124,7 +177,7 @@ export default function AIChatBot({
     // 5. REMOVE DEMO / RESET
     if (p.includes("remove demo") || p.includes("clear demo") || p.includes("clean workspace") || p.includes("reset")) {
       return {
-        reply: "🧹 **Workspace Reset to Clean State**\n\nAll demo entries (faculty profiles, mock attendance %, substitutions, and schedule assignments) have been purged. Clean real institution workspace active.",
+        reply: "**Workspace Reset to Clean State**\n\nAll demo entries (faculty profiles, mock attendance, substitutions, and schedule assignments) have been purged.",
         action: "clear_demo"
       };
     }
@@ -132,14 +185,14 @@ export default function AIChatBot({
     // 6. LOAD DEMO
     if (p.includes("load demo") || p.includes("demo data") || p.includes("demo timetable")) {
       return {
-        reply: "🚀 **Full LNCT Academic Demo Loaded!**\n\nPopulated 30+ classes across BCA Sections A-F, 17+ faculty profiles, lab allocations, and classroom arrangements.",
+        reply: "**Academic Demo Dataset Loaded**\n\nPopulated 30+ classes across BCA Sections A-F, 17+ faculty profiles, lab allocations, and classroom arrangements.",
         action: "load_demo"
       };
     }
 
     // 7. DEFAULT CONTEXTUAL ASSISTANCE
     return {
-      reply: `🤖 **Plannify Academic Intelligence Status**:\n\n- **Active Faculty Profiles**: ${activeTeachers.length}\n- **Catalog Subjects**: ${activeSubjects.length}\n- **Registered Sections**: ${activeSections.length}\n- **Allocated Classrooms**: ${activeRooms.length}\n- **Schedule Solver Status**: ${currentContext.result ? "✅ Feasible Schedule Active" : "⚡ Ready to Generate"}\n\n*You can ask me to add teachers, add subjects, solve timetables, load/clear demo data, or attach an image of a paper timetable to extract it via OCR.*`
+      reply: `**System Status & Overview**:\n\n- **Active Faculty Profiles**: ${activeTeachers.length}\n- **Catalog Courses**: ${activeSubjects.length}\n- **Registered Sections**: ${activeSections.length}\n- **Allocated Classrooms**: ${activeRooms.length}\n- **Solver Status**: ${currentContext.result ? "Feasible Schedule Active" : "Ready to Solve"}\n\n*You can ask to register faculty, add subjects, solve timetables, load demo datasets, or attach an image of a paper timetable to extract it via OCR.*`
     };
   };
 
@@ -151,106 +204,92 @@ export default function AIChatBot({
     const userMsg = {
       id: Date.now().toString(),
       text: userText,
-      sender: 'user',
       image: previewUrl,
+      sender: 'user',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages(prev => [...prev, userMsg]);
-    if (!customPrompt) setInput("");
-
-    const imgToSend = selectedImage;
+    setInput("");
+    const currentBase64 = selectedImage;
     setSelectedImage(null);
     setPreviewUrl(null);
     setIsLoading(true);
 
-    const endpoints = [
-      API_BASE_URL,
-      "http://localhost:8080",
-      "http://127.0.0.1:8080",
-      "http://localhost:8000",
-      "http://127.0.0.1:8000",
-    ].filter(Boolean);
+    const currentContext = { teachers, subjects, sections, rooms, timeSlots, result };
 
-    let reply = null;
-    let extractedData = null;
-    let triggeredAction = null;
-
-    // 1. Attempt connection to FastAPI backend
-    for (const ep of endpoints) {
-      try {
-        const response = await axios.post(`${ep}/chat`, {
-          message: userMsg.text,
-          context: { 
-            ...(result || {}), 
-            teachers, 
-            subjects, 
-            sections, 
-            rooms, 
-            timeSlots,
-            is_teacher_view: isTeacherView, 
-            teacher_name: teacherName 
-          },
-          history: messages.map(m => ({ sender: m.sender, text: m.text })),
-          image: imgToSend
-        }, { timeout: 8000 });
-
-        if (response.data && response.data.reply) {
-          reply = response.data.reply;
-          break;
+    try {
+      const payload = {
+        prompt: userText,
+        image: currentBase64,
+        context: {
+          active_teachers: teachers.map(t => t.name || t),
+          active_subjects: subjects.map(s => s.name || s),
+          active_sections: sections.map(s => s.name || s),
+          active_rooms: rooms.map(r => r.name || r),
+          has_schedule: !!result
         }
-      } catch (err) {
-        // Try next endpoint
-      }
-    }
+      };
 
-    // 2. Client-side NLP fallback if backend is offline
-    if (!reply) {
-      const clientRes = generateClientSideAIResponse(userMsg.text, { teachers, subjects, sections, rooms, result });
-      reply = clientRes.reply;
-      extractedData = clientRes.data;
-      triggeredAction = clientRes.action;
-    }
+      const res = await axios.post(`${API_BASE_URL}/ai/copilot`, payload, { timeout: 25000 });
+      
+      if (res.data) {
+        const botReply = res.data.reply || res.data.message || "I have processed your request.";
+        setMessages(prev => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            text: botReply,
+            sender: 'bot',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ]);
 
-    // 3. Process extracted structured JSON or actions
-    let displayReply = reply;
-    const jsonMatch = reply.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (jsonMatch && jsonMatch[1]) {
-      try {
-        const parsed = JSON.parse(jsonMatch[1]);
-        if (parsed.teachers || parsed.subjects || parsed.sections || parsed.rooms || parsed.timeSlots) {
-          extractedData = parsed;
+        if (res.data.extracted_data && onExtractedData) {
+          onExtractedData(res.data.extracted_data);
         }
-      } catch (e) {
-        // Ignore
+        if (res.data.action === "generate" && onGenerateTimetable) {
+          onGenerateTimetable();
+        }
+        if (res.data.action === "load_demo" && onLoadDemo) {
+          onLoadDemo();
+        }
+        if (res.data.action === "clear_demo" && onRemoveDemo) {
+          onRemoveDemo();
+        }
       }
-    }
+    } catch (err) {
+      console.warn("Cloud AI endpoint asleep or unreachable. Activating local NLP engine:", err);
+      
+      const localResult = generateClientSideAIResponse(userText, currentContext);
+      
+      setTimeout(() => {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            text: localResult.reply,
+            sender: 'bot',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ]);
 
-    if (extractedData) {
-      if (onExtractedData) onExtractedData(extractedData);
-      if (extractedData.teachers && onAddFaculty) {
-        extractedData.teachers.forEach(t => onAddFaculty(t));
-      }
+        if (localResult.data && onExtractedData) {
+          onExtractedData(localResult.data);
+        }
+        if (localResult.action === "generate" && onGenerateTimetable) {
+          onGenerateTimetable();
+        }
+        if (localResult.action === "load_demo" && onLoadDemo) {
+          onLoadDemo();
+        }
+        if (localResult.action === "clear_demo" && onRemoveDemo) {
+          onRemoveDemo();
+        }
+      }, 400);
+    } finally {
+      setIsLoading(false);
     }
-
-    if (triggeredAction === "generate" && onGenerateTimetable) {
-      onGenerateTimetable();
-    } else if (triggeredAction === "load_demo" && onLoadDemo) {
-      onLoadDemo();
-    } else if (triggeredAction === "clear_demo" && onRemoveDemo) {
-      onRemoveDemo();
-    }
-
-    setMessages(prev => [
-      ...prev,
-      {
-        id: (Date.now() + 1).toString(),
-        text: displayReply,
-        sender: 'bot',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-    ]);
-    setIsLoading(false);
   };
 
   const handleCopy = (id, text) => {
@@ -259,11 +298,11 @@ export default function AIChatBot({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const clearChat = () => {
+  const handleResetChat = () => {
     setMessages([
       {
         id: "welcome-reset",
-        text: "✨ **Chat history reset.** How can I assist with your academic timetable, faculty, or institutional operations?",
+        text: "**Chat history reset.** How can I assist with your academic timetable, faculty, or institutional operations?",
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
@@ -271,17 +310,17 @@ export default function AIChatBot({
   };
 
   const SUGGESTIONS = isTeacherView ? [
-    { label: "My Schedule Today", icon: "📅" },
-    { label: "Check Free Slots", icon: "⏳" },
-    { label: "Find Proxy Substitute", icon: "⚡" },
-    { label: "Leave Application Rules", icon: "🏖️" },
+    { label: "My Schedule Today", iconType: "calendar" },
+    { label: "Check Free Slots", iconType: "clock" },
+    { label: "Find Proxy Substitute", iconType: "users" },
+    { label: "Leave Rules", iconType: "file-text" },
   ] : [
-    { label: "Load Demo Data", icon: "🚀", action: "demo" },
-    { label: "Remove Demo Data", icon: "🧹", action: "clear_demo" },
-    { label: "Upload Timetable (OCR)", icon: "📷", action: "ocr" },
-    { label: "Add Dr. Priya Sharma (CSE)", icon: "👨‍🏫" },
-    { label: "Generate Timetable", icon: "✨" },
-    { label: "Workload Analysis", icon: "📊" },
+    { label: "Load Demo Data", iconType: "database", action: "demo" },
+    { label: "Remove Demo Data", iconType: "trash", action: "clear_demo" },
+    { label: "Upload Timetable (OCR)", iconType: "camera", action: "ocr" },
+    { label: "Add Dr. Priya Sharma (CSE)", iconType: "user-plus" },
+    { label: "Generate Timetable", iconType: "zap" },
+    { label: "Workload Analysis", iconType: "bar-chart" },
   ];
 
   return (
@@ -329,54 +368,54 @@ export default function AIChatBot({
                   <h3 className="text-sm font-black text-white tracking-wide font-display">
                     Plannify AI Assistant
                   </h3>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/30 flex items-center gap-1">
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[9px] font-bold border border-indigo-500/30 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     Llama 3.3 70B
                   </span>
                 </div>
-                <p className="text-[10px] text-amber-200/60">Timetable & Operational Intelligence Engine</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Constraint Solver & OCR Intelligence</p>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
               <button
-                onClick={clearChat}
-                className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
-                title="Reset Chat"
+                onClick={handleResetChat}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                title="Reset conversation"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
               </button>
+
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors hidden sm:block"
-                title={isExpanded ? "Collapse Window" : "Expand Window"}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors hidden sm:block"
+                title={isExpanded ? "Collapse window" : "Expand window"}
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  {isExpanded ? (
-                    <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3" />
-                  ) : (
-                    <path d="M15 3h6v6m0-6L14 11M9 21H3v-6m0 6l7-7" />
-                  )}
-                </svg>
+                {isExpanded ? (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/></svg>
+                ) : (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                )}
               </button>
+
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition-colors"
-                title="Close AI Assistant"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                title="Close Co-Pilot"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
           </div>
 
-          {/* Messages Container */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-slate-800 bg-slate-950/40">
+          {/* Messages Scroll Area */}
+          <div className="flex-1 p-4 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
             {messages.map((msg) => {
               const isUser = msg.sender === 'user';
               return (
                 <div
                   key={msg.id}
-                  className={`flex items-start gap-2.5 max-w-[88%] ${
+                  className={`flex gap-3 max-w-[88%] ${
                     isUser ? "ml-auto flex-row-reverse" : "mr-auto"
                   }`}
                 >
@@ -384,10 +423,10 @@ export default function AIChatBot({
                     className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 mt-1 border ${
                       isUser
                         ? "bg-amber-600 text-white border-amber-400/30"
-                        : "bg-slate-800 text-amber-300 border-slate-700"
+                        : "bg-slate-800 text-indigo-300 border-slate-700 p-1"
                     }`}
                   >
-                    {isUser ? "U" : "🤖"}
+                    {isUser ? "U" : <PlannifyIconMark size={16} isWarm={false} />}
                   </div>
 
                   <div
@@ -400,8 +439,9 @@ export default function AIChatBot({
                     {msg.image && (
                       <div className="mb-2 overflow-hidden rounded-xl border border-white/20">
                         <img src={msg.image} alt="Uploaded for OCR" className="max-h-48 w-full object-cover" />
-                        <div className="bg-slate-950/80 px-2 py-1 text-[10px] text-slate-300 flex items-center gap-1">
-                          📷 Image attached for AI OCR processing
+                        <div className="bg-slate-950/80 px-2 py-1 text-[10px] text-slate-300 flex items-center gap-1.5">
+                          <svg className="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                          Image attached for AI OCR processing
                         </div>
                       </div>
                     )}
@@ -420,7 +460,11 @@ export default function AIChatBot({
                           className="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity flex items-center gap-1 text-[10px]"
                           title="Copy Markdown"
                         >
-                          {copiedId === msg.id ? "✓ Copied" : "📋 Copy"}
+                          {copiedId === msg.id ? (
+                            <span className="text-emerald-400 font-bold">Copied</span>
+                          ) : (
+                            <span>Copy</span>
+                          )}
                         </button>
                       )}
                     </div>
@@ -432,8 +476,8 @@ export default function AIChatBot({
             {/* Typing Indicator */}
             {isLoading && (
               <div className="flex items-center gap-2.5 mr-auto max-w-[85%]">
-                <div className="w-7 h-7 rounded-xl bg-slate-800 text-amber-300 border border-slate-700 flex items-center justify-center text-xs font-bold">
-                  🤖
+                <div className="w-7 h-7 rounded-xl bg-slate-800 text-indigo-300 border border-slate-700 flex items-center justify-center p-1">
+                  <PlannifyIconMark size={16} isWarm={false} />
                 </div>
                 <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center gap-2 rounded-tl-none">
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" />
@@ -459,7 +503,7 @@ export default function AIChatBot({
                         ...prev,
                         {
                           id: Date.now().toString(),
-                          text: "🚀 **Full Demo Data Loaded!**\n\nI have populated the timetable grid, departments, sections, faculty directory, and classroom allocations with complete demo data.",
+                          text: "**Academic Demo Dataset Loaded**\n\nI have populated the timetable grid, sections, faculty directory, and classroom allocations with complete demonstration data.",
                           sender: 'bot',
                           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         }
@@ -470,7 +514,7 @@ export default function AIChatBot({
                         ...prev,
                         {
                           id: Date.now().toString(),
-                          text: "🧹 **Demo Data Removed!**\n\nI have cleared all demo entries from the workspace. You are now in clean real implementation mode ready to add real faculty and subjects.",
+                          text: "**Workspace Reset to Clean State**\n\nAll demonstration data has been removed. You are now in real institutional operation mode ready to add active faculty and courses.",
                           sender: 'bot',
                           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         }
@@ -489,7 +533,7 @@ export default function AIChatBot({
                       : "bg-slate-800/90 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
                   }`}
                 >
-                  <span>{s.icon}</span>
+                  <SuggestionIcon type={s.iconType} />
                   <span>{s.label}</span>
                 </button>
               ))}
@@ -509,7 +553,7 @@ export default function AIChatBot({
                   onClick={() => { setPreviewUrl(null); setSelectedImage(null); }}
                   className="p-1 text-slate-400 hover:text-rose-400 transition-colors"
                 >
-                  ✕
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
             )}
