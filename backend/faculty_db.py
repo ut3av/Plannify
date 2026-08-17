@@ -288,11 +288,58 @@ def get_faculty(faculty_id: str) -> Optional[dict]:
     return f
 
 
+def _sanitize_faculty_payload(data: dict) -> dict:
+    """Cleans and standardizes faculty data for database operations."""
+    clean = {}
+    for k, v in data.items():
+        if isinstance(v, (datetime, date)):
+            clean[k] = v.isoformat() if isinstance(v, datetime) else v.strftime("%Y-%m-%d")
+        elif isinstance(v, str):
+            trimmed = v.strip()
+            clean[k] = trimmed if trimmed else None
+        else:
+            clean[k] = v
+
+    # Ensure joining_date is formatted as YYYY-MM-DD
+    if not clean.get("joining_date"):
+        clean["joining_date"] = date.today().strftime("%Y-%m-%d")
+    else:
+        clean["joining_date"] = _norm_date(clean["joining_date"])
+
+    # Ensure department_id is valid UUID or None if invalid
+    dept_id = clean.get("department_id")
+    if dept_id:
+        try:
+            uuid.UUID(str(dept_id))
+        except (ValueError, TypeError):
+            clean["department_id"] = None
+
+    return clean
+
+
 def create_faculty(data: dict) -> dict:
+    clean_data = _sanitize_faculty_payload(data)
     sb = get_supabase()
     if sb:
         try:
-            res = sb.table("faculty_profiles").insert(data).execute()
+            # Filter to allowed Supabase columns
+            allowed_cols = {
+                "id", "user_id", "teacher_name", "employee_id", "department_id", "designation",
+                "qualification", "employment_type", "joining_date", "phone", "emergency_contact",
+                "address", "photo_url", "status", "email"
+            }
+            sb_payload = {k: v for k, v in clean_data.items() if k in allowed_cols and v is not None}
+            
+            try:
+                res = sb.table("faculty_profiles").insert(sb_payload).execute()
+            except Exception as insert_err:
+                # If error is due to missing email column in Supabase schema, retry without email
+                if "email" in sb_payload and "email" in str(insert_err):
+                    sb_payload_no_email = {k: v for k, v in sb_payload.items() if k != "email"}
+                    res = sb.table("faculty_profiles").insert(sb_payload_no_email).execute()
+                else:
+                    raise insert_err
+
             f = res.data[0] if res.data else {}
             f["joining_date"] = _norm_date(f.get("joining_date"))
             f["created_at"] = _norm_datetime(f.get("created_at"))
@@ -301,7 +348,7 @@ def create_faculty(data: dict) -> dict:
         except Exception as e:
             # If duplicate employee_id, fetch existing
             try:
-                emp_id = data.get("employee_id")
+                emp_id = clean_data.get("employee_id")
                 if emp_id:
                     existing = sb.table("faculty_profiles").select("*").eq("employee_id", emp_id).single().execute()
                     if existing.data:
@@ -316,7 +363,7 @@ def create_faculty(data: dict) -> dict:
 
     conn = get_connection()
     cursor = conn.cursor()
-    emp_id = data.get("employee_id")
+    emp_id = clean_data.get("employee_id")
     if emp_id:
         cursor.execute("SELECT id FROM faculty_profiles WHERE employee_id = ?", (emp_id,))
         existing_row = cursor.fetchone()
@@ -324,9 +371,9 @@ def create_faculty(data: dict) -> dict:
             conn.close()
             return get_faculty(existing_row["id"]) or {}
 
-    fid = data.get("id") or str(uuid.uuid4())
+    fid = clean_data.get("id") or str(uuid.uuid4())
     now_iso = datetime.now(timezone.utc).isoformat()
-    joining_date = _norm_date(data.get("joining_date")) or date.today().isoformat()
+    joining_date = clean_data.get("joining_date") or date.today().isoformat()
 
     cursor.execute("""
         INSERT INTO faculty_profiles (
@@ -335,12 +382,12 @@ def create_faculty(data: dict) -> dict:
             address, photo_url, status, email, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        fid, data.get("user_id"), data.get("teacher_name"), emp_id,
-        data.get("department_id"), data.get("designation", "Lecturer"),
-        data.get("qualification"), data.get("employment_type", "full-time"),
-        joining_date, data.get("phone"), data.get("emergency_contact"),
-        data.get("address"), data.get("photo_url"), data.get("status", "active"),
-        data.get("email"),
+        fid, clean_data.get("user_id"), clean_data.get("teacher_name"), emp_id,
+        clean_data.get("department_id"), clean_data.get("designation", "Lecturer"),
+        clean_data.get("qualification"), clean_data.get("employment_type", "full-time"),
+        joining_date, clean_data.get("phone"), clean_data.get("emergency_contact"),
+        clean_data.get("address"), clean_data.get("photo_url"), clean_data.get("status", "active"),
+        clean_data.get("email"),
         now_iso, now_iso
     ))
     conn.commit()
@@ -349,11 +396,18 @@ def create_faculty(data: dict) -> dict:
 
 
 def update_faculty(faculty_id: str, data: dict) -> dict:
+    clean_data = _sanitize_faculty_payload(data)
     sb = get_supabase()
     if sb:
         try:
-            data["updated_at"] = datetime.now(timezone.utc).isoformat()
-            res = sb.table("faculty_profiles").update(data).eq("id", faculty_id).execute()
+            clean_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+            allowed_cols = {
+                "user_id", "teacher_name", "employee_id", "department_id", "designation",
+                "qualification", "employment_type", "joining_date", "phone", "emergency_contact",
+                "address", "photo_url", "status", "email", "updated_at"
+            }
+            sb_payload = {k: v for k, v in clean_data.items() if k in allowed_cols}
+            res = sb.table("faculty_profiles").update(sb_payload).eq("id", faculty_id).execute()
             f = res.data[0] if res.data else {}
             f["joining_date"] = _norm_date(f.get("joining_date"))
             f["created_at"] = _norm_datetime(f.get("created_at"))
@@ -364,13 +418,13 @@ def update_faculty(faculty_id: str, data: dict) -> dict:
 
     conn = get_connection()
     cursor = conn.cursor()
-    data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    clean_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     fields = []
     values = []
-    for k, v in data.items():
+    for k, v in clean_data.items():
         if k != "id":
             fields.append(f"{k} = ?")
-            values.append(_norm_date(v) if "date" in k else v)
+            values.append(v)
     if fields:
         values.append(faculty_id)
         cursor.execute(f"UPDATE faculty_profiles SET {', '.join(fields)} WHERE id = ?", values)

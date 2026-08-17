@@ -87,6 +87,13 @@ class FacultyCreate(BaseModel):
     def validate_joining_date(cls, v):
         return _parse_date_value(v)
 
+    @field_validator("department_id", "phone", "emergency_contact", "address", "photo_url", "email", "qualification", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v.strip() if isinstance(v, str) else v
+
 
 class FacultyUpdate(BaseModel):
     teacher_name: Optional[str] = None
@@ -99,6 +106,14 @@ class FacultyUpdate(BaseModel):
     address: Optional[str] = None
     photo_url: Optional[str] = None
     status: Optional[str] = None
+    email: Optional[str] = None
+
+    @field_validator("department_id", "phone", "emergency_contact", "address", "photo_url", "email", "qualification", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v.strip() if isinstance(v, str) else v
 
 
 class FacultyOut(BaseModel):

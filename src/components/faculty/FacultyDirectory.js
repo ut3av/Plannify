@@ -4,10 +4,21 @@ import DispatchPreviewModal from "../common/DispatchPreviewModal";
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
-export default function FacultyDirectory({ onSelectFaculty, teachers = [], subjects = [], result }) {
+export default function FacultyDirectory({
+  onSelectFaculty,
+  teachers = [],
+  subjects = [],
+  result,
+  onAddFaculty,
+  onTeachersChange,
+  onSwitchUser,
+}) {
   const [faculty, setFaculty] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -16,10 +27,15 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
   const [deletedKeys, setDeletedKeys] = useState(new Set());
   const [dispatchTeacher, setDispatchTeacher] = useState(null);
   const [form, setForm] = useState({
-    teacher_name: "", employee_id: "", department_id: "",
-    designation: "Lecturer", qualification: "", employment_type: "full-time",
+    teacher_name: "",
+    employee_id: "",
+    department_id: "",
+    designation: "Assistant Professor",
+    qualification: "",
+    employment_type: "full-time",
     joining_date: new Date().toISOString().split("T")[0],
-    phone: "", email: "",
+    phone: "",
+    email: "",
   });
 
   useEffect(() => {
@@ -98,7 +114,7 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
           ...f,
           email: f.email || (typeof matchingTeacher === 'object' ? matchingTeacher?.email : null) || `${f.teacher_name?.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
           phone: f.phone || (typeof matchingTeacher === 'object' ? matchingTeacher?.phone : null) || "+91-9876543210",
-          department_name: f.department_name || (typeof matchingTeacher === 'object' ? matchingTeacher?.department : null) || "Academic Operations"
+          department_name: f.department_name || (typeof matchingTeacher === 'object' ? matchingTeacher?.department : null) || "Computer Applications"
         };
       });
 
@@ -174,13 +190,72 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsSubmitting(true);
+
     try {
-      await axios.post(`${API}/faculty/`, form);
+      const deptObj = departments.find(d => d.id === form.department_id);
+      const deptName = deptObj ? deptObj.name : "Computer Applications";
+
+      const payload = {
+        teacher_name: form.teacher_name.trim(),
+        employee_id: form.employee_id.trim() || `EMP-LNCT-${Math.floor(1000 + Math.random() * 9000)}`,
+        department_id: form.department_id || null,
+        designation: form.designation || "Assistant Professor",
+        qualification: form.qualification.trim() || "M.Tech / Ph.D",
+        employment_type: form.employment_type || "full-time",
+        joining_date: form.joining_date || new Date().toISOString().split("T")[0],
+        phone: form.phone.trim() || "+91-9876543210",
+        email: form.email.trim() || `${form.teacher_name.trim().toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
+        status: "active",
+      };
+
+      const res = await axios.post(`${API}/faculty/`, payload);
+      const created = res.data;
+
+      // Update parent teachers state so it's instantly usable in Subjects, Sections & Solver
+      const newTeacherObj = {
+        name: payload.teacher_name,
+        department: deptName,
+        email: payload.email,
+        phone: payload.phone,
+        employee_id: payload.employee_id,
+        designation: payload.designation,
+        free_periods: 1,
+        id: created?.id,
+      };
+
+      if (onAddFaculty) {
+        onAddFaculty(newTeacherObj);
+      } else if (onTeachersChange && Array.isArray(teachers)) {
+        if (!teachers.some(t => (t.name || t) === payload.teacher_name)) {
+          onTeachersChange([...teachers, newTeacherObj]);
+        }
+      }
+
+      setSuccessMessage(`✨ Faculty "${payload.teacher_name}" registered successfully & synced with academic state!`);
       setShowAddForm(false);
-      setForm({ teacher_name: "", employee_id: "", department_id: "", designation: "Lecturer", qualification: "", employment_type: "full-time", joining_date: new Date().toISOString().split("T")[0], phone: "", email: "" });
-      fetchFaculty();
+      setForm({
+        teacher_name: "",
+        employee_id: "",
+        department_id: "",
+        designation: "Assistant Professor",
+        qualification: "",
+        employment_type: "full-time",
+        joining_date: new Date().toISOString().split("T")[0],
+        phone: "",
+        email: "",
+      });
+
+      await fetchFaculty();
+      setTimeout(() => setSuccessMessage(""), 6000);
     } catch (e) {
-      alert(e.response?.data?.detail || "Failed to add faculty");
+      console.error("Failed to add faculty:", e);
+      const errDetail = e.response?.data?.detail || e.message || "Failed to add faculty";
+      setErrorMessage(typeof errDetail === "string" ? errDetail : "Failed to add faculty profile. Please check the inputs.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -209,73 +284,183 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
 
   const getInitials = (name) => {
     return (name || "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
-  };
-
-  return (
+  };  return (
     <div className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Faculty Directory</h2>
-          <p className="text-sm text-slate-500 mt-1">{filtered.length} active faculty profiles registered</p>
+          <p className="text-sm text-slate-500 mt-1">{filtered.length} active faculty profiles registered • Click any faculty to view portal or details</p>
         </div>
-        <button onClick={() => setShowAddForm(!showAddForm)} className="btn-primary gap-2">
+        <button
+          onClick={() => {
+            setShowAddForm(!showAddForm);
+            setErrorMessage("");
+            setSuccessMessage("");
+          }}
+          className="btn-primary gap-2"
+        >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Faculty
+          {showAddForm ? "Close Form" : "Add Faculty"}
         </button>
       </div>
 
+      {/* Success Alert Banner */}
+      {successMessage && (
+        <div className="animate-slide-down flex items-center justify-between p-4 mb-6 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-semibold shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="text-base">✅</span>
+            <span>{successMessage}</span>
+          </div>
+          <button onClick={() => setSuccessMessage("")} className="text-emerald-600 dark:text-emerald-400 hover:opacity-80">✕</button>
+        </div>
+      )}
+
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div className="animate-slide-down flex items-center justify-between p-4 mb-6 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-800 dark:text-red-300 text-xs font-semibold shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="text-base">⚠️</span>
+            <span>{errorMessage}</span>
+          </div>
+          <button onClick={() => setErrorMessage("")} className="text-red-600 dark:text-red-400 hover:opacity-80">✕</button>
+        </div>
+      )}
+
       {/* Add Form */}
       {showAddForm && (
-        <div className="card p-6 mb-6 animate-slide-down">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">New Faculty Member Registration</h3>
-          <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="card p-6 mb-6 animate-slide-down bg-slate-900/90 border border-slate-800">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Full Name *</label>
-              <input type="text" className="input" placeholder="Dr. John Doe" value={form.teacher_name} onChange={e => setForm({ ...form, teacher_name: e.target.value })} required />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">New Faculty Member Registration</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Registering here immediately synchronizes with both the backend DB and the active timetable solver.</p>
+            </div>
+            <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">
+              Admin Onboarding
+            </span>
+          </div>
+
+          <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Full Name *</label>
+              <input
+                type="text"
+                className="input"
+                placeholder="e.g. Dr. John Doe"
+                value={form.teacher_name}
+                onChange={e => setForm({ ...form, teacher_name: e.target.value })}
+                required
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Employee ID *</label>
-              <input type="text" className="input" placeholder="EMP-LNCT-1001" value={form.employee_id} onChange={e => setForm({ ...form, employee_id: e.target.value })} required />
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Employee ID *</label>
+              <input
+                type="text"
+                className="input font-mono"
+                placeholder="EMP-LNCT-1001"
+                value={form.employee_id}
+                onChange={e => setForm({ ...form, employee_id: e.target.value })}
+                required
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email Address</label>
-              <input type="email" className="input" placeholder="faculty@lnctu.ac.in" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Email Address</label>
+              <input
+                type="email"
+                className="input"
+                placeholder="faculty@lnctu.ac.in"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Phone / Mobile</label>
-              <input type="tel" className="input" placeholder="+91-9876543210" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Phone / Mobile</label>
+              <input
+                type="tel"
+                className="input"
+                placeholder="+91-9876543210"
+                value={form.phone}
+                onChange={e => setForm({ ...form, phone: e.target.value })}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Department</label>
-              <select className="input" value={form.department_id} onChange={e => setForm({ ...form, department_id: e.target.value })}>
-                <option value="">Select Department</option>
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Department</label>
+              <select
+                className="input cursor-pointer"
+                value={form.department_id}
+                onChange={e => setForm({ ...form, department_id: e.target.value })}
+              >
+                <option value="">Select Department (Default: Computer Applications)</option>
                 {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Designation</label>
-              <select className="input" value={form.designation} onChange={e => setForm({ ...form, designation: e.target.value })}>
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Designation</label>
+              <select
+                className="input cursor-pointer"
+                value={form.designation}
+                onChange={e => setForm({ ...form, designation: e.target.value })}
+              >
                 {["Professor", "Associate Professor", "Assistant Professor", "Lecturer", "Lab Instructor", "Visiting Faculty"].map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Employment Type</label>
-              <select className="input" value={form.employment_type} onChange={e => setForm({ ...form, employment_type: e.target.value })}>
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Employment Type</label>
+              <select
+                className="input cursor-pointer"
+                value={form.employment_type}
+                onChange={e => setForm({ ...form, employment_type: e.target.value })}
+              >
                 {["full-time", "part-time", "guest", "contractual"].map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Qualification</label>
-              <input type="text" className="input" placeholder="Ph.D. in Computer Science" value={form.qualification} onChange={e => setForm({ ...form, qualification: e.target.value })} />
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Qualification</label>
+              <input
+                type="text"
+                className="input"
+                placeholder="Ph.D. / M.Tech in CS"
+                value={form.qualification}
+                onChange={e => setForm({ ...form, qualification: e.target.value })}
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Joining Date</label>
-              <input type="date" className="input" value={form.joining_date} onChange={e => setForm({ ...form, joining_date: e.target.value })} />
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Joining Date</label>
+              <input
+                type="date"
+                className="input cursor-pointer"
+                value={form.joining_date}
+                onChange={e => setForm({ ...form, joining_date: e.target.value })}
+              />
             </div>
             <div className="flex items-end gap-3 md:col-span-2 lg:col-span-3 pt-2">
-              <button type="submit" className="btn-primary" disabled={!form.teacher_name || !form.employee_id}>Save Faculty Profile</button>
-              <button type="button" onClick={() => setShowAddForm(false)} className="btn-secondary">Cancel</button>
+              <button
+                type="submit"
+                className="btn-primary gap-2"
+                disabled={!form.teacher_name || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Saving Faculty...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>✨ Save & Synchronize Faculty Profile</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setErrorMessage("");
+                }}
+                className="btn-secondary"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </button>
             </div>
           </form>
         </div>
@@ -303,7 +488,7 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
           </select>
           <div className="flex border rounded-lg overflow-hidden" style={{ borderColor: "var(--border-default)" }}>
             <button onClick={() => setViewMode("grid")} className={`px-3 py-2 text-xs font-semibold ${viewMode === "grid" ? "bg-indigo-600 text-white" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"}`}>
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             </button>
             <button onClick={() => setViewMode("table")} className={`px-3 py-2 text-xs font-semibold ${viewMode === "table" ? "bg-indigo-600 text-white" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"}`}>
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -326,72 +511,97 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
       ) : viewMode === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map(f => (
-            <div key={f.id || f.teacher_name} className="card p-5 cursor-pointer hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group" onClick={() => onSelectFaculty && onSelectFaculty(f)}>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-sm shrink-0 group-hover:scale-105 transition-transform">
-                  {getInitials(f.teacher_name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1">
-                    <p className="font-bold text-slate-900 dark:text-white truncate text-sm">{f.teacher_name}</p>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className={`badge ${statusColor(f.status)}`}>{f.status}</span>
-                      <button
-                        title="Dispatch Schedule via Email/WhatsApp"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDispatchTeacher(f);
-                        }}
-                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-500/30 transition-all flex items-center gap-1 shadow"
-                      >
-                        ✉️ Schedule
-                      </button>
-                      {f.status !== "active" && (
-                        <button
-                          title="Reinstate Faculty Member to Active"
-                          onClick={(e) => handleActivate(e, f)}
-                          className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition-all flex items-center gap-1 shadow"
+            <div key={f.id || f.teacher_name} className="card p-5 cursor-pointer hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group relative flex flex-col justify-between" onClick={() => onSelectFaculty && onSelectFaculty(f)}>
+              <div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-sm shrink-0 group-hover:scale-105 transition-transform">
+                    {getInitials(f.teacher_name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="font-bold text-slate-900 dark:text-white truncate text-sm">{f.teacher_name}</p>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`badge ${statusColor(f.status)}`}>{f.status}</span>
+                        <button 
+                          title="Remove Faculty Member" 
+                          onClick={(e) => handleDelete(e, f)}
+                          className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         >
-                          ⚡ Activate
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
-                      )}
-                      <button 
-                        title="Remove Faculty Member" 
-                        onClick={(e) => handleDelete(e, f)}
-                        className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                      >
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-xs text-indigo-400/90 font-semibold mt-0.5">{f.designation}</p>
-                  
-                  <div className="mt-3 space-y-1.5 text-xs text-slate-400">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60 text-slate-300">
-                        {f.employee_id}
-                      </span>
-                      {f.department_name && (
-                        <span className="truncate text-slate-400 text-[11px]">
-                          • {f.department_name}
+                    <p className="text-xs text-indigo-400/90 font-semibold mt-0.5">{f.designation}</p>
+                    
+                    <div className="mt-3 space-y-1.5 text-xs text-slate-400">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60 text-slate-300">
+                          {f.employee_id}
                         </span>
+                        {f.department_name && (
+                          <span className="truncate text-slate-400 text-[11px]">
+                            • {f.department_name}
+                          </span>
+                        )}
+                      </div>
+
+                      {f.email && (
+                        <p className="truncate flex items-center gap-1.5 text-slate-400 hover:text-indigo-300 transition-colors">
+                          <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                          <span className="truncate">{f.email}</span>
+                        </p>
+                      )}
+
+                      {f.phone && (
+                        <p className="flex items-center gap-1.5 text-slate-400">
+                          <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                          <span>{f.phone}</span>
+                        </p>
                       )}
                     </div>
-
-                    {f.email && (
-                      <p className="truncate flex items-center gap-1.5 text-slate-400 hover:text-indigo-300 transition-colors">
-                        <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        <span className="truncate">{f.email}</span>
-                      </p>
-                    )}
-
-                    {f.phone && (
-                      <p className="flex items-center gap-1.5 text-slate-400">
-                        <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                        <span>{f.phone}</span>
-                      </p>
-                    )}
                   </div>
+                </div>
+              </div>
+
+              {/* Bottom Quick-Action Buttons */}
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                {onSwitchUser ? (
+                  <button
+                    onClick={() => onSwitchUser({
+                      role: "teacher",
+                      name: f.teacher_name,
+                      email: f.email,
+                      department: f.department_name,
+                      designation: f.designation,
+                      employee_id: f.employee_id,
+                      id: f.id
+                    })}
+                    className="flex-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-900 dark:text-amber-300 border border-amber-500/30 transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                    title={`Open Faculty Portal as ${f.teacher_name}`}
+                  >
+                    <span>👨‍🏫 Open Faculty Portal ➔</span>
+                  </button>
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-400">Account Verified ✓</span>
+                )}
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    title="Dispatch Schedule via Email/WhatsApp"
+                    onClick={() => setDispatchTeacher(f)}
+                    className="px-2 py-1.5 rounded-xl text-[11px] font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/20 transition-all"
+                  >
+                    ✉️
+                  </button>
+                  {f.status !== "active" && (
+                    <button
+                      title="Reinstate Faculty Member to Active"
+                      onClick={(e) => handleActivate(e, f)}
+                      className="px-2 py-1.5 rounded-xl text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all"
+                    >
+                      ⚡
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -431,6 +641,23 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
                   <td><span className={`badge ${statusColor(f.status)}`}>{f.status}</span></td>
                   <td>
                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      {onSwitchUser && (
+                        <button
+                          onClick={() => onSwitchUser({
+                            role: "teacher",
+                            name: f.teacher_name,
+                            email: f.email,
+                            department: f.department_name,
+                            designation: f.designation,
+                            employee_id: f.employee_id,
+                            id: f.id
+                          })}
+                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 transition-colors flex items-center gap-1"
+                          title={`Switch to Faculty Portal as ${f.teacher_name}`}
+                        >
+                          👨‍🏫 Portal
+                        </button>
+                      )}
                       <button
                         title="Dispatch Schedule via Email/WhatsApp"
                         onClick={() => setDispatchTeacher(f)}
@@ -448,7 +675,7 @@ export default function FacultyDirectory({ onSelectFaculty, teachers = [], subje
                         </button>
                       )}
                       <button 
-                        title="Remove Faculty Member"
+                        title="Remove Faculty Member" 
                         onClick={(e) => handleDelete(e, f)}
                         className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-colors"
                       >

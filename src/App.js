@@ -29,6 +29,7 @@ const IntegrationsSection = lazy(() => import("./components/IntegrationsSection"
 const LogsSection = lazy(() => import("./components/LogsSection"));
 const ReportsCenter = lazy(() => import("./components/reports/ReportsCenter"));
 const AIChatBot = lazy(() => import("./components/AIChatBot"));
+const PersonaSwitcher = lazy(() => import("./components/common/PersonaSwitcher"));
 
 const parseCloudJson = (value, fallback) => {
   if (value === null || value === undefined || value === "") return fallback;
@@ -1117,24 +1118,55 @@ export default function App() {
   };
 
 
+  const [showPersonaSwitcher, setShowPersonaSwitcher] = useState(false);
+
+  const handleSwitchUser = useCallback((newUser) => {
+    setUser(newUser);
+    if (newUser.role) {
+      setUserRole(newUser.role === "admin" ? "Admin" : "Faculty");
+    }
+  }, []);
+
+  const handleSwitchRole = useCallback((newRole) => {
+    setUser(prev => ({ ...(prev || {}), role: newRole }));
+    setUserRole(newRole === "admin" ? "Admin" : "Faculty");
+  }, []);
+
+  const handleAddFaculty = useCallback((newTeacher) => {
+    setTeachers(prev => {
+      const exists = prev.some(t => (t.name || t)?.trim().toLowerCase() === newTeacher.name?.trim().toLowerCase());
+      if (exists) return prev;
+      return [...prev, newTeacher];
+    });
+    saveToCloud(true);
+  }, [saveToCloud]);
+
   useEffect(() => {
     // Check active session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        const role = session.user.user_metadata?.role || (session.user.email === "admin@lnctu.ac.in" ? "admin" : "teacher");
         setUser({ 
-           role: session.user.user_metadata?.role || "teacher", 
-           name: session.user.user_metadata?.name || session.user.email 
+           role, 
+           name: session.user.user_metadata?.name || session.user.email,
+           email: session.user.email,
+           user_metadata: session.user.user_metadata || {},
         });
+        setUserRole(role === "admin" ? "Admin" : "Faculty");
       }
     });
 
     // Listen for auth state changes (login/logout/signup)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        const role = session.user.user_metadata?.role || (session.user.email === "admin@lnctu.ac.in" ? "admin" : "teacher");
         setUser({ 
-           role: session.user.user_metadata?.role || "teacher", 
-           name: session.user.user_metadata?.name || session.user.email 
+           role, 
+           name: session.user.user_metadata?.name || session.user.email,
+           email: session.user.email,
+           user_metadata: session.user.user_metadata || {},
         });
+        setUserRole(role === "admin" ? "Admin" : "Faculty");
       } else {
         setUser(null);
       }
@@ -1166,7 +1198,12 @@ export default function App() {
         <TeacherDashboard
           user={user}
           result={result}
+          teachers={teachers}
           onLogout={handleLogout}
+          onSwitchUser={handleSwitchUser}
+          onSwitchRole={handleSwitchRole}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
       </Suspense>
     );
@@ -1190,6 +1227,10 @@ export default function App() {
       onLogout={handleLogout}
       theme={theme}
       onToggleTheme={toggleTheme}
+      onSwitchUser={handleSwitchUser}
+      onSwitchRole={handleSwitchRole}
+      teachers={teachers}
+      onOpenPersonaSwitcher={() => setShowPersonaSwitcher(true)}
     >
       {/* Global Alerts */}
       <ErrorAlert error={error} />
@@ -1261,7 +1302,15 @@ export default function App() {
               <FacultyProfile faculty={selectedFaculty} onBack={() => setSelectedFaculty(null)} />
             ) : (
               <div className="space-y-8">
-                <FacultyDirectory teachers={teachers} subjects={subjects} result={result} onSelectFaculty={(f) => setSelectedFaculty(f)} />
+                <FacultyDirectory
+                  teachers={teachers}
+                  subjects={subjects}
+                  result={result}
+                  onSelectFaculty={(f) => setSelectedFaculty(f)}
+                  onAddFaculty={handleAddFaculty}
+                  onTeachersChange={(updated) => { setTeachers(updated); saveToCloud(true); }}
+                  onSwitchUser={handleSwitchUser}
+                />
                 <AttendanceDashboard />
               </div>
             )}
@@ -1404,6 +1453,20 @@ export default function App() {
           }}
         />
       </Suspense>
+
+      {/* Live Persona Switcher Modal */}
+      {showPersonaSwitcher && (
+        <Suspense fallback={null}>
+          <PersonaSwitcher
+            currentRole={user?.role || userRole}
+            currentUser={user}
+            teachers={teachers}
+            onSwitchUser={handleSwitchUser}
+            onAddFaculty={handleAddFaculty}
+            onClose={() => setShowPersonaSwitcher(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Global Loading Overlay */}
       {loading && activeTab !== "timetable" && (

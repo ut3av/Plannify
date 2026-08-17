@@ -21,6 +21,9 @@ export default function HeaderBar({
   onLogout,
   theme = 'warm-white',
   onToggleTheme,
+  onSwitchUser,
+  teachers = [],
+  onOpenPersonaSwitcher,
 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
@@ -239,6 +242,32 @@ export default function HeaderBar({
         )}
 
 
+        {/* Quick Faculty Portal Switcher */}
+        {onSwitchUser && (
+          <button
+            onClick={() => {
+              const firstTeacher = Array.isArray(teachers) && teachers.length > 0
+                ? (typeof teachers[0] === 'object' ? teachers[0].name : teachers[0])
+                : "Faculty Member";
+              onSwitchUser({
+                role: "teacher",
+                name: firstTeacher,
+                department: "Computer Applications",
+                designation: "Assistant Professor",
+              });
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+              isWarm
+                ? 'bg-amber-100/70 hover:bg-amber-200/80 border-amber-300 text-amber-900'
+                : 'bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/30 text-amber-300'
+            }`}
+            title="Switch into Faculty Portal & personalized teacher view"
+          >
+            <span>👨‍🏫</span>
+            <span className="hidden sm:inline">Faculty Portal</span>
+          </button>
+        )}
+
         {/* User Profile Dropdown */}
         <div className="relative">
           <button
@@ -267,19 +296,54 @@ export default function HeaderBar({
           </button>
 
           {showProfileMenu && (
-            <div className={`absolute right-0 mt-2 w-48 rounded-2xl border shadow-2xl p-2 z-50 text-xs animate-fade-in ${
+            <div className={`absolute right-0 mt-2 w-52 rounded-2xl border shadow-2xl p-2 z-50 text-xs animate-fade-in ${
               isWarm
                 ? 'bg-[#fffdf8] border-[#e8ddd0] text-[#2c1810]'
                 : 'bg-slate-900 border-slate-700 text-slate-200'
             }`}>
               <div className={`px-3 py-2 border-b ${isWarm ? 'border-[#e8ddd0]' : 'border-slate-800'}`}>
                 <p className={`font-bold truncate ${isWarm ? 'text-[#2c1810]' : 'text-white'}`}>
-                  {user?.email || 'admin@planify.edu'}
+                  {user?.email || 'admin@lnctu.ac.in'}
                 </p>
                 <p className={`text-[10px] mt-0.5 ${isWarm ? 'text-amber-600' : 'text-indigo-400'}`}>
-                  Academic OS Admin
+                  Academic Dean / Admin
                 </p>
               </div>
+
+              {onSwitchUser && (
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    const firstTeacher = Array.isArray(teachers) && teachers.length > 0
+                      ? (typeof teachers[0] === 'object' ? teachers[0].name : teachers[0])
+                      : "Faculty Member";
+                    onSwitchUser({
+                      role: "teacher",
+                      name: firstTeacher,
+                      department: "Computer Applications",
+                      designation: "Assistant Professor",
+                    });
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-amber-500/10 text-amber-800 dark:text-amber-300 flex items-center gap-2 mt-1 font-semibold transition-colors"
+                >
+                  <span>👨‍🏫</span>
+                  <span>Open Faculty Portal</span>
+                </button>
+              )}
+
+              {onOpenPersonaSwitcher && (
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    onOpenPersonaSwitcher();
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-2 font-semibold transition-colors"
+                >
+                  <span>🔄</span>
+                  <span>Switch Persona / Role</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   setShowProfileMenu(false);

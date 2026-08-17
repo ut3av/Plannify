@@ -7,6 +7,7 @@ export default function PersonaSwitcher({
   currentUser,
   teachers = [],
   onSwitchUser,
+  onAddFaculty,
   onClose,
 }) {
   const [activeTab, setActiveTab] = useState("select"); // "select" | "new"
@@ -25,6 +26,9 @@ export default function PersonaSwitcher({
       name: tName,
       email: tEmail,
       department: (typeof teacher === "object" && teacher.department) || "Computer Applications",
+      designation: (typeof teacher === "object" && teacher.designation) || "Assistant Professor",
+      employee_id: (typeof teacher === "object" && teacher.employee_id) || "EMP-LNCT-1001",
+      id: (typeof teacher === "object" && teacher.id) || undefined,
     });
     onClose && onClose();
   };
@@ -58,10 +62,27 @@ export default function PersonaSwitcher({
       status: "active",
     };
 
+    let createdId = undefined;
     try {
-      await axios.post(`${API_BASE_URL}/faculty/`, newFacultyPayload).catch(() => null);
+      const res = await axios.post(`${API_BASE_URL}/faculty/`, newFacultyPayload);
+      if (res.data?.id) createdId = res.data.id;
     } catch {
       // Handled gracefully
+    }
+
+    const newTeacherObj = {
+      name: newTeacherName.trim(),
+      email,
+      phone: newFacultyPayload.phone,
+      department: newDept,
+      designation: newDesignation,
+      employee_id: empId,
+      free_periods: 1,
+      id: createdId,
+    };
+
+    if (onAddFaculty) {
+      onAddFaculty(newTeacherObj);
     }
 
     onSwitchUser({
@@ -70,6 +91,8 @@ export default function PersonaSwitcher({
       email,
       department: newDept,
       designation: newDesignation,
+      employee_id: empId,
+      id: createdId,
       isNew: true,
     });
     setIsCreating(false);
