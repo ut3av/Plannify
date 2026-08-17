@@ -29,7 +29,7 @@ const NAV_GROUPS = [
       { id: "reschedule", label: "Reschedule Engine", icon: "refresh-cw", badge: "AI" },
       { id: "integrations", label: "Automation & Broadcast", icon: "zap", badge: "Live" },
       { id: "history", label: "Version Control & Audit", icon: "history", badge: null },
-      { id: "logs", label: "System Mission Control", icon: "terminal", badge: null },
+      { id: "settings", label: "System Settings", icon: "settings", badge: null },
     ],
   }, {
     title: "REPORTS",
@@ -90,14 +90,7 @@ export default function SidebarNav({
             return null;
           }
 
-          // Filter out Leave Apply / Substitutions for Admin role (restricted to Teacher interface)
-          const filteredItems = group.items.filter(item => {
-            if (!isFaculty && (item.id === "leave" || item.id === "substitutions")) {
-              return false;
-            }
-            return true;
-          });
-
+          const filteredItems = group.items;
           if (filteredItems.length === 0) return null;
 
           return (
@@ -184,7 +177,7 @@ export default function SidebarNav({
             <img src="/favicon.png" alt="Plannify" className="w-4 h-4 object-contain drop-shadow-sm" />
             <BrandLogo size="xs" isWarm={isWarm} />
           </div>
-          <span className={`font-mono text-[10px] font-bold ${isWarm ? 'text-amber-400' : 'text-purple-400'}`}>v2.0</span>
+          <span className={`font-mono text-[10px] font-bold ${isWarm ? 'text-amber-400' : 'text-purple-400'}`}>v3.69.0</span>
         </div>
       )}
     </aside>

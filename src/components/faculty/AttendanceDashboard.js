@@ -14,7 +14,7 @@ const STATUS_COLORS = {
   holiday: { bg: "#f1f5f9", text: "#94a3b8", label: "Holiday" },
 };
 
-export default function AttendanceDashboard() {
+export default function AttendanceDashboard({ facultyId, isTeacherView = false }) {
   const [records, setRecords] = useState([]);
   const [faculty, setFaculty] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ export default function AttendanceDashboard() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [importResult, setImportResult] = useState(null);
   const [showManualForm, setShowManualForm] = useState(false);
-  const [manualForm, setManualForm] = useState({ faculty_id: "", date: viewDate, punch_in: "", punch_out: "", status: "present", remarks: "" });
+  const [manualForm, setManualForm] = useState({ faculty_id: facultyId || "", date: viewDate, punch_in: "", punch_out: "", status: "present", remarks: "" });
   const fileRef = useRef();
 
   const fetchFaculty = useCallback(async () => {
@@ -37,20 +37,30 @@ export default function AttendanceDashboard() {
   const fetchDailyRecords = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/attendance/`, { params: { date: viewDate } });
-      setRecords(res.data || []);
+      const params = { date: viewDate };
+      if (facultyId) params.faculty_id = facultyId;
+      const res = await axios.get(`${API}/attendance/`, { params });
+      let data = res.data || [];
+      if (facultyId && Array.isArray(data)) {
+        data = data.filter(r => r.faculty_id === facultyId);
+      }
+      setRecords(data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [viewDate]);
+  }, [viewDate, facultyId]);
 
   const fetchMonthlyRecords = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API}/attendance/report/monthly`, { params: { month: selectedMonth, year: selectedYear } });
-      setRecords(res.data || []);
+      let data = res.data || [];
+      if (facultyId && Array.isArray(data)) {
+        data = data.filter(r => r.faculty_id === facultyId);
+      }
+      setRecords(data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, facultyId]);
 
   useEffect(() => {
     fetchFaculty();
@@ -123,38 +133,46 @@ export default function AttendanceDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Attendance Dashboard</h2>
-          <p className="text-sm text-slate-500 mt-1">Track faculty attendance from biometric hardware punch machines and live influx simulations</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            {isTeacherView ? "Personal Attendance Ledger" : "Attendance Dashboard"}
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            {isTeacherView
+              ? "View your biometric check-ins, punch logs, and compliance records"
+              : "Track faculty attendance from biometric hardware punch machines and live influx simulations"}
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={handleSimulateInflux}
-            disabled={simulating}
-            className="btn-gradient gap-2 text-xs py-2 px-3.5 font-bold shadow-md hover:shadow-indigo-500/25 transition-all flex items-center"
-            title="Simulate realistic morning biometric check-ins (Hackathon Live Demo)"
-          >
-            {simulating ? (
-              <>
-                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Simulating Influx...
-              </>
-            ) : (
-              <>
-                <span>⚡</span>
-                Simulate Morning Influx (Live Demo)
-              </>
-            )}
-          </button>
-          <button onClick={() => setShowManualForm(!showManualForm)} className="btn-secondary gap-2 text-sm">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Manual Entry
-          </button>
-          <label className="btn-primary gap-2 cursor-pointer text-sm">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Import CSV
-            <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
-          </label>
-        </div>
+        {!isTeacherView && (
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleSimulateInflux}
+              disabled={simulating}
+              className="btn-gradient gap-2 text-xs py-2 px-3.5 font-bold shadow-md hover:shadow-indigo-500/25 transition-all flex items-center"
+              title="Simulate realistic morning biometric check-ins (Hackathon Live Demo)"
+            >
+              {simulating ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Simulating Influx...
+                </>
+              ) : (
+                <>
+                  <span>⚡</span>
+                  Simulate Morning Influx (Live Demo)
+                </>
+              )}
+            </button>
+            <button onClick={() => setShowManualForm(!showManualForm)} className="btn-secondary gap-2 text-sm">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Manual Entry
+            </button>
+            <label className="btn-primary gap-2 cursor-pointer text-sm">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Import CSV
+              <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Simulation Banner */}

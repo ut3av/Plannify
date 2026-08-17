@@ -91,8 +91,8 @@ export default function SystemSettings({ userRole = "Super Admin" }) {
               <p className="text-[10px] text-slate-500 mt-1">Faculty exceeding this threshold trigger Early Warning Workload Insights.</p>
             </div>
 
-            <button type="submit" className="btn-primary w-full py-2.5 text-xs font-bold">
-              Save Institutional Configuration
+            <button type="submit" disabled={loading} className="btn-primary w-full py-2.5 text-xs font-bold">
+              {loading ? "Loading Settings..." : "Save Institutional Configuration"}
             </button>
           </form>
         </div>

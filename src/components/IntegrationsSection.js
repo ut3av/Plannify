@@ -75,8 +75,8 @@ export default function IntegrationsSection() {
       fetchLogs();
     } catch (err) {
       setDistributeStatus({
-        success: true,
-        message: "✨ Timetable schedules dispatched to all faculty members via Make Automation Webhook."
+        success: false,
+        error: err.response?.data?.detail || "Distribution request failed. Verify Make.com webhook configuration in .env.",
       });
     } finally {
       setDistributing(false);
@@ -99,47 +99,50 @@ export default function IntegrationsSection() {
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
                   Automation & Broadcast Center
                 </h1>
-                <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
-                  Make & Webhooks
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  ● Make.com Connected
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Automate timetable distribution, WhatsApp notifications, emergency alerts, and third-party ERP integrations.
+              <p className="text-xs text-slate-400 mt-1">
+                Automated multi-channel timetable broadcast engine via Email, WhatsApp, and real-time biometric hardware synchronization.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={testWebhook}
             disabled={loading}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-all flex items-center gap-2"
+            className="btn-secondary text-xs py-2.5 px-4 font-bold flex items-center gap-2"
           >
-            {loading ? "Pinging..." : "⚡ Ping Make Webhook"}
+            <span>⚡</span>
+            {loading ? "Testing..." : "Test Make Webhook"}
           </button>
           <button
             onClick={distributeTimetables}
             disabled={distributing}
-            className="btn-gradient text-xs py-2 px-4 font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20"
+            className="btn-gradient text-xs py-2.5 px-4 font-bold flex items-center gap-2 shadow-lg shadow-amber-500/20"
           >
-            {distributing ? "Broadcasting..." : "📢 Broadcast Timetables to All Faculty"}
+            <span>📢</span>
+            {distributing ? "Distributing..." : "Broadcast Timetables to All Faculty"}
           </button>
         </div>
       </div>
 
       {/* Alert Notices */}
       {status && (
-        <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 animate-slide-down ${status.success ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-amber-500/10 border-amber-500/30 text-amber-300"}`}>
+        <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 animate-slide-down ${status.success ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-red-500/10 border-red-500/30 text-red-300"}`}>
           <span>⚡</span>
           <span>{status.message || status.error}</span>
         </div>
       )}
 
       {distributeStatus && (
-        <div className="p-4 rounded-2xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-3 animate-slide-down">
-          <span>📢</span>
-          <span>{distributeStatus.message}</span>
+        <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 animate-slide-down ${distributeStatus.success ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-red-500/10 border-red-500/30 text-red-300"}`}>
+          <span>{distributeStatus.success ? "📢" : "⚠️"}</span>
+          <span>{distributeStatus.message || distributeStatus.error}</span>
         </div>
       )}
 

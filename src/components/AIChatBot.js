@@ -7,13 +7,15 @@ import { compressImage } from '../utils/imageOptimizer';
 import { API_BASE_URL } from '../apiConfig';
 import BrandLogo from './common/BrandLogo';
 
-export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
+export default function AIChatBot({ result, onExtractedData, onLoadDemo, isTeacherView = false, teacherName = "" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: "welcome",
-      text: "👋 **Hello! I am your Plannify.exe AI Co-Pilot.**\n\nI specialize in academic timetable optimization, teacher workload balancing, substitution management, and automated timetable OCR image extraction.\n\n*How can I assist your institution today?*",
+      text: isTeacherView
+        ? `👋 **Hello ${teacherName || "Faculty Member"}! I am your Personal Academic Assistant.**\n\nI can help you review your weekly classes, check workload balance, find proxy substitutes, and answer timetable queries.\n\n*How can I assist you today?*`
+        : "👋 **Hello! I am your Plannify.exe AI Co-Pilot.**\n\nI specialize in academic timetable optimization, teacher workload balancing, substitution management, and automated timetable OCR image extraction.\n\n*How can I assist your institution today?*",
       sender: 'bot',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
@@ -75,7 +77,7 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
     try {
       const response = await axios.post(`${API_BASE_URL}/chat`, {
         message: userMsg.text,
-        context: result || {},
+        context: { ...(result || {}), is_teacher_view: isTeacherView, teacher_name: teacherName },
         history: messages.map(m => ({ sender: m.sender, text: m.text })),
         image: imgToSend
       });

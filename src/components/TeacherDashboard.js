@@ -540,7 +540,7 @@ export default function TeacherDashboard({
                 </span>
               </div>
             </div>
-            <AttendanceDashboard />
+            <AttendanceDashboard facultyId={selectedTeacher?.id || user?.faculty_id || user?.id} isTeacherView={true} />
           </div>
         )}
 

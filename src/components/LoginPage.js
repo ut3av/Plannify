@@ -114,10 +114,10 @@ export default function LoginPage() {
         });
         if (signInError) throw signInError;
 
-        // Optionally update metadata if portalRole was explicitly chosen
-        if (signInData?.user) {
+        // Only set default role if user didn't already have one in metadata
+        if (signInData?.user && !signInData.user.user_metadata?.role) {
           await supabase.auth.updateUser({
-            data: { role: portalRole, name: name || signInData.user.user_metadata?.name || email.split('@')[0] }
+            data: { role: portalRole, name: name || email.split('@')[0] }
           });
         }
       }

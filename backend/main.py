@@ -103,7 +103,7 @@ DEFAULT_SLOTS = [
     "02:40 PM - 03:30 PM",
 ]
 
-app = FastAPI(title="Plannify — Academic Operations Platform", version="2.0.0")
+app = FastAPI(title="Plannify — Academic Operations Platform", version="3.69.0")
 
 # --- Faculty Management System Routers ---
 try:
@@ -151,7 +151,7 @@ def root():
     return {
         "status": "healthy",
         "service": "Planify Academic Operations Platform",
-        "version": "2.0.0",
+        "version": "3.69.0",
         "docs": "/docs"
     }
 

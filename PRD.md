@@ -1,6 +1,6 @@
 # Plannify.exe — Product Requirement Document (PRD)
 
-**Document Version**: 2.0.0  
+**Document Version**: 3.69.0  
 **Status**: Institutional Production Specification  
 **Target Platform**: University, College, and School ERP Ecosystems  
 
