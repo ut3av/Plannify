@@ -869,9 +869,11 @@ export default function App() {
   }, [saveToCloud]);
 
   useEffect(() => {
+    const isRecoveryUrl = typeof window !== 'undefined' && (window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery'));
+
     // Check active session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
+      if (session?.user && !isRecoveryUrl) {
         const role = session.user.user_metadata?.role || (session.user.email === "admin@lnctu.ac.in" ? "admin" : "teacher");
         setUser({ 
            role, 
@@ -883,8 +885,12 @@ export default function App() {
       }
     });
 
-    // Listen for auth state changes (login/logout/signup)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Listen for auth state changes (login/logout/signup/recovery)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        // Keep in login page to let the user set their new password
+        return;
+      }
       if (session?.user) {
         const role = session.user.user_metadata?.role || (session.user.email === "admin@lnctu.ac.in" ? "admin" : "teacher");
         setUser({ 
