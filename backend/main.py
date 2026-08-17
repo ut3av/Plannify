@@ -207,7 +207,7 @@ class ChatRequest(BaseModel):
     image: Optional[str] = None
 
 
-class N8nTestRequest(BaseModel):
+class MakeTestRequest(BaseModel):
     event: str = "manual_test"
     payload: dict = Field(default_factory=dict)
 
@@ -377,8 +377,7 @@ LAST_TIMETABLE: Optional[dict] = None
 
 
 def notify_make(event: str, data: dict) -> dict:
-    # Handle common typo in env or user request
-    webhook_url = (os.getenv("MAKE_WEBHOOK_URL") or os.getenv("N8N_WEBHOOK_URL") or "").strip()
+    webhook_url = os.getenv("MAKE_WEBHOOK_URL", "").strip()
     
     if not webhook_url:
         return {
@@ -1174,13 +1173,13 @@ def health_check():
 
 @app.get("/make/status")
 def make_status():
-    webhook_url = (os.getenv("MAKE_WEBHOOK_URL") or os.getenv("N8N_WEBHOOK_URL") or "").strip()
+    webhook_url = os.getenv("MAKE_WEBHOOK_URL", "").strip()
     webhook_host = urlparse(webhook_url).netloc if webhook_url else None
     return {
         "enabled": bool(webhook_url),
         "webhook_configured": bool(webhook_url),
         "webhook_host": webhook_host,
-        "provider": "Make.com" if "make.com" in (webhook_host or "") else "Self-Hosted",
+        "provider": "Make.com" if "make.com" in (webhook_host or "") else "Make Integration",
         "events": [
             "timetable.generated",
             "timetable.rescheduled",
@@ -1192,7 +1191,7 @@ def make_status():
 
 
 @app.post("/make/test")
-def test_make(request: N8nTestRequest):
+def test_make(request: MakeTestRequest):
     delivery = notify_make(
         request.event,
         {
@@ -1255,7 +1254,7 @@ def reschedule(request: RescheduleRequest):
         {"day": day, "slot": slot} for day, slot in UNAVAILABILITY[teacher]], }
     global LAST_TIMETABLE
     LAST_TIMETABLE = response
-    response["n8n_delivery"] = notify_n8n(
+    response["make_delivery"] = notify_make(
         "timetable.rescheduled",
         {
             "request": request.model_dump(),
@@ -1282,44 +1281,31 @@ def assign_proxy(request: RescheduleRequest):
             status_code=400,
             detail="A valid day is required for proxy assignment.")
 
-    blocked_slots = request.slots or LAST_REQUEST.time_slots
-    timetable = LAST_TIMETABLE["timetable"]
-
+    new_timetable = copy.deepcopy(LAST_TIMETABLE["timetable"])
+    new_assignments = []
     proxies_assigned = []
 
-    import copy
-    new_timetable = copy.deepcopy(timetable)
-    new_assignments = []
+    # Identify slots where the teacher is scheduled on the given day
+    if day in new_timetable:
+        for s in LAST_TIMETABLE.get("time_slots", []):
+            if s in new_timetable[day]:
+                classes_in_slot = new_timetable[day][s]
+                for cls in classes_in_slot:
+                    if cls.get("teacher") == teacher:
+                        proxy_teacher = find_available_proxy(
+                            teacher, day, s, new_timetable, LAST_REQUEST.teachers
+                        )
+                        if proxy_teacher:
+                            cls["original_teacher"] = teacher
+                            cls["teacher"] = proxy_teacher
+                            cls["is_proxy"] = True
+                            proxies_assigned.append(
+                                {"day": day, "slot": s, "original": teacher, "proxy": proxy_teacher}
+                            )
 
-    all_teachers = [t.name for t in LAST_REQUEST.teachers]
-
-    for d in DAYS:
-        for s in LAST_REQUEST.time_slots:
-            if d == day and s in blocked_slots:
-                # Need to find proxy for this teacher
-                slot_classes = new_timetable[d][s]
-                teacher_class_idx = -1
-                for idx, cls in enumerate(slot_classes):
-                    if cls["teacher"] == teacher:
-                        teacher_class_idx = idx
-                        break
-
-                if teacher_class_idx != -1:
-                    # Find busy teachers in this slot
-                    busy_teachers = {cls["teacher"] for cls in slot_classes}
-                    free_teachers = [
-                        t for t in all_teachers if t not in busy_teachers and t != teacher]
-
-                    if free_teachers:
-                        # Pick the first available
-                        proxy_teacher = free_teachers[0]
-                        slot_classes[teacher_class_idx]["teacher"] = proxy_teacher
-                        slot_classes[teacher_class_idx]["is_proxy"] = True
-                        slot_classes[teacher_class_idx]["original_teacher"] = teacher
-                        proxies_assigned.append(
-                            {"day": d, "slot": s, "original": teacher, "proxy": proxy_teacher})
-
-            # Rebuild assignments
+    # Rebuild assignments
+    for d in new_timetable:
+        for s in new_timetable[d]:
             for cls in new_timetable[d][s]:
                 new_assignments.append({"day": d, "slot": s, **cls})
 
@@ -1330,7 +1316,7 @@ def assign_proxy(request: RescheduleRequest):
         "proxies_assigned": proxies_assigned,
         "message": f"Assigned {len(proxies_assigned)} proxies for {teacher} on {day}."
     }
-    LAST_TIMETABLE["n8n_delivery"] = notify_n8n(
+    LAST_TIMETABLE["make_delivery"] = notify_make(
         "timetable.proxy_assigned",
         {
             "request": request.model_dump(),
@@ -1349,7 +1335,7 @@ class SaveTimetableRequest(BaseModel):
 @app.post("/save")
 def save_timetable(request: SaveTimetableRequest):
     tid = save_timetable_to_db(request.name, request.timetable_data)
-    delivery = notify_n8n(
+    delivery = notify_make(
         "timetable.saved",
         {
             "id": tid,
@@ -1360,7 +1346,7 @@ def save_timetable(request: SaveTimetableRequest):
     return {
         "id": tid,
         "message": "Timetable saved successfully",
-        "n8n_delivery": delivery,
+        "make_delivery": delivery,
     }
 
 
@@ -1409,7 +1395,7 @@ def generate_expert_fallback_reply(user_msg: str, context: dict) -> str:
             "1. Go to **Operations -> Reschedule Engine**.\n"
             "2. Select the absent teacher and date.\n"
             "3. The system automatically identifies free faculty members who teach in the same department without room conflicts.\n\n"
-            "✨ *Selected proxy assignments will automatically reflect on teacher dashboards and n8n WhatsApp alerts.*"
+            "✨ *Selected proxy assignments will automatically reflect on teacher dashboards and Make WhatsApp alerts.*"
         )
     elif "optimize" in msg_lower or "schedule" in msg_lower or "timetable" in msg_lower:
         return (
@@ -1426,7 +1412,7 @@ def generate_expert_fallback_reply(user_msg: str, context: dict) -> str:
             f"I have analyzed your active operational context (`{len(assignments)} scheduled sessions` across active departments).\n\n"
             "- **Timetable Workspace**: Click **Timetable Workspace** to inspect grid assignments.\n"
             "- **Academic Setup**: Manage **Departments**, **Sections**, **Subjects**, and **Rooms**.\n"
-            "- **Automation**: Connect n8n webhooks in **Operations -> Automation & n8n**.\n\n"
+            "- **Automation**: Connect Make webhooks in **Operations -> Automation & Broadcast**.\n\n"
             "💡 *For live LLM conversational reasoning, configure `GROQ_API_KEY` in `backend/.env`.*"
         )
 

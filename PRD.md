@@ -15,7 +15,7 @@ It seamlessly integrates:
 2. **Faculty Lifecycle & Directory**: Comprehensive records, qualifications, workload, department hierarchies.
 3. **Digital Leave Approval System**: Multi-level workflow with automatic substitution suggestions.
 4. **Hardware Punch Machine Integration**: Universal adapter layer for ZKTeco, eSSL, BioMax biometric hardware and CSV imports.
-5. **n8n Automation & Webhooks**: Automated notification triggers (email, WhatsApp, Slack, Excel reports).
+5. **Make.com Automation & Webhooks**: Automated notification triggers (email, WhatsApp, Slack, Excel reports).
 6. **Supabase Cloud Sync & Relational Data**: Real-time state persistence and relational synchronization.
 
 ---
@@ -34,8 +34,8 @@ It seamlessly integrates:
                                  ┌───────────────┴───────────────┐
                                  ▼                               ▼
                      ┌───────────────────────┐       ┌───────────────────────┐
-                     │ Supabase PostgreSQL   │       │ n8n Automation Engine │
-                     │ Cloud Relational DB   │       │ (Webhooks & Workflows)│
+                     │ Supabase PostgreSQL   │       │ Make Automation Engine│
+                     │ Cloud Relational DB   │       │ (Webhooks & Scenarios)│
                      └───────────────────────┘       └───────────────────────┘
                                  ▲                               │
                                  └───────────────┬───────────────┘
@@ -241,9 +241,9 @@ CREATE INDEX IF NOT EXISTS idx_assignments_tt ON assignments(timetable_id);
 
 ---
 
-## 4. n8n Automation Engine & Webhook Specifications
+## 4. Make.com Automation Engine & Webhook Specifications
 
-The backend triggers n8n via a central webhook endpoint configured by `N8N_WEBHOOK_URL` in `.env`.
+The backend triggers Make.com via a central webhook endpoint configured by `MAKE_WEBHOOK_URL` in `.env`.
 
 ### Event Payload Specs
 
@@ -265,7 +265,7 @@ Triggered immediately when OR-Tools successfully solves a new timetable grid.
 ```
 
 #### Event 2: `bulk_email_trigger`
-Triggered by admin via `/n8n/email-all` to generate and send personalized Excel timetable attachments to all faculty members.
+Triggered by admin via `/make/email-all` to generate and send personalized Excel timetable attachments to all faculty members.
 
 ```json
 {
@@ -377,7 +377,7 @@ PORT=8080
 CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 GROQ_API_KEY=your_groq_api_key
 GEMINI_API_KEY=your_gemini_api_key
-N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/path
+MAKE_WEBHOOK_URL=https://hook.eu1.make.com/your-make-webhook-path
 SUPABASE_URL=https://your-supabase-project.supabase.co
 SUPABASE_SERVICE_KEY=your_supabase_service_role_key
 ```
@@ -391,8 +391,8 @@ REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ---
 
-## 9. Next Steps for Database & n8n Setup
+## 9. Next Steps for Database & Make.com Setup
 
 1. **Database Setup**: Execute the DDL in Section 3 in your Supabase SQL Editor.
-2. **n8n Workflow Setup**: Create webhook triggers in n8n listening for `bulk_email_trigger`, `timetable.generated`, and `leave.approved` events.
+2. **Make.com Scenario Setup**: Create a webhook trigger in Make.com listening for `bulk_email_trigger`, `timetable.generated`, and `timetable.proxy_assigned` events.
 3. **Biometric Integration**: Configure your hardware punch machine software to export daily CSVs or push directly to `POST /attendance/manual`.

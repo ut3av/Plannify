@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getSubjectColor, SUBJECT_COLORS } from "./SubjectsSection";
+import { getSubjectColor } from "./SubjectsSection";
 
 function ShimmerGrid() {
   return (

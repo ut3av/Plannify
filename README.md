@@ -21,7 +21,7 @@
 **Plannify.exe** is a comprehensive **Smart Academic Operations Platform**. It solves institutional academic scheduling via **Google OR-Tools CP-SAT constraint solver** and provides a full-fledged **Faculty Management System (FMS)** for university admin portals.
 
 > [!NOTE]
-> Detailed technical specifications, database DDLs, and n8n integration blueprints are documented in [`PRD.md`](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/PRD.md).
+> Detailed technical specifications, database DDLs, and Make integration blueprints are documented in [`PRD.md`](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/PRD.md).
 
 ---
 
@@ -41,7 +41,7 @@
 
 ### 3. ⚡ Cloud Sync & Automation
 - **Supabase Cloud Sync**: Real-time relational database persistence for institutions.
-- **n8n Webhook Integration**: Automated notifications (Email, WhatsApp) and personalized Excel timetable distribution.
+- **Make (Integromat) Webhook Integration**: Automated notifications (Email, WhatsApp) and personalized Excel timetable distribution.
 - **Multi-Sheet Excel Export**: One-click professional exports for class sections and individual teacher schedules.
 
 ---
@@ -53,7 +53,7 @@
 - **Optimization Engine**: Google OR-Tools (CP-SAT)
 - **Database & Auth**: Supabase (PostgreSQL 15+, Row Level Security)
 - **AI Engines**: Groq API (Llama-3.3-70B), Gemini 2.5 Flash
-- **Automation**: n8n Webhooks
+- **Automation**: Make.com Webhooks
 
 ---
 
@@ -76,7 +76,7 @@ PORT=8080
 CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 GROQ_API_KEY=your_groq_api_key
 GEMINI_API_KEY=your_gemini_api_key
-N8N_WEBHOOK_URL=your_n8n_webhook_url
+MAKE_WEBHOOK_URL=your_make_webhook_url
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=your_supabase_service_role_key
 ```
@@ -105,7 +105,7 @@ npm start
 
 - [Product Requirement Document (PRD)](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/PRD.md)
 - [Supabase Migration SQL Script](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/supabase-faculty-migration.sql)
-- [n8n Automation Guide](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/n8n_integration_guide.md)
+- [Make Automation Guide](file:///c:/Users/vastu/OneDrive/Desktop/Projects/Plannify.exe/make_integration_guide.md)
 
 ---
 
