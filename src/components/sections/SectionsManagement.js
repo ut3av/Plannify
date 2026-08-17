@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
 
-const DEFAULT_DEPARTMENTS = [
-  "Computer Science",
-  "Information Technology",
-  "Electronics & Comm.",
-  "Mechanical Eng.",
-  "Business Admin"
-];
-
 export default function SectionsManagement({
   sections = [],
   rooms = [],
@@ -17,10 +9,8 @@ export default function SectionsManagement({
   onNavigate
 }) {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedDeptFilter, setSelectedDeptFilter] = useState("");
   const [form, setForm] = useState({
     name: "",
-    department: "Computer Science",
     room: "",
     lab_room: ""
   });
@@ -30,7 +20,7 @@ export default function SectionsManagement({
     if (!form.name.trim()) return;
     const updated = [...sections, { ...form }];
     onChange && onChange(updated);
-    setForm({ name: "", department: "Computer Science", room: "", lab_room: "" });
+    setForm({ name: "", room: "", lab_room: "" });
     setShowAddModal(false);
   };
 
@@ -40,11 +30,6 @@ export default function SectionsManagement({
       onChange && onChange(updated);
     }
   };
-
-  // Filter sections by department
-  const filteredSections = selectedDeptFilter
-    ? sections.filter(s => (s.department || "Computer Science") === selectedDeptFilter)
-    : sections;
 
   // Helper to find linked subjects & teachers for a section
   const getLinkedData = (secName) => {
@@ -68,17 +53,11 @@ export default function SectionsManagement({
             Sections & Classes Setup
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Interlinked setup for academic sections, department mapping, classroom allocations, and subject-teacher bindings.
+            Setup for academic sections, classroom allocations, and subject-teacher bindings.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => onNavigate && onNavigate("departments")}
-            className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold transition-all flex items-center gap-2"
-          >
-            🏛️ View Departments
-          </button>
           <button onClick={() => setShowAddModal(true)} className="btn-primary gap-2 text-xs py-2.5 px-4 font-bold">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Section / Class
@@ -86,36 +65,21 @@ export default function SectionsManagement({
         </div>
       </div>
 
-      {/* Sections Table & Filters */}
+      {/* Sections Table */}
       <div className="card p-6 bg-slate-900/90 border border-slate-800 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
           <div>
-            <h2 className="text-base font-bold text-white">Registered Classes & Sections ({filteredSections.length})</h2>
-            <p className="text-xs text-slate-400">Interlinked with active Department curricula</p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400 font-semibold">Filter by Department:</span>
-            <select
-              value={selectedDeptFilter}
-              onChange={(e) => setSelectedDeptFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            >
-              <option value="">All Departments</option>
-              {DEFAULT_DEPARTMENTS.map((dept, idx) => (
-                <option key={idx} value={dept}>{dept}</option>
-              ))}
-            </select>
+            <h2 className="text-base font-bold text-white">Registered Classes & Sections ({sections.length})</h2>
+            <p className="text-xs text-slate-400">Classrooms and lab allocations</p>
           </div>
         </div>
 
-        {filteredSections.length > 0 ? (
+        {sections.length > 0 ? (
           <div className="overflow-x-auto border border-slate-800 rounded-xl">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-800/80 text-slate-400 font-bold uppercase">
                 <tr>
                   <th className="p-3">Section / Class</th>
-                  <th className="p-3">Department</th>
                   <th className="p-3">Lecture Room</th>
                   <th className="p-3">Lab Room</th>
                   <th className="p-3">Linked Subjects & Faculty</th>
@@ -123,8 +87,7 @@ export default function SectionsManagement({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800 text-slate-300">
-                {filteredSections.map((sec, i) => {
-                  const dept = sec.department || "Computer Science";
+                {sections.map((sec, i) => {
                   const { linkedSubs, teacherNames } = getLinkedData(sec.name);
                   return (
                     <tr key={i} className="hover:bg-slate-800/40 transition-colors">
@@ -138,11 +101,6 @@ export default function SectionsManagement({
                             <div className="text-[10px] text-slate-500">Active Cohort</div>
                           </div>
                         </div>
-                      </td>
-                      <td className="p-3">
-                        <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-indigo-500/10 border border-amber-200 dark:border-indigo-500/30 text-amber-800 dark:text-indigo-300 font-bold text-[11px]">
-                          🏛️ {dept}
-                        </span>
                       </td>
                       <td className="p-3">
                         <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-800 dark:text-indigo-300 font-medium">
@@ -187,7 +145,7 @@ export default function SectionsManagement({
           </div>
         ) : (
           <div className="p-8 text-center text-slate-500 italic">
-            No sections registered {selectedDeptFilter ? `in ${selectedDeptFilter}` : ""}. Click "Add Section / Class" to create one.
+            No sections registered. Click "Add Section / Class" to create one.
           </div>
         )}
       </div>
@@ -212,19 +170,6 @@ export default function SectionsManagement({
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-1 focus:ring-indigo-500"
                 />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Department *</label>
-                <select
-                  value={form.department}
-                  onChange={(e) => setForm({ ...form, department: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-1 focus:ring-indigo-500"
-                >
-                  {DEFAULT_DEPARTMENTS.map((d, idx) => (
-                    <option key={idx} value={d}>{d}</option>
-                  ))}
-                </select>
               </div>
 
               <div>

@@ -5,8 +5,6 @@ const TEMPLATE_PRESETS = [
     name: "LNCT University (7 Periods + Lunch)",
     desc: "10:30 AM to 03:30 PM with 50-min lectures & lunch gap",
     slots: [
-      "09:00 AM - 09:45 AM",
-      "09:45 AM - 10:30 AM",
       "10:30 AM - 11:20 AM",
       "11:20 AM - 12:10 PM",
       "01:00 PM - 01:50 PM",
@@ -25,7 +23,7 @@ const TEMPLATE_PRESETS = [
       "01:15 PM - 02:05 PM",
       "02:05 PM - 02:55 PM",
       "03:00 PM - 03:50 PM",
-      "03:50 PM - 04:40 PM",
+      "03:50 PM - 04:30 PM",
     ]
   },
   {
@@ -37,7 +35,7 @@ const TEMPLATE_PRESETS = [
       "09:50 AM - 10:40 AM",
       "10:40 AM - 11:30 AM",
       "11:45 AM - 12:35 PM",
-      "12:35 PM - 01:25 PM",
+      "12:35 PM - 01:30 PM",
     ]
   },
   {

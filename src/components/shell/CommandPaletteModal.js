@@ -31,7 +31,7 @@ export default function CommandPaletteModal({ isOpen, onClose, onNavigate }) {
       const facultyMatches = (res.data || []).map(f => ({
         type: "faculty",
         label: f.teacher_name,
-        detail: `${f.employee_id} • ${f.department_name} (${f.designation})`,
+        detail: `${f.employee_id} • ${f.designation}`,
         page: "faculty",
         id: f.id,
       }));

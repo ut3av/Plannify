@@ -19,12 +19,10 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
   const [dashboardData, setDashboardData] = useState(null);
   const [directoryData, setDirectoryData] = useState([]);
   const [insights, setInsights] = useState([]);
-  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // 4. Directory Filters & Sorting
   const [search, setSearch] = useState("");
-  const [filterDept, setFilterDept] = useState("");
   const [filterDesignation, setFilterDesignation] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [attMin, setAttMin] = useState("");
@@ -41,7 +39,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
       const params = { range_key: rangeKey };
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
-      if (filterDept) params.department_id = filterDept;
 
       const res = await axios.get(`${API}/analytics/dashboard`, { params });
       setDashboardData(res.data);
@@ -50,7 +47,7 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
     } finally {
       setLoading(false);
     }
-  }, [rangeKey, startDate, endDate, filterDept]);
+  }, [rangeKey, startDate, endDate]);
 
   const fetchDirectory = useCallback(async () => {
     try {
@@ -61,7 +58,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
       };
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
-      if (filterDept) params.department_id = filterDept;
       if (filterDesignation) params.designation = filterDesignation;
       if (filterStatus) params.status = filterStatus;
       if (search) params.search = search;
@@ -72,7 +68,7 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
     } catch (e) {
       console.error("Failed to load faculty directory analytics:", e);
     }
-  }, [rangeKey, startDate, endDate, sortBy, sortOrder, filterDept, filterDesignation, filterStatus, search, attMin]);
+  }, [rangeKey, startDate, endDate, sortBy, sortOrder, filterDesignation, filterStatus, search, attMin]);
 
   const fetchInsights = useCallback(async () => {
     try {
@@ -86,15 +82,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
     }
   }, [rangeKey, startDate, endDate]);
 
-  const fetchDepartments = useCallback(async () => {
-    try {
-      const res = await axios.get(`${API}/faculty/departments`);
-      setDepartments(res.data || []);
-    } catch (e) {
-      console.error("Failed to load departments:", e);
-    }
-  }, []);
-
   const fetchConfig = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/analytics/config`);
@@ -107,9 +94,8 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
   useEffect(() => {
     fetchDashboard();
     fetchInsights();
-    fetchDepartments();
     fetchConfig();
-  }, [fetchDashboard, fetchInsights, fetchDepartments, fetchConfig]);
+  }, [fetchDashboard, fetchInsights, fetchConfig]);
 
   useEffect(() => {
     fetchDirectory();
@@ -380,15 +366,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
               />
 
               <select
-                value={filterDept}
-                onChange={(e) => setFilterDept(e.target.value)}
-                className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white"
-              >
-                <option value="">All Departments</option>
-                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-
-              <select
                 value={filterDesignation}
                 onChange={(e) => setFilterDesignation(e.target.value)}
                 className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white"
@@ -437,7 +414,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
                 <tr>
                   <th onClick={() => handleSort("teacher_name")} className="p-3 cursor-pointer hover:text-white">Faculty Name {sortBy === 'teacher_name' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}</th>
                   <th onClick={() => handleSort("employee_id")} className="p-3 cursor-pointer hover:text-white">ID</th>
-                  <th className="p-3">Department</th>
                   <th onClick={() => handleSort("attendance_percentage")} className="p-3 cursor-pointer hover:text-white">Attendance % {sortBy === 'attendance_percentage' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}</th>
                   <th onClick={() => handleSort("present_days")} className="p-3 cursor-pointer hover:text-white">Present</th>
                   <th onClick={() => handleSort("late_days")} className="p-3 cursor-pointer hover:text-white">Late</th>
@@ -456,7 +432,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
                       <div className="text-[10px] text-slate-500">{f.designation}</div>
                     </td>
                     <td className="p-3 text-slate-400 font-mono">{f.employee_id}</td>
-                    <td className="p-3">{f.department_name}</td>
                     <td className="p-3 font-bold text-emerald-400">{f.attendance_percentage}%</td>
                     <td className="p-3 text-indigo-300 font-semibold">{f.present_days}</td>
                     <td className="p-3 text-amber-700 dark:text-amber-400">{f.late_days}</td>
@@ -491,7 +466,6 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
       {activeTab === "ai" && (
         <AIAnalyticsAssistantModal
           rangeKey={rangeKey}
-          departmentId={filterDept}
           onClose={() => setActiveTab("dashboard")}
         />
       )}

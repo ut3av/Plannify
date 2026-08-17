@@ -133,7 +133,7 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
               <h2 className="text-2xl font-black text-white">{detail.teacher_name}</h2>
               <span className={`badge ${statusColor[detail.status] || "badge-neutral"}`}>{detail.status}</span>
             </div>
-            <p className="text-sm font-semibold text-indigo-300 mt-1">{detail.designation} • <span className="text-slate-400">{detail.department_name || detail.department || "Academic Operations"}</span></p>
+            <p className="text-sm font-semibold text-indigo-300 mt-1">{detail.designation}</p>
             
             <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-300">
               <span className="flex items-center gap-1.5 font-mono bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700">
@@ -194,7 +194,6 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
               { label: "Email Address", key: "email" },
               { label: "Phone / Mobile", key: "phone" },
               { label: "Employee ID", key: "employee_id", disabled: true },
-              { label: "Department", key: "department_name" },
               { label: "Designation", key: "designation", type: "select", options: ["Professor", "Associate Professor", "Assistant Professor", "Lecturer", "Lab Instructor", "Visiting Faculty"] },
               { label: "Highest Qualification", key: "qualification" },
               { label: "Employment Type", key: "employment_type", type: "select", options: ["full-time", "part-time", "guest", "contractual"] },

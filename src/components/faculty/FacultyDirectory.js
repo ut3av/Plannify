@@ -24,7 +24,6 @@ export default function FacultyDirectory({
   const [createdAccountInfo, setCreatedAccountInfo] = useState(null);
   const [copiedCredentials, setCopiedCredentials] = useState(false);
   const [search, setSearch] = useState("");
-  const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [viewMode, setViewMode] = useState("grid"); // grid | table
   const [showAddForm, setShowAddForm] = useState(false);
@@ -376,11 +375,10 @@ export default function FacultyDirectory({
         f.employee_id?.toLowerCase().includes(search.toLowerCase()) ||
         f.email?.toLowerCase().includes(search.toLowerCase()) ||
         f.phone?.toLowerCase().includes(search.toLowerCase());
-      const matchDept = !filterDept || f.department_id === filterDept || f.department_name === filterDept;
       const matchStatus = !filterStatus || f.status === filterStatus;
-      return matchSearch && matchDept && matchStatus;
+      return matchSearch && matchStatus;
     });
-  }, [allFaculty, search, filterDept, filterStatus]);
+  }, [allFaculty, search, filterStatus]);
 
   const statusColor = (status) => {
     switch (status) {
@@ -569,17 +567,6 @@ export default function FacultyDirectory({
               />
             </div>
             <div>
-              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Department</label>
-              <select
-                className="input cursor-pointer"
-                value={form.department_id}
-                onChange={e => setForm({ ...form, department_id: e.target.value })}
-              >
-                <option value="">Select Department (Default: Computer Applications)</option>
-                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-            <div>
               <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Designation</label>
               <select
                 className="input cursor-pointer"
@@ -687,10 +674,6 @@ export default function FacultyDirectory({
               <input type="text" className="input pl-10" placeholder="Search by name, email, phone, or employee ID..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
           </div>
-          <select className="input w-auto" value={filterDept} onChange={e => setFilterDept(e.target.value)}>
-            <option value="">All Departments</option>
-            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
           <select className="input w-auto" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -753,11 +736,6 @@ export default function FacultyDirectory({
                         <span className="font-mono text-[11px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60 text-slate-300">
                           {f.employee_id}
                         </span>
-                        {f.department_name && (
-                          <span className="truncate text-slate-400 text-[11px]">
-                            • {f.department_name}
-                          </span>
-                        )}
                       </div>
 
                       {f.email && (
@@ -821,7 +799,6 @@ export default function FacultyDirectory({
               <tr>
                 <th>Faculty Name</th>
                 <th>Employee ID</th>
-                <th>Department</th>
                 <th>Designation</th>
                 <th>Email Address</th>
                 <th>Phone Number</th>
@@ -846,7 +823,6 @@ export default function FacultyDirectory({
                     </div>
                   </td>
                   <td><span className="font-mono text-xs text-indigo-300">{f.employee_id}</span></td>
-                  <td>{f.department_name || "—"}</td>
                   <td><span className="font-medium text-slate-300">{f.designation}</span></td>
                   <td><span className="text-slate-400 font-mono text-xs">{f.email || "—"}</span></td>
                   <td><span className="text-slate-400 text-xs">{f.phone || "—"}</span></td>

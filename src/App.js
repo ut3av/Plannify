@@ -1236,26 +1236,7 @@ export default function App() {
           <SystemSettings userRole={userRole} />
         )}
 
-        {/* ACADEMIC SETUP: DEPARTMENTS */}
-        {activeTab === "departments" && (
-          <FacultyDirectory
-            teachers={teachers}
-            subjects={subjects}
-            result={result}
-            onSelectFaculty={(f) => setSelectedFaculty(f)}
-            onAddFaculty={handleAddFaculty}
-            onTeachersChange={(updated) => { 
-              setTeachers(updated); 
-              saveToCloud(true, { 
-                teachers: updated, 
-                sections: activeStateRef.current.sections, 
-                subjects: activeStateRef.current.subjects, 
-                rooms: activeStateRef.current.rooms, 
-                timeSlots: activeStateRef.current.timeSlots 
-              }); 
-            }}
-          />
-        )}
+
 
         {/* 16. REPORTS CENTER */}
         {activeTab === "reports" && (

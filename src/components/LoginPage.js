@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [department, setDepartment] = useState("Computer Applications");
+  const department = "Computer Applications";
   const [designation, setDesignation] = useState("Assistant Professor");
   const [employeeId, setEmployeeId] = useState(`EMP-LNCT-${Math.floor(1000 + Math.random() * 9000)}`);
   const [error, setError] = useState("");
@@ -513,21 +513,6 @@ export default function LoginPage() {
                       <>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className="block font-bold text-slate-300 mb-1">Department</label>
-                            <select
-                              value={department}
-                              onChange={(e) => setDepartment(e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
-                            >
-                              <option value="Computer Applications">Computer Applications (BCA/MCA)</option>
-                              <option value="AI & DA">AI & Data Science (B.Tech)</option>
-                              <option value="Computer Science & Engineering">Computer Science & Eng (CSE)</option>
-                              <option value="Information Technology">Information Technology (IT)</option>
-                              <option value="Management Studies">Management Studies (MBA/BBA)</option>
-                            </select>
-                          </div>
-
-                          <div>
                             <label className="block font-bold text-slate-300 mb-1">Designation</label>
                             <select
                               value={designation}
@@ -541,20 +526,20 @@ export default function LoginPage() {
                               <option value="Lab Instructor">Lab Instructor</option>
                             </select>
                           </div>
-                        </div>
 
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="font-bold text-slate-300">Employee ID</label>
-                            <span className="text-[10px] text-slate-500 font-mono">Institutional Identifier</span>
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="font-bold text-slate-300">Employee ID</label>
+                              <span className="text-[10px] text-slate-500 font-mono">ID</span>
+                            </div>
+                            <input
+                              type="text"
+                              value={employeeId}
+                              onChange={(e) => setEmployeeId(e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-amber-500"
+                              placeholder="EMP-LNCT-1001"
+                            />
                           </div>
-                          <input
-                            type="text"
-                            value={employeeId}
-                            onChange={(e) => setEmployeeId(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-amber-500"
-                            placeholder="EMP-LNCT-1001"
-                          />
                         </div>
                       </>
                     )}

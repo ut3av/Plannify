@@ -264,7 +264,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
 
           {/* Weekly Slots Stepper */}
           <div className="lg:col-span-1">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Periods / Wk</label>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Periods / Week</label>
             <div className="flex items-center bg-slate-800 border border-slate-700 rounded-xl p-0.5">
               <button
                 type="button"
