@@ -255,25 +255,6 @@ def get_attendance_records(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ── Individual Faculty History ──────────────────────────────
-
-@router.get("/{faculty_id}")
-def get_faculty_attendance(
-    faculty_id: str,
-    month: Optional[int] = Query(None, ge=1, le=12),
-    year: Optional[int] = Query(None),
-):
-    try:
-        records = get_attendance(faculty_id=faculty_id, month=month, year=year)
-        today = date.today()
-        m = month or today.month
-        y = year or today.year
-        summary = get_attendance_summary(faculty_id, m, y)
-        return {"records": records, "summary": summary}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 # ── Manual Entry / Override ─────────────────────────────────
 
 @router.post("/manual")
@@ -316,5 +297,24 @@ def monthly_report(month: int = Query(..., ge=1, le=12), year: int = Query(...))
                 **summary,
             })
         return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Individual Faculty History ──────────────────────────────
+
+@router.get("/{faculty_id}")
+def get_faculty_attendance(
+    faculty_id: str,
+    month: Optional[int] = Query(None, ge=1, le=12),
+    year: Optional[int] = Query(None),
+):
+    try:
+        records = get_attendance(faculty_id=faculty_id, month=month, year=year)
+        today = date.today()
+        m = month or today.month
+        y = year or today.year
+        summary = get_attendance_summary(faculty_id, m, y)
+        return {"records": records, "summary": summary}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

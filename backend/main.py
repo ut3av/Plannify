@@ -2,7 +2,9 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
+import copy
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from ortools.sat.python import cp_model
 import os
@@ -152,13 +154,16 @@ def health_check():
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     logger.error(f"Global error: {exc}", exc_info=True)
-    return {
-        "detail": {
-            "message": "An unexpected server error occurred.",
-            "suggestions": ["Refresh the page.", "Check connectivity."],
-            "facts": [str(exc)[:100]]
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": {
+                "message": "An unexpected server error occurred.",
+                "suggestions": ["Refresh the page.", "Check connectivity."],
+                "facts": [str(exc)[:100]]
+            }
         }
-    }
+    )
 
 class SubjectInput(BaseModel):
     code: str = ""
@@ -1262,6 +1267,18 @@ def reschedule(request: RescheduleRequest):
         },
     )
     return response
+
+
+def find_available_proxy(teacher: str, day: str, slot: str, timetable: dict, all_teachers: list) -> Optional[str]:
+    """Finds a free teacher in the given day and slot who is not the original teacher."""
+    if day not in timetable or slot not in timetable[day]:
+        return None
+    busy_teachers = {cls.get("teacher") for cls in timetable[day][slot] if cls.get("teacher")}
+    for t in all_teachers:
+        t_name = t.name if hasattr(t, "name") else (t.get("name") if isinstance(t, dict) else str(t))
+        if t_name != teacher and t_name not in busy_teachers:
+            return t_name
+    return None
 
 
 @app.post("/proxy")
