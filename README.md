@@ -15,7 +15,7 @@
 
 <br />
 
-<img src="public/readme_assets/hero.png" width="100%" alt="Plannify.exe Enterprise Academic Operations Interface" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.18);" />
+<img src="public/readme_assets/hero1.png" width="100%" alt="Plannify.exe Enterprise Academic Operations Interface" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.18);" />
 
 </div>
 
