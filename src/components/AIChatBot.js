@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 
 import { compressImage } from '../utils/imageOptimizer';
 import { API_BASE_URL } from '../apiConfig';
+import BrandLogo from './common/BrandLogo';
 
 function generateClientSideAIResponse(userText, context = {}, { teachers = [], subjects = [], sections = [], rooms = [] } = {}) {
   const text = (userText || "").trim();
@@ -348,14 +349,19 @@ export default function AIChatBot({
 
   return (
     <>
-      {/* Minimalist Floating Trigger Button */}
+      {/* Floating Trigger Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-13 h-13 rounded-full bg-[#D97706] hover:bg-[#B45309] text-white shadow-xl shadow-amber-600/30 hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-white dark:border-[#2A1C14]"
+          className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 p-3.5 rounded-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white shadow-2xl shadow-amber-600/30 hover:scale-105 hover:shadow-amber-600/50 transition-all duration-300 border border-amber-400/40"
           title="Open Plannify AI Assistant"
         >
-          <span className="font-bold text-sm tracking-tight">AI</span>
+          <div className="relative flex items-center justify-center w-7 h-7 rounded-full bg-white/20 backdrop-blur-md">
+            <img src="/favicon.png" alt="AI" className="w-5 h-5 object-contain" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#20140E]" />
+          </div>
+          <BrandLogo size="xs" isWarm={true} className="pr-1 hidden sm:inline-flex" />
+          <span className="text-[10px] font-black uppercase text-amber-200 hidden sm:inline">AI</span>
         </button>
       )}
 
