@@ -1392,6 +1392,9 @@ def get_dashboard_stats() -> dict:
             on_leave_res = sb.table("leave_applications").select("id", count="exact").eq("status", "approved").lte("from_date", today).gte("to_date", today).execute()
             on_leave_today = on_leave_res.count or 0
 
+            sub_res = sb.table("substitution_log").select("id", count="exact").eq("date", today).execute()
+            substitutions_today = sub_res.count or 0
+
             return {
                 "total_faculty": total_faculty,
                 "total_departments": total_departments,
@@ -1399,7 +1402,8 @@ def get_dashboard_stats() -> dict:
                 "absent_today": absent_today,
                 "pending_leaves": pending_leaves,
                 "on_leave_today": on_leave_today,
-                "attendance_rate": round((present_today / max(1, total_faculty)) * 100, 1),
+                "substitutions_today": substitutions_today,
+                "attendance_rate": round((present_today / max(1, total_faculty)) * 100, 1) if total_faculty > 0 else 0.0,
             }
         except Exception as e:
             logger.warning(f"Supabase get_dashboard_stats failed: {e}. Using SQLite fallback.")
@@ -1423,6 +1427,9 @@ def get_dashboard_stats() -> dict:
     cursor.execute("SELECT count(*) FROM leave_applications WHERE status = 'approved' AND from_date <= ? AND to_date >= ?", (today, today))
     on_leave_today = cursor.fetchone()[0]
 
+    cursor.execute("SELECT count(*) FROM substitution_log WHERE date = ?", (today,))
+    substitutions_today = cursor.fetchone()[0]
+
     conn.close()
     return {
         "total_faculty": total_faculty,
@@ -1431,7 +1438,8 @@ def get_dashboard_stats() -> dict:
         "absent_today": absent_today,
         "pending_leaves": pending_leaves,
         "on_leave_today": on_leave_today,
-        "attendance_rate": round((present_today / max(1, total_faculty)) * 100, 1),
+        "substitutions_today": substitutions_today,
+        "attendance_rate": round((present_today / max(1, total_faculty)) * 100, 1) if total_faculty > 0 else 0.0,
     }
 
 

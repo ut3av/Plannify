@@ -17,7 +17,7 @@ export default function InstitutionalDashboard({
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [teachersCount, sectionsCount, subjectsCount, roomsCount]);
 
   const fetchDashboardData = async () => {
     try {
@@ -35,10 +35,11 @@ export default function InstitutionalDashboard({
     }
   };
 
-  const activeFaculty = stats?.total_faculty || teachersCount || 0;
-  const attendanceRate = stats?.attendance_rate || 94.2;
+  const activeFaculty = stats?.total_faculty !== undefined ? stats.total_faculty : (teachersCount || 0);
+  const attendanceRate = (activeFaculty > 0 && stats?.attendance_rate !== undefined) ? stats.attendance_rate : 0;
   const pendingLeaves = stats?.pending_leaves || 0;
   const onLeaveToday = stats?.on_leave_today || 0;
+  const substitutionsToday = stats?.substitutions_today || 0;
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-900 dark:text-slate-100">
@@ -124,7 +125,7 @@ export default function InstitutionalDashboard({
 
         <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">
           <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Substitutions</p>
-          <h3 className="text-2xl font-black text-teal-700 dark:text-teal-400 mt-1">3</h3>
+          <h3 className="text-2xl font-black text-teal-700 dark:text-teal-400 mt-1">{substitutionsToday}</h3>
           <p className="text-[10px] text-slate-500 mt-1">Proxy Slots Today</p>
         </div>
       </div>
