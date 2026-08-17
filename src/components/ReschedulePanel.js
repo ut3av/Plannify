@@ -18,7 +18,13 @@ export default function ReschedulePanel({
   const [selectedProxy, setSelectedProxy] = useState("");
 
   useEffect(() => {
-    setTeacher((c) => c || teachers[0]?.name || "");
+    if (teachers && teachers.length > 0) {
+      setTeacher((c) => {
+        if (c) return c;
+        const first = teachers[0];
+        return typeof first === "string" ? first : (first?.name || "");
+      });
+    }
   }, [teachers]);
 
   useEffect(() => {
@@ -41,7 +47,7 @@ export default function ReschedulePanel({
 
   // Find all classes taught by this teacher on this day from the active timetable result
   const teacherImpactedClasses = useMemo(() => {
-    if (!result?.assignments) return [];
+    if (!result?.assignments || !teacher) return [];
     return result.assignments.filter(
       (a) => a.teacher === teacher && a.day === day,
     );
@@ -58,22 +64,27 @@ export default function ReschedulePanel({
         : teacherImpactedClasses.map((c) => c.slot);
 
     (result?.assignments || []).forEach((a) => {
-      if (a.day === day && targetSlots.includes(a.slot)) {
+      if (a.day === day && targetSlots.includes(a.slot) && a.teacher) {
         busyTeachersAtSlots.add(a.teacher);
       }
     });
 
-    const teacherObj = teachers.find((t) => t.name === teacher);
-    const teacherDept = teacherObj?.department || "";
+    const teacherObj = teachers.find((t) => (typeof t === "string" ? t : t.name) === teacher);
+    const teacherDept = (typeof teacherObj === "object" ? teacherObj?.department : "") || "";
 
     return teachers
-      .filter((t) => t.name !== teacher && !busyTeachersAtSlots.has(t.name))
-      .map((t) => ({
-        name: t.name,
-        department: t.department || "Academic",
-        isSameDept: t.department === teacherDept,
-        phone: t.phone,
-      }))
+      .map((t) => {
+        const name = typeof t === "string" ? t : t.name;
+        const department = typeof t === "string" ? "Academic" : (t.department || "Academic");
+        const phone = typeof t === "object" ? t.phone : "";
+        return {
+          name,
+          department,
+          isSameDept: department === teacherDept,
+          phone,
+        };
+      })
+      .filter((t) => t.name && t.name !== teacher && !busyTeachersAtSlots.has(t.name))
       .sort((a, b) => (b.isSameDept ? 1 : 0) - (a.isSameDept ? 1 : 0));
   }, [teachers, teacher, day, selectedSlots, teacherImpactedClasses, result]);
 
@@ -90,9 +101,10 @@ export default function ReschedulePanel({
   };
 
   const submitProxy = () => {
+    const proxyToAssign = selectedProxy || availableProxies[0]?.name || "Substitute Faculty";
     onAssignProxy({
       teacher,
-      proxy_teacher: selectedProxy || availableProxies[0]?.name,
+      proxy_teacher: proxyToAssign,
       day,
       slots:
         selectedSlots.length > 0
@@ -187,15 +199,19 @@ export default function ReschedulePanel({
                     value={teacher}
                     onChange={(e) => setTeacher(e.target.value)}
                   >
-                    {teachers.map((t) => (
-                      <option
-                        key={t.name}
-                        value={t.name}
-                        className="bg-slate-900"
-                      >
-                        {t.name} ({t.department || "Faculty"})
-                      </option>
-                    ))}
+                    {teachers.map((t) => {
+                      const tName = typeof t === "string" ? t : t.name;
+                      const tDept = typeof t === "string" ? "Faculty" : (t.department || "Faculty");
+                      return (
+                        <option
+                          key={tName}
+                          value={tName}
+                          className="bg-slate-900"
+                        >
+                          {tName} ({tDept})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 

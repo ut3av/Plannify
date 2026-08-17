@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from urllib.parse import urlparse
 import copy
 from fastapi import FastAPI, HTTPException
@@ -200,8 +200,12 @@ class GenerateRequest(BaseModel):
 
 class RescheduleRequest(BaseModel):
     teacher: str
+    proxy_teacher: Optional[str] = None
     day: Optional[str] = None
     slots: List[str] = []
+    reason: Optional[str] = None
+    timetable_data: Optional[dict] = None
+    teachers: Optional[List[Any]] = None
 
 
 
@@ -1271,77 +1275,136 @@ def reschedule(request: RescheduleRequest):
 
 def find_available_proxy(teacher: str, day: str, slot: str, timetable: dict, all_teachers: list) -> Optional[str]:
     """Finds a free teacher in the given day and slot who is not the original teacher."""
-    if day not in timetable or slot not in timetable[day]:
+    if not timetable or day not in timetable or slot not in timetable[day]:
         return None
     busy_teachers = {cls.get("teacher") for cls in timetable[day][slot] if cls.get("teacher")}
     for t in all_teachers:
         t_name = t.name if hasattr(t, "name") else (t.get("name") if isinstance(t, dict) else str(t))
-        if t_name != teacher and t_name not in busy_teachers:
+        if t_name and t_name != teacher and t_name not in busy_teachers:
             return t_name
     return None
 
 
 @app.post("/proxy")
 def assign_proxy(request: RescheduleRequest):
-    if LAST_REQUEST is None or LAST_TIMETABLE is None:
+    global LAST_TIMETABLE, LAST_REQUEST
+
+    # 1. Base Timetable Recovery
+    active_tt = LAST_TIMETABLE
+    if active_tt is None and request.timetable_data:
+        active_tt = copy.deepcopy(request.timetable_data)
+
+    if active_tt is None:
+        saved = get_timetables_from_db()
+        if saved and len(saved) > 0:
+            latest_id = saved[0].get("id")
+            saved_doc = get_timetable_by_id(latest_id)
+            if saved_doc and "timetable_data" in saved_doc:
+                active_tt = saved_doc["timetable_data"]
+
+    if active_tt is None:
         raise HTTPException(
             status_code=400,
-            detail="Generate a timetable before assigning proxies.")
+            detail="Generate or load a timetable before assigning proxies."
+        )
 
     teacher = clean_name(request.teacher)
-    if teacher not in [t.name for t in LAST_REQUEST.teachers]:
-        raise HTTPException(status_code=400, detail="Teacher not found.")
 
-    day = request.day
-    if not day or day not in DAYS:
-        raise HTTPException(
-            status_code=400,
-            detail="A valid day is required for proxy assignment.")
+    # 2. Pool of available teachers
+    all_teachers_pool = []
+    if request.teachers:
+        all_teachers_pool = request.teachers
+    elif LAST_REQUEST and LAST_REQUEST.teachers:
+        all_teachers_pool = LAST_REQUEST.teachers
+    else:
+        t_set = set()
+        for a in active_tt.get("assignments", []):
+            if a.get("teacher"):
+                t_set.add(a.get("teacher"))
+        all_teachers_pool = [{"name": t} for t in t_set]
 
-    new_timetable = copy.deepcopy(LAST_TIMETABLE["timetable"])
-    new_assignments = []
+    day = request.day or (DAYS[0] if DAYS else "Mon")
+    target_slots = set(request.slots) if request.slots else None
+
+    # 3. Build & Clone Timetable Map
+    new_timetable = copy.deepcopy(active_tt.get("timetable", {}))
+    
+    # If timetable map is missing but assignments array exists, reconstruct map
+    if not new_timetable and active_tt.get("assignments"):
+        new_timetable = {}
+        for a in active_tt.get("assignments", []):
+            d = a.get("day", "Mon")
+            s = a.get("slot", "")
+            if d not in new_timetable:
+                new_timetable[d] = {}
+            if s not in new_timetable[d]:
+                new_timetable[d][s] = []
+            new_timetable[d][s].append({k: v for k, v in a.items() if k not in ("day", "slot")})
+
     proxies_assigned = []
 
-    # Identify slots where the teacher is scheduled on the given day
+    # 4. Perform Proxy Substitution on Target Classes
     if day in new_timetable:
-        for s in LAST_TIMETABLE.get("time_slots", []):
+        slots_list = active_tt.get("time_slots") or list(new_timetable[day].keys())
+        for s in slots_list:
             if s in new_timetable[day]:
+                if target_slots is not None and s not in target_slots:
+                    continue
                 classes_in_slot = new_timetable[day][s]
                 for cls in classes_in_slot:
                     if cls.get("teacher") == teacher:
-                        proxy_teacher = find_available_proxy(
-                            teacher, day, s, new_timetable, LAST_REQUEST.teachers
+                        proxy_name = request.proxy_teacher or find_available_proxy(
+                            teacher, day, s, new_timetable, all_teachers_pool
                         )
-                        if proxy_teacher:
+                        if proxy_name:
                             cls["original_teacher"] = teacher
-                            cls["teacher"] = proxy_teacher
+                            cls["teacher"] = proxy_name
                             cls["is_proxy"] = True
-                            proxies_assigned.append(
-                                {"day": day, "slot": s, "original": teacher, "proxy": proxy_teacher}
-                            )
+                            cls["proxy_reason"] = request.reason or "Substitution"
+                            proxies_assigned.append({
+                                "day": day,
+                                "slot": s,
+                                "original": teacher,
+                                "proxy": proxy_name,
+                                "subject": cls.get("subject", ""),
+                                "section": cls.get("section", ""),
+                                "room": cls.get("room", ""),
+                            })
 
-    # Rebuild assignments
-    for d in new_timetable:
-        for s in new_timetable[d]:
-            for cls in new_timetable[d][s]:
-                new_assignments.append({"day": d, "slot": s, **cls})
+    # 5. Rebuild Flat Assignments List
+    new_assignments = []
+    days_order = active_tt.get("days") or DAYS
+    for d in days_order:
+        if d in new_timetable:
+            slots_order = active_tt.get("time_slots") or list(new_timetable[d].keys())
+            for s in slots_order:
+                if s in new_timetable[d]:
+                    for cls in new_timetable[d][s]:
+                        new_assignments.append({"day": d, "slot": s, **cls})
 
-    LAST_TIMETABLE["timetable"] = new_timetable
-    LAST_TIMETABLE["assignments"] = new_assignments
-    LAST_TIMETABLE["reschedule_note"] = {
-        "teacher": teacher,
-        "proxies_assigned": proxies_assigned,
-        "message": f"Assigned {len(proxies_assigned)} proxies for {teacher} on {day}."
+    result_payload = {
+        **active_tt,
+        "timetable": new_timetable,
+        "assignments": new_assignments,
+        "reschedule_note": {
+            "teacher": teacher,
+            "proxies_assigned": proxies_assigned,
+            "message": f"Successfully assigned {len(proxies_assigned)} proxy class(es) for {teacher} on {day} ({request.proxy_teacher or 'AI Conflict-Free Matcher'})."
+        }
     }
-    LAST_TIMETABLE["make_delivery"] = notify_make(
+
+    LAST_TIMETABLE = result_payload
+
+    # Trigger Make automation webhook
+    result_payload["make_delivery"] = notify_make(
         "timetable.proxy_assigned",
         {
             "request": request.model_dump(),
-            "result": LAST_TIMETABLE,
+            "result": result_payload,
         },
     )
 
-    return LAST_TIMETABLE
+    return result_payload
 
 
 class SaveTimetableRequest(BaseModel):
