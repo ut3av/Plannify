@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import GooeyLoader from "./common/GooeyLoader";
 import { API_BASE_URL } from "../apiConfig";
 
 export default function HistorySection({ onSelectTimetable }) {
@@ -106,9 +107,12 @@ export default function HistorySection({ onSelectTimetable }) {
 
       {/* Snapshot Cards Grid */}
       {loading ? (
-        <div className="card p-12 text-center text-slate-400">
-          <div className="animate-spin w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full mx-auto mb-3" />
-          <p className="text-xs font-semibold">Loading timetable history...</p>
+        <div className="card p-12 text-center animate-fade-in">
+          <GooeyLoader
+            size="md"
+            text="Loading timetable snapshots..."
+            subtitle="Fetching stored database schedule states"
+          />
         </div>
       ) : history.length === 0 ? (
         <div className="card p-12 text-center text-slate-500 border border-slate-800">

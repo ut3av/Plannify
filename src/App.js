@@ -5,6 +5,7 @@ import { supabase } from "./supabaseClient";
 import { syncRelationalData } from "./services/supabaseService";
 import { API_BASE_URL } from "./apiConfig";
 import BrandLogo from "./components/common/BrandLogo";
+import GooeyLoader from "./components/common/GooeyLoader";
 import AppShell from "./components/shell/AppShell";
 
 // Dynamic Section / View Imports (React.lazy)
@@ -105,12 +106,11 @@ function getErrorMessage(error) {
 function ModuleLoadingFallback() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[380px] w-full p-12 animate-fade-in">
-      <div className="relative mb-4">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center animate-pulse">
-          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      </div>
-      <p className="text-xs font-semibold text-slate-400 tracking-wide">Loading module...</p>
+      <GooeyLoader
+        size="md"
+        text="Loading module..."
+        subtitle="Preparing view and academic datasets"
+      />
     </div>
   );
 }
@@ -118,16 +118,15 @@ function ModuleLoadingFallback() {
 function PageLoadingFallback() {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-100">
-      <div className="relative mb-6">
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-600/20 to-purple-600/20 border border-purple-500/30 flex items-center justify-center shadow-2xl shadow-purple-500/25 p-3">
-          <img src="/favicon.png" alt="Plannify" className="w-12 h-12 object-contain animate-pulse" />
-        </div>
-      </div>
-      <div className="flex items-center gap-2.5 mb-2">
-        <span className="text-xs font-bold text-indigo-400/80 uppercase tracking-widest">INITIALIZING</span>
+      <div className="flex items-center gap-2.5 mb-6">
+        <span className="text-xs font-bold text-amber-500 uppercase tracking-widest">INITIALIZING</span>
         <BrandLogo size="md" />
       </div>
-      <p className="text-xs text-slate-500 mt-1">Preparing academic workspace...</p>
+      <GooeyLoader
+        size="lg"
+        text="Preparing Academic Workspace"
+        subtitle="Establishing Supabase real-time connection & solver engine"
+      />
     </div>
   );
 }
@@ -1470,18 +1469,13 @@ export default function App() {
 
       {/* Global Loading Overlay */}
       {loading && activeTab !== "timetable" && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 backdrop-blur-md animate-fade-in">
-          <div className="glass-card flex flex-col items-center gap-6 p-10 animate-scale-in">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-violet-500/10 animate-pulse" />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-bold text-white">AI Engine Working</h3>
-              <p className="text-sm text-slate-400 mt-1">Processing complex academic constraints...</p>
-            </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 backdrop-blur-md animate-fade-in">
+          <div className="card p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl animate-scale-in max-w-sm w-full mx-4">
+            <GooeyLoader
+              size="lg"
+              text="AI Engine Processing"
+              subtitle="Optimizing academic constraints & solving schedule matrix..."
+            />
           </div>
         </div>
       )}

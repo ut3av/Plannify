@@ -767,3 +767,81 @@ input:-webkit-autofill:active {
     font-weight: 700 !important;
   }
 }
+
+/* ============================================================
+   Custom Gooey Orbital Physics Loader
+   ============================================================ */
+.loader-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(220, 200, 180, 0.3);
+}
+
+.loader {
+  width: 100px;
+  aspect-ratio: 1;
+  padding: 10px;
+  box-sizing: border-box;
+  display: grid;
+  background: #fff;
+  filter: blur(5px) contrast(10) hue-rotate(300deg);
+  mix-blend-mode: darken;
+}
+
+.loader:before,
+.loader:after { 
+  content: "";
+  grid-area: 1/1; 
+  width: 40px;
+  height: 40px;
+  background: #ffff00;
+  animation: l7 2s infinite;
+}
+
+.loader:after { 
+  animation-delay: -1s;
+}
+
+@keyframes l7 {
+  0%   {transform: translate(   0,0)}
+  25%  {transform: translate(100%,0)}
+  50%  {transform: translate(100%,100%)}
+  75%  {transform: translate(   0,100%)}
+  100% {transform: translate(   0,0)}
+}
+
+/* Size Variants */
+.loader-sm {
+  width: 44px;
+  padding: 4px;
+}
+.loader-sm:before,
+.loader-sm:after {
+  width: 18px;
+  height: 18px;
+}
+
+.loader-md {
+  width: 72px;
+  padding: 7px;
+}
+.loader-md:before,
+.loader-md:after {
+  width: 29px;
+  height: 29px;
+}
+
+.loader-lg {
+  width: 100px;
+  padding: 10px;
+}
+.loader-lg:before,
+.loader-lg:after {
+  width: 40px;
+  height: 40px;
+}

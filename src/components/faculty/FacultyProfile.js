@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import GooeyLoader from "../common/GooeyLoader";
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
@@ -98,9 +99,12 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
 
   if (loading) {
     return (
-      <div className="text-center py-20 text-slate-400">
-        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-sm">Loading faculty profile...</p>
+      <div className="text-center py-20 animate-fade-in">
+        <GooeyLoader
+          size="md"
+          text="Loading faculty profile..."
+          subtitle="Fetching credentials and assigned lectures"
+        />
       </div>
     );
   }

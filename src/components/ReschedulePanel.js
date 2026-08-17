@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import GooeyLoader from "./common/GooeyLoader";
 
 export default function ReschedulePanel({
   teachers = [],
@@ -105,29 +106,12 @@ export default function ReschedulePanel({
     <div className="glass-card p-6 animate-fade-in relative overflow-hidden text-slate-100 space-y-6">
       {/* Loading Overlay */}
       {loading && (
-        <div className="absolute inset-0 z-50 bg-slate-900/85 backdrop-blur-md flex flex-col items-center justify-center animate-fade-in text-white">
-          <div className="w-16 h-16 relative mb-6">
-            <div className="absolute inset-0 border-4 border-amber-500/20 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-amber-500 rounded-full border-t-transparent animate-spin"></div>
-            <svg
-              className="w-6 h-6 text-amber-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polyline points="23 4 23 10 17 10" />
-              <polyline points="1 20 1 14 7 14" />
-              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-bold mb-2">
-            AI Rescheduling & Constraint Re-optimization
-          </h3>
-          <p className="text-sm text-slate-300">
-            Reallocating impacted student sections with zero room/teacher
-            clashes...
-          </p>
+        <div className="absolute inset-0 z-50 bg-slate-900/85 backdrop-blur-md flex flex-col items-center justify-center animate-fade-in text-white p-6">
+          <GooeyLoader
+            size="lg"
+            text="AI Rescheduling & Constraint Re-optimization"
+            subtitle="Reallocating impacted student sections with zero room/teacher clashes..."
+          />
         </div>
       )}
 

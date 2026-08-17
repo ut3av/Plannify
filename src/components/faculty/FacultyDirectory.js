@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import DispatchPreviewModal from "../common/DispatchPreviewModal";
+import GooeyLoader from "../common/GooeyLoader";
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
@@ -499,9 +500,12 @@ export default function FacultyDirectory({
 
       {/* Content */}
       {loading ? (
-        <div className="text-center py-20 text-slate-400">
-          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm font-medium">Loading faculty directory...</p>
+        <div className="text-center py-16 animate-fade-in">
+          <GooeyLoader
+            size="md"
+            text="Loading faculty directory..."
+            subtitle="Fetching verified faculty profiles and academic assignments"
+          />
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-slate-400">

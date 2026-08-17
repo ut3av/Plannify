@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
+import GooeyLoader from "../common/GooeyLoader";
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
@@ -217,9 +218,12 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
 
       {/* Leaves Table */}
       {loading ? (
-        <div className="text-center py-16 text-slate-400">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm">Loading leaves and computing timetable impact...</p>
+        <div className="text-center py-16 animate-fade-in">
+          <GooeyLoader
+            size="md"
+            text="Loading leave workflows..."
+            subtitle="Evaluating timetable impact & substitute availability"
+          />
         </div>
       ) : filteredLeaves.length === 0 ? (
         <div className="text-center py-16 text-slate-400">
