@@ -547,14 +547,14 @@ export default function App() {
   const [rescheduleNote, setRescheduleNote] = useState("");
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);
 
-  // Theme state: 'dark' | 'warm-white'
+  // Theme state: 'warm-white' (primary) | 'dark'
   const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem('planify-theme') || 'dark'; } catch { return 'dark'; }
+    try { return localStorage.getItem('planify-theme') || 'warm-white'; } catch { return 'warm-white'; }
   });
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => {
-      const next = prev === 'dark' ? 'warm-white' : 'dark';
+      const next = prev === 'warm-white' ? 'dark' : 'warm-white';
       try { localStorage.setItem('planify-theme', next); } catch {}
       return next;
     });

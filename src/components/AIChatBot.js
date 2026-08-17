@@ -156,43 +156,43 @@ export default function AIChatBot({ result, onExtractedData, onLoadDemo }) {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 p-3.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-500 text-white shadow-2xl shadow-purple-500/40 hover:scale-105 hover:shadow-purple-500/60 transition-all duration-300 border border-purple-400/30"
+          className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 p-3.5 rounded-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white shadow-2xl shadow-amber-600/30 hover:scale-105 hover:shadow-amber-600/50 transition-all duration-300 border border-amber-400/40"
           title="Open Plannify.exe AI Co-Pilot"
         >
           <div className="relative flex items-center justify-center w-7 h-7 rounded-full bg-white/20 backdrop-blur-md">
             <img src="/favicon.png" alt="AI" className="w-5 h-5 object-contain" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#20140E]" />
           </div>
-          <BrandLogo size="xs" className="pr-1 hidden sm:inline-flex" />
-          <span className="text-[10px] font-black uppercase text-indigo-300 hidden sm:inline">AI</span>
+          <BrandLogo size="xs" isWarm={true} className="pr-1 hidden sm:inline-flex" />
+          <span className="text-[10px] font-black uppercase text-amber-200 hidden sm:inline">AI</span>
         </button>
       )}
 
       {/* Main AI Assistant Window */}
       {isOpen && (
         <div
-          className={`fixed right-4 bottom-4 z-50 bg-slate-900/95 border border-slate-800 rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col transition-all duration-300 overflow-hidden animate-scale-in ${
+          className={`fixed right-4 bottom-4 z-50 bg-[#20140E]/95 border border-[#332219] rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col transition-all duration-300 overflow-hidden animate-scale-in text-amber-100 ${
             isExpanded
               ? "w-[92vw] sm:w-[700px] h-[85vh]"
               : "w-[92vw] sm:w-[460px] h-[640px] max-h-[85vh]"
           }`}
         >
           {/* Header */}
-          <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border-b border-slate-800 flex items-center justify-between">
+          <div className="px-5 py-3.5 bg-gradient-to-r from-[#20140E] via-[#2E1B13] to-[#20140E] border-b border-[#332219] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600/30 to-purple-600/30 border border-purple-500/40 flex items-center justify-center shadow-lg shadow-purple-500/20 p-1.5">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-600/30 to-orange-600/30 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-600/20 p-1.5">
                 <img src="/favicon.png" alt="Plannify" className="w-full h-full object-contain" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <BrandLogo size="sm" />
+                  <BrandLogo size="sm" isWarm={true} />
                   <span className="text-xs font-black text-white uppercase tracking-wider">AI Co-Pilot</span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30 flex items-center gap-1">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/30 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     Llama 3.3 70B
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400">Timetable & Operational Intelligence Engine</p>
+                <p className="text-[10px] text-amber-200/60">Timetable & Operational Intelligence Engine</p>
               </div>
             </div>
 

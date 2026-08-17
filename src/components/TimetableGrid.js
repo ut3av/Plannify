@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SUBJECT_COLORS } from "./SubjectsSection";
+import { getSubjectColor, SUBJECT_COLORS } from "./SubjectsSection";
 
 function ShimmerGrid() {
   return (
@@ -44,45 +44,48 @@ function EmptyState({ loading }) {
 function AssignmentCard({ item, subjects }) {
   const subject = subjects?.find(s => s.name === item.subject || s.code === item.code);
   const colorIndex = subject?.colorIndex ?? 0;
-  const c = SUBJECT_COLORS[colorIndex % SUBJECT_COLORS.length] || SUBJECT_COLORS[0];
+  const c = getSubjectColor(colorIndex, true);
 
   return (
     <div
-      className="assignment-card-print relative rounded-xl p-2.5 transition-all duration-200 hover:translate-y-[-2px] hover:shadow-lg cursor-default border group text-left"
-      style={{ background: c.bg, borderColor: c.border }}
+      className="assignment-card-print relative rounded-xl p-2.5 transition-all duration-200 hover:translate-y-[-2px] hover:shadow-md cursor-default border text-left"
+      style={{
+        backgroundColor: c.bg,
+        borderColor: c.border,
+      }}
     >
       <div className="flex items-start justify-between gap-1">
-        <p className="font-bold text-xs leading-tight" style={{ color: c.accent }}>
+        <p className="font-bold text-xs leading-tight font-display tracking-tight" style={{ color: c.text }}>
           {item.code ? <span className="mr-1 opacity-90 font-mono font-black">[{item.code}]</span> : null}
           {item.subject}
         </p>
         <div className="flex gap-1 shrink-0 no-print">
           {item.is_proxy && (
-            <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-amber-600/20 text-amber-800 dark:text-amber-300 border border-amber-500/40">
               Proxy
             </span>
           )}
           {item.is_lab && (
-            <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-emerald-600/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40">
               🔬 Lab
             </span>
           )}
         </div>
       </div>
 
-      <div className="mt-1.5 flex items-center justify-between text-[11px] text-slate-300">
-        <span className="truncate font-semibold text-slate-200">
+      <div className="mt-1.5 flex items-center justify-between text-[11px]">
+        <span className="truncate font-semibold" style={{ color: c.accent }}>
           {item.is_proxy ? (
             <>
-              <span className="line-through opacity-40 mr-1">{item.original_teacher}</span>
-              <span className="text-amber-300 font-bold">{item.teacher}</span>
+              <span className="line-through opacity-50 mr-1">{item.original_teacher}</span>
+              <span className="font-bold underline">{item.teacher}</span>
             </>
           ) : (
             item.teacher
           )}
         </span>
         {item.section && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/80 font-mono text-slate-400 shrink-0 ml-1">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/70 dark:bg-slate-800/80 font-mono font-bold text-slate-700 dark:text-slate-300 border border-slate-300/60 dark:border-slate-700 shrink-0 ml-1">
             {item.section.replace("Section ", "Sec ")}
           </span>
         )}

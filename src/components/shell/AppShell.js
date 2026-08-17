@@ -15,7 +15,7 @@ export default function AppShell({
   onLoadDemo,
   user,
   onLogout,
-  theme = 'dark',
+  theme = 'warm-white',
   onToggleTheme,
   children,
 }) {
@@ -27,7 +27,7 @@ export default function AppShell({
   return (
     <div className={`min-h-screen font-sans flex flex-col antialiased transition-colors duration-300 ${
       isWarm
-        ? 'bg-[#faf7f2] text-[#2c1810]'
+        ? 'bg-[#FAF8F3] text-[#1F140E]'
         : 'bg-slate-950 text-slate-100'
     }`}>
       {/* Top Header Bar */}

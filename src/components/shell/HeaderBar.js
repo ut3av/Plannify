@@ -19,7 +19,7 @@ export default function HeaderBar({
   onLoadDemo,
   user,
   onLogout,
-  theme = 'dark',
+  theme = 'warm-white',
   onToggleTheme,
 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -42,7 +42,7 @@ export default function HeaderBar({
   return (
     <header className={`h-16 backdrop-blur-md border-b px-4 flex items-center justify-between sticky top-0 z-30 transition-colors duration-300 ${
       isWarm
-        ? 'bg-[#fffdf8]/95 border-[#e8ddd0] text-[#2c1810]'
+        ? 'bg-white/95 border-[#E8DDD0] text-[#1F140E]'
         : 'bg-slate-900/95 border-slate-800 text-slate-100'
     }`}>
       {/* LEFT: Toggle & Breadcrumbs */}
@@ -51,7 +51,7 @@ export default function HeaderBar({
           onClick={onToggleSidebar}
           className={`p-2 rounded-xl transition-colors border ${
             isWarm
-              ? 'bg-[#f3ede4] hover:bg-[#e8ddd0] text-[#6b5344] border-[#e8ddd0]'
+              ? 'bg-[#F4EEE5] hover:bg-[#E8DDD0] text-[#5C4A3E] border-[#E8DDD0]'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700/80'
           }`}
           title={isSidebarOpen ? "Collapse navigation" : "Expand navigation"}
@@ -67,35 +67,37 @@ export default function HeaderBar({
         <button
           onClick={() => onSelectPage && onSelectPage("dashboard")}
           className={`flex items-center gap-2.5 shrink-0 pr-3 border-r text-left cursor-pointer hover:opacity-90 transition-all group ${
-            isWarm ? 'border-[#e8ddd0]' : 'border-slate-800'
+            isWarm ? 'border-[#E8DDD0]' : 'border-slate-800'
           }`}
         >
           <img
             src="/favicon.png"
             alt="Plannify Logo"
-            className="w-8 h-8 object-contain drop-shadow-[0_2px_10px_rgba(126,34,206,0.35)] group-hover:scale-105 transition-transform"
+            className={`w-8 h-8 object-contain ${
+              isWarm ? 'drop-shadow-[0_2px_10px_rgba(217,119,6,0.35)]' : 'drop-shadow-[0_2px_10px_rgba(126,34,206,0.35)]'
+            } group-hover:scale-105 transition-transform`}
           />
           <BrandLogo size="md" isWarm={isWarm} className="hidden sm:inline-flex" />
         </button>
 
         {/* Dynamic Breadcrumbs */}
         <nav className={`flex items-center gap-2 text-xs min-w-0 overflow-hidden ${
-          isWarm ? 'text-[#a08b7a]' : 'text-slate-400'
+          isWarm ? 'text-[#8F7B6D]' : 'text-slate-400'
         }`}>
           <span
             onClick={() => onSelectPage && onSelectPage("dashboard")}
             className={`cursor-pointer font-medium ${
-              isWarm ? 'hover:text-[#2c1810]' : 'hover:text-slate-200'
+              isWarm ? 'hover:text-[#1F140E]' : 'hover:text-slate-200'
             }`}
           >
             Home
           </span>
           {breadcrumbs.map((crumb, idx) => (
             <React.Fragment key={idx}>
-              <span className={isWarm ? 'text-[#d4c4b0]' : 'text-slate-600'}>/</span>
+              <span className={isWarm ? 'text-[#D4C4B0]' : 'text-slate-600'}>/</span>
               <span className={`truncate ${idx === breadcrumbs.length - 1
-                ? `font-bold ${isWarm ? 'text-[#2c1810]' : 'text-white'}`
-                : `${isWarm ? 'hover:text-[#2c1810]' : 'hover:text-slate-200'} cursor-pointer`
+                ? `font-bold ${isWarm ? 'text-[#1F140E]' : 'text-white'}`
+                : `${isWarm ? 'hover:text-[#1F140E]' : 'hover:text-slate-200'} cursor-pointer`
               }`}>
                 {crumb}
               </span>
@@ -110,9 +112,9 @@ export default function HeaderBar({
         {onToggleTheme && (
           <button
             onClick={onToggleTheme}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all duration-300 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-300 ${
               isWarm
-                ? 'bg-amber-100/80 hover:bg-amber-200/80 border-amber-300/60 text-amber-800'
+                ? 'bg-amber-100 hover:bg-amber-200 border-amber-300/80 text-amber-900 shadow-sm'
                 : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-slate-100'
             }`}
             title={isWarm ? 'Switch to Dark theme' : 'Switch to Warm White theme'}

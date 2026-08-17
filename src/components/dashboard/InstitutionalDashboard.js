@@ -41,20 +41,20 @@ export default function InstitutionalDashboard({
   const onLeaveToday = stats?.on_leave_today || 0;
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-100">
+    <div className="space-y-6 animate-fade-in text-slate-900 dark:text-slate-100">
       {/* Welcome Banner */}
-      <div className="card p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950/80 border border-indigo-500/20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 blur-3xl rounded-full pointer-events-none" />
+      <div className="card p-6 bg-gradient-to-r from-[#20140E] via-[#2C1810] to-[#150C07] border border-[#332219] text-amber-100 relative overflow-hidden shadow-md">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 blur-3xl rounded-full pointer-events-none" />
 
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black text-white tracking-tight">Institutional Operations Command Center</h1>
+              <h1 className="text-2xl font-black text-white tracking-tight font-display">Institutional Operations Command Center</h1>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${loading ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"}`}>
                 {loading ? "● SYNCING METRICS..." : "● LIVE SYSTEM"}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-[#D4C4B0] mt-1">
               Central operational overview for academic scheduling, faculty management, attendance tracking, and leave workflows.
             </p>
           </div>
@@ -62,7 +62,7 @@ export default function InstitutionalDashboard({
           <div className="flex items-center gap-3">
             <button
               onClick={() => onNavigate("timetable")}
-              className="btn-primary text-xs py-2.5 px-4 font-bold gap-2 shadow-lg shadow-indigo-500/20"
+              className="btn-primary text-xs py-2.5 px-4 font-bold gap-2 shadow-lg shadow-amber-900/30"
             >
               📅 Open Timetable Workspace
             </button>
@@ -78,34 +78,34 @@ export default function InstitutionalDashboard({
 
       {/* Top Operational Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-        <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">
-          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Faculty</p>
-          <h3 className="text-2xl font-black text-white mt-1">{activeFaculty}</h3>
-          <p className="text-[10px] text-slate-500 mt-1">Active Profiles</p>
+        <div className="stat-card p-4 hover:border-amber-500/40">
+          <p className="stat-label">Faculty</p>
+          <h3 className="stat-value">{activeFaculty}</h3>
+          <p className="text-[10px] text-slate-400 mt-1">Active Profiles</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">
-          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Sections</p>
-          <h3 className="text-2xl font-black text-indigo-400 mt-1">{sectionsCount}</h3>
-          <p className="text-[10px] text-slate-500 mt-1">Active Classes</p>
+        <div className="stat-card p-4 hover:border-amber-500/40">
+          <p className="stat-label">Sections</p>
+          <h3 className="stat-value text-amber-700 dark:text-amber-400">{sectionsCount}</h3>
+          <p className="text-[10px] text-slate-400 mt-1">Active Classes</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">
-          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Subjects</p>
-          <h3 className="text-2xl font-black text-sky-400 mt-1">{subjectsCount}</h3>
-          <p className="text-[10px] text-slate-500 mt-1">Course Catalog</p>
+        <div className="stat-card p-4 hover:border-amber-500/40">
+          <p className="stat-label">Subjects</p>
+          <h3 className="stat-value text-amber-800 dark:text-amber-300">{subjectsCount}</h3>
+          <p className="text-[10px] text-slate-400 mt-1">Course Catalog</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">
-          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Classrooms</p>
-          <h3 className="text-2xl font-black text-purple-400 mt-1">{roomsCount}</h3>
-          <p className="text-[10px] text-slate-500 mt-1">Rooms & Labs</p>
+        <div className="stat-card p-4 hover:border-amber-500/40">
+          <p className="stat-label">Classrooms</p>
+          <h3 className="stat-value text-orange-700 dark:text-orange-400">{roomsCount}</h3>
+          <p className="text-[10px] text-slate-400 mt-1">Rooms & Labs</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">
-          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Attendance %</p>
-          <h3 className="text-2xl font-black text-emerald-400 mt-1">{attendanceRate}%</h3>
-          <p className="text-[10px] text-emerald-400/80 mt-1">Today's Rate</p>
+        <div className="stat-card p-4 hover:border-emerald-500/40">
+          <p className="stat-label">Attendance %</p>
+          <h3 className="stat-value text-emerald-700 dark:text-emerald-400">{attendanceRate}%</h3>
+          <p className="text-[10px] text-emerald-600/80 mt-1">Today's Rate</p>
         </div>
 
         <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all">

@@ -68,7 +68,7 @@ export default function SidebarNav({
   activePage,
   onSelectPage,
   userRole = "Admin",
-  theme = "dark",
+  theme = "warm-white",
 }) {
   const isWarm = theme === 'warm-white';
 
@@ -78,12 +78,12 @@ export default function SidebarNav({
         isOpen ? "w-64" : "w-16"
       } ${
         isWarm
-          ? 'border-[#3d2a1e]'
+          ? 'border-[#332219]'
           : 'bg-slate-900/95 border-slate-800'
       }`}
-      style={isWarm ? { backgroundColor: 'rgba(44, 24, 16, 0.98)' } : undefined}
+      style={isWarm ? { backgroundColor: '#20140E' } : undefined}
     >
-      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
+      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-6 scrollbar-thin scrollbar-thumb-amber-900/40">
         {NAV_GROUPS.map((group, groupIdx) => {
           const isFaculty = userRole === "Faculty" || userRole === "Teacher" || userRole === "teacher";
           if (isFaculty && group.title === "ACADEMIC SETUP") {
@@ -103,14 +103,14 @@ export default function SidebarNav({
           return (
             <div key={groupIdx} className="space-y-1">
               {isOpen ? (
-                <p className={`px-3 text-[10px] font-black uppercase tracking-widest mb-2 ${
-                  isWarm ? 'text-amber-700/50' : 'text-slate-500'
+                <p className={`px-3 text-[10px] font-bold uppercase tracking-widest mb-2 ${
+                  isWarm ? 'text-amber-200/50' : 'text-slate-500'
                 }`}>
                   {group.title}
                 </p>
               ) : (
                 <div className={`w-full h-px my-2 ${
-                  isWarm ? 'bg-[#3d2a1e]' : 'bg-slate-800'
+                  isWarm ? 'bg-[#332219]' : 'bg-slate-800'
                 }`} />
               )}
 
@@ -124,10 +124,10 @@ export default function SidebarNav({
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all relative group ${
                       isActive
                         ? isWarm
-                          ? 'bg-amber-600/20 text-amber-100 border border-amber-500/40 shadow-lg shadow-amber-500/10 font-bold'
+                          ? 'bg-amber-600/25 text-amber-100 border border-amber-500/50 shadow-md shadow-amber-900/30 font-bold'
                           : 'bg-indigo-600/20 text-white border border-indigo-500/40 shadow-lg shadow-indigo-500/10 font-bold'
                         : isWarm
-                          ? 'text-amber-200/60 hover:text-amber-100 hover:bg-amber-900/30 border border-transparent'
+                          ? 'text-[#D4C4B0] hover:text-amber-100 hover:bg-white/[0.06] border border-transparent'
                           : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
                     }`}
                   >
@@ -135,7 +135,7 @@ export default function SidebarNav({
                       isActive
                         ? isWarm ? 'text-amber-400' : 'text-indigo-400'
                         : isWarm
-                          ? 'text-amber-200/60 group-hover:text-amber-100'
+                          ? 'text-[#A08B7A] group-hover:text-amber-200'
                           : 'text-slate-400 group-hover:text-slate-200'
                     }`}>
                       <NavIcon icon={item.icon} />
@@ -148,7 +148,7 @@ export default function SidebarNav({
                     {isOpen && item.badge && (
                       <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
                         isWarm
-                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                           : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
                       }`}>
                         {item.badge}
@@ -159,8 +159,8 @@ export default function SidebarNav({
                     {!isOpen && (
                       <div className={`absolute left-full ml-2 hidden group-hover:block z-50 px-3 py-1.5 rounded-lg text-xs text-white whitespace-nowrap shadow-xl border ${
                         isWarm
-                          ? 'bg-[#2c1810] border-[#3d2a1e]'
-                          : 'bg-slate-950 border-slate-700'
+                          ? 'bg-[#20140E] border-[#332219] text-amber-100'
+                          : 'bg-slate-900 border-slate-800'
                       }`}>
                         {item.label}
                       </div>
@@ -177,7 +177,7 @@ export default function SidebarNav({
       {isOpen && (
         <div className={`p-3 border-t text-[10px] flex items-center justify-between ${
           isWarm
-            ? 'border-[#3d2a1e] text-amber-200/40'
+            ? 'border-[#332219] text-amber-200/50'
             : 'border-slate-800 text-slate-500'
         }`}>
           <div className="flex items-center gap-2">

@@ -35,22 +35,22 @@ export default function TeacherDashboard({ user, result, onLogout }) {
   }, [schedule]);
 
   return (
-    <div className="min-h-screen text-slate-100 selection:bg-indigo-500/30 selection:text-white bg-slate-950">
+    <div className="min-h-screen text-slate-900 dark:text-slate-100 selection:bg-amber-500/30 selection:text-white bg-[var(--bg-main)]">
       <div className="glow-mesh" />
       
       {/* Top Navbar */}
-      <nav className="sticky top-0 z-50 glass-panel border-b border-white/10 px-6 py-4 flex justify-between items-center bg-slate-950/90 backdrop-blur-2xl">
+      <nav className="sticky top-0 z-50 glass-panel border-b border-[#E8DDD0] dark:border-white/10 px-6 py-4 flex justify-between items-center bg-white/95 dark:bg-slate-950/90 backdrop-blur-2xl">
         <div className="flex items-center gap-3.5">
           <img 
             src="/favicon.png" 
             alt="Plannify" 
-            className="w-10 h-10 object-contain drop-shadow-[0_2px_12px_rgba(126,34,206,0.4)]" 
+            className="w-10 h-10 object-contain drop-shadow-[0_2px_12px_rgba(217,119,6,0.4)]" 
           />
           <div className="flex flex-col">
             <h1 className="flex items-center gap-2 group">
-              <BrandLogo size="md" />
+              <BrandLogo size="md" isWarm={true} />
             </h1>
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-400/80">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Faculty Portal
             </div>
@@ -58,14 +58,14 @@ export default function TeacherDashboard({ user, result, onLogout }) {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex flex-col items-end border-r border-slate-800 pr-4">
-            <span className="text-xs font-black text-white">{teacherName}</span>
-            <span className="text-[10px] font-bold text-slate-500">{user?.email}</span>
+          <div className="hidden md:flex flex-col items-end border-r border-slate-200 dark:border-slate-800 pr-4">
+            <span className="text-xs font-black text-slate-900 dark:text-white">{teacherName}</span>
+            <span className="text-[10px] font-bold text-slate-400">{user?.email}</span>
           </div>
 
           <button 
             onClick={onLogout} 
-            className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-bold text-red-300 hover:bg-red-500/20 hover:text-white transition-all active:scale-95 flex items-center gap-1.5"
+            className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-bold text-red-600 dark:text-red-300 hover:bg-red-500/20 transition-all active:scale-95 flex items-center gap-1.5"
           >
             <span>🔒</span>
             <span>Sign Out</span>
@@ -78,18 +78,18 @@ export default function TeacherDashboard({ user, result, onLogout }) {
         {/* Dashboard Header */}
         <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-black text-white mb-1">Faculty <span className="text-gradient">Portal</span></h2>
-            <p className="text-slate-400 text-xs font-medium tracking-wide">Manage your individual schedule, attendance, workload analytics, and leave applications.</p>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-1 font-display">Faculty <span className="text-gradient">Portal</span></h2>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium tracking-wide">Manage your individual schedule, attendance, workload analytics, and leave applications.</p>
           </div>
 
           {/* Teacher Tab Navigation */}
-          <div className="flex items-center gap-2 p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl">
+          <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl">
             <button 
               onClick={() => setActiveTab("timetable")} 
               className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${
                 activeTab === "timetable" 
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-amber-600 text-white shadow-md shadow-amber-600/20" 
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               📅 My Timetable
@@ -98,8 +98,8 @@ export default function TeacherDashboard({ user, result, onLogout }) {
               onClick={() => setActiveTab("attendance")} 
               className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${
                 activeTab === "attendance" 
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-amber-600 text-white shadow-md shadow-amber-600/20" 
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               🕒 Individual Attendance
@@ -108,8 +108,8 @@ export default function TeacherDashboard({ user, result, onLogout }) {
               onClick={() => setActiveTab("analytics")} 
               className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${
                 activeTab === "analytics" 
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-amber-600 text-white shadow-md shadow-amber-600/20" 
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               📊 Workload Analytics
@@ -118,8 +118,8 @@ export default function TeacherDashboard({ user, result, onLogout }) {
               onClick={() => setActiveTab("leave")} 
               className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${
                 activeTab === "leave" 
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-amber-600 text-white shadow-md shadow-amber-600/20" 
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               📋 Leave Apply
@@ -128,32 +128,32 @@ export default function TeacherDashboard({ user, result, onLogout }) {
         </div>
 
         {/* Faculty Identity Profile Card */}
-        <div className="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-wrap items-center justify-between gap-4 text-xs mb-8 shadow-xl">
+        <div className="card p-4 flex flex-wrap items-center justify-between gap-4 text-xs mb-8">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold flex items-center justify-center">
               👨‍🏫
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-white text-sm">{teacherName}</span>
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                <span className="font-bold text-slate-900 dark:text-white text-sm">{teacherName}</span>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
                   Verified Faculty
                 </span>
               </div>
-              <p className="text-slate-400 text-xs">
+              <p className="text-slate-500 dark:text-slate-400 text-xs">
                 {user?.user_metadata?.designation || "Assistant Professor"} • {user?.user_metadata?.department || "Computer Applications"}
               </p>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-3 text-slate-300">
+          <div className="flex flex-wrap items-center gap-3 text-slate-600 dark:text-slate-300">
             {user?.user_metadata?.employee_id && (
-              <span className="font-mono text-[11px] bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700 text-indigo-300">
+              <span className="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-amber-800 dark:text-amber-300">
                 🏷️ {user?.user_metadata?.employee_id}
               </span>
             )}
             {user?.email && (
-              <span className="bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/60 text-slate-300">
+              <span className="bg-slate-100 dark:bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300">
                 ✉️ {user?.email}
               </span>
             )}

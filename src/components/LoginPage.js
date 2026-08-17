@@ -138,37 +138,37 @@ export default function LoginPage() {
       <div className="relative w-full max-w-[1020px] grid lg:grid-cols-12 gap-0 overflow-hidden bg-slate-900/90 rounded-[32px] shadow-2xl border border-slate-800 backdrop-blur-xl">
 
         {/* LEFT COLUMN: BRAND HERO (5 cols) */}
-        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-950 border-r border-slate-800">
+        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-[#20140E] via-[#2C1810] to-[#150C07] border-r border-[#332219] text-amber-100">
           <div>
             <div className="flex items-center gap-3.5 mb-8">
               <img 
                 src="/favicon.png" 
                 alt="Plannify" 
-                className="w-12 h-12 object-contain drop-shadow-[0_4px_20px_rgba(126,34,206,0.45)]" 
+                className="w-12 h-12 object-contain drop-shadow-[0_4px_20px_rgba(217,119,6,0.45)]" 
               />
-              <BrandLogo size="lg" />
+              <BrandLogo size="lg" isWarm={true} />
             </div>
 
             <h1 className="text-3xl font-black tracking-tight text-white mb-3 leading-snug">
               Smart Academic <br />
               <span className="text-gradient">Operations Platform</span>
             </h1>
-            <p className="text-slate-400 text-xs leading-relaxed">
+            <p className="text-[#D4C4B0] text-xs leading-relaxed">
               University-grade automated scheduling, real-time timetable optimization, and operational faculty analytics.
             </p>
           </div>
 
-          <div className="space-y-3 pt-6 border-t border-slate-800/80 text-xs text-slate-300">
+          <div className="space-y-3 pt-6 border-t border-[#332219] text-xs text-[#E8DDD0]">
             <div className="flex items-center gap-2.5">
               <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px]">✓</div>
               <span>OR-Tools AI Constraint Solver</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-[10px]">✓</div>
+              <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[10px]">✓</div>
               <span>Role-Based Portal Access</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-[10px]">✓</div>
+              <div className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-[10px]">✓</div>
               <span>Supabase Cloud Integration</span>
             </div>
           </div>
@@ -178,43 +178,43 @@ export default function LoginPage() {
         <div className="lg:col-span-7 p-8 lg:p-10 flex flex-col justify-center space-y-6">
 
           {/* Mobile Brand Header */}
-          <div className="flex lg:hidden items-center justify-center gap-2.5 mb-1 pb-4 border-b border-slate-800">
+          <div className="flex lg:hidden items-center justify-center gap-2.5 mb-1 pb-4 border-b border-slate-200 dark:border-slate-800">
             <img 
               src="/favicon.png" 
               alt="Plannify" 
-              className="w-9 h-9 object-contain drop-shadow-[0_2px_12px_rgba(126,34,206,0.4)]" 
+              className="w-9 h-9 object-contain drop-shadow-[0_2px_12px_rgba(217,119,6,0.4)]" 
             />
-            <BrandLogo size="md" />
+            <BrandLogo size="md" isWarm={true} />
           </div>
 
           {/* Header & Title */}
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
               {isSignUp ? "Registration Portal" : "Authentication Portal"}
             </span>
-            <h2 className="text-2xl font-black text-white mt-1">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
               {isSignUp ? "Create OS Identity" : "Sign In to Plannify.exe"}
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Select your role portal to access your designated workspace.
             </p>
           </div>
 
           {/* TWO LOGIN PORTAL SECTIONS SWITCHER */}
-          <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-950 border border-slate-800">
+          <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setPortalRole("admin")}
               className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${portalRole === "admin"
-                  ? "bg-indigo-600/20 border-indigo-500/50 text-white shadow-lg shadow-indigo-500/10"
-                  : "bg-transparent border-transparent text-slate-400 hover:text-slate-200"
+                  ? "bg-amber-500/15 border-amber-500/50 text-slate-900 dark:text-white shadow-md shadow-amber-600/10 font-bold"
+                  : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold">🛡️ Admin</span>
-                {portalRole === "admin" && <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />}
+                {portalRole === "admin" && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
               </div>
-              <p className="text-[10px] text-slate-400 mt-1 leading-tight">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-tight">
                 Full institutional operations, timetable solver, faculty management, & settings
               </p>
             </button>
@@ -223,15 +223,15 @@ export default function LoginPage() {
               type="button"
               onClick={() => setPortalRole("teacher")}
               className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${portalRole === "teacher"
-                  ? "bg-indigo-600/20 border-indigo-500/50 text-white shadow-lg shadow-indigo-500/10"
-                  : "bg-transparent border-transparent text-slate-400 hover:text-slate-200"
+                  ? "bg-amber-500/15 border-amber-500/50 text-slate-900 dark:text-white shadow-md shadow-amber-600/10 font-bold"
+                  : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold">👨‍🏫 Faculty Member</span>
-                {portalRole === "teacher" && <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />}
+                {portalRole === "teacher" && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
               </div>
-              <p className="text-[10px] text-slate-400 mt-1 leading-tight">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-tight">
                 Personal timetable schedule, individual attendance, workload analytics, & Leave Apply
               </p>
             </button>

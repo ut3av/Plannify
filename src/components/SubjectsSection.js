@@ -1,18 +1,35 @@
 import React, { useState, useMemo } from "react";
 
-/* Modern Color palette for subject badges */
-export const SUBJECT_COLORS = [
-  { bg: "rgba(99,102,241,0.12)", border: "rgba(99,102,241,0.35)", text: "#c7d2fe", accent: "#818cf8" },
-  { bg: "rgba(244,63,94,0.12)", border: "rgba(244,63,94,0.35)", text: "#fda4af", accent: "#fb7185" },
-  { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.35)", text: "#fcd34d", accent: "#fbbf24" },
-  { bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.35)", text: "#6ee7b7", accent: "#34d399" },
-  { bg: "rgba(14,165,233,0.12)", border: "rgba(14,165,233,0.35)", text: "#7dd3fc", accent: "#38bdf8" },
-  { bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.35)", text: "#d8b4fe", accent: "#c084fc" },
-  { bg: "rgba(236,72,153,0.12)", border: "rgba(236,72,153,0.35)", text: "#f9a8d4", accent: "#f472b6" },
-  { bg: "rgba(6,182,212,0.12)", border: "rgba(6,182,212,0.35)", text: "#67e8f9", accent: "#22d3ee" },
-  { bg: "rgba(234,88,12,0.12)", border: "rgba(234,88,12,0.35)", text: "#fdba74", accent: "#fb923c" },
-  { bg: "rgba(34,197,94,0.12)", border: "rgba(34,197,94,0.35)", text: "#86efac", accent: "#4ade80" },
-];
+/* Theme-Adaptive Professional Color Palettes for Subject Badges */
+export const SUBJECT_PALETTES = {
+  warm: [
+    { bg: "#FEF3C7", border: "#F59E0B", text: "#78350F", accent: "#92400E", tag: "Amber" },
+    { bg: "#FFEDD5", border: "#FB923C", text: "#7C2D12", accent: "#C2410C", tag: "Terracotta" },
+    { bg: "#ECFDF5", border: "#34D399", text: "#064E3B", accent: "#047857", tag: "Emerald" },
+    { bg: "#EFF6FF", border: "#60A5FA", text: "#1E3A8A", accent: "#1D4ED8", tag: "Cobalt" },
+    { bg: "#F5F3FF", border: "#A78BFA", text: "#4C1D95", accent: "#6D28D9", tag: "Plum" },
+    { bg: "#FFF1F2", border: "#FB7185", text: "#881337", accent: "#BE123C", tag: "Rose" },
+    { bg: "#F0FDFA", border: "#2DD4BF", text: "#134E4A", accent: "#0F766E", tag: "Teal" },
+    { bg: "#FEF9C3", border: "#EAB308", text: "#713F12", accent: "#A16207", tag: "Gold" },
+  ],
+  dark: [
+    { bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.45)", text: "#FDE68A", accent: "#FBBF24", tag: "Amber" },
+    { bg: "rgba(234,88,12,0.15)", border: "rgba(234,88,12,0.45)", text: "#FED7AA", accent: "#FB923C", tag: "Terracotta" },
+    { bg: "rgba(16,185,129,0.15)", border: "rgba(16,185,129,0.45)", text: "#A7F3D0", accent: "#34D399", tag: "Emerald" },
+    { bg: "rgba(59,130,246,0.15)", border: "rgba(59,130,246,0.45)", text: "#BFDBFE", accent: "#60A5FA", tag: "Cobalt" },
+    { bg: "rgba(168,85,247,0.15)", border: "rgba(168,85,247,0.45)", text: "#DDD6FE", accent: "#C084FC", tag: "Plum" },
+    { bg: "rgba(244,63,94,0.15)", border: "rgba(244,63,94,0.45)", text: "#FECDD3", accent: "#FB7185", tag: "Rose" },
+    { bg: "rgba(20,184,166,0.15)", border: "rgba(20,184,166,0.45)", text: "#99F6E4", accent: "#2DD4BF", tag: "Teal" },
+    { bg: "rgba(234,179,8,0.15)", border: "rgba(234,179,8,0.45)", text: "#FEF08A", accent: "#FACC15", tag: "Gold" },
+  ]
+};
+
+export const SUBJECT_COLORS = SUBJECT_PALETTES.warm;
+
+export function getSubjectColor(colorIndex = 0, isWarm = true) {
+  const palette = isWarm ? SUBJECT_PALETTES.warm : SUBJECT_PALETTES.dark;
+  return palette[colorIndex % palette.length] || palette[0];
+}
 
 export default function SubjectsSection({ subjects = [], teachers = [], sections = [], rooms = [], onChange }) {
   const [code, setCode] = useState("");
