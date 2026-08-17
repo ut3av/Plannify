@@ -295,8 +295,8 @@ export default function AIChatBot({
             title="Open AI Timetable Co-Pilot"
           >
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="w-7 h-7 rounded-lg bg-amber-900/60 border border-amber-400/30 flex items-center justify-center p-1 shadow-inner">
-              <BrandLogo size="xs" />
+            <div className="w-7 h-7 rounded-lg bg-amber-950/80 border border-amber-400/40 flex items-center justify-center p-1 shadow-inner shrink-0">
+              <BrandLogo onlyIcon size="xs" isWarm={true} />
             </div>
             <div className="text-left">
               <div className="flex items-center gap-1.5 leading-none">
@@ -321,8 +321,8 @@ export default function AIChatBot({
           {/* Rich Header Bar */}
           <div className="px-5 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950/70 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center p-1.5 shadow-inner">
-                <BrandLogo size="xs" />
+              <div className="w-9 h-9 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center p-1.5 shadow-inner shrink-0">
+                <BrandLogo onlyIcon size="sm" isWarm={false} />
               </div>
               <div>
                 <div className="flex items-center gap-2">

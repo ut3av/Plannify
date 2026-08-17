@@ -48,9 +48,8 @@ function ModuleLoadingFallback() {
 function PageLoadingFallback() {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-100">
-      <div className="flex items-center gap-2.5 mb-6">
-        <span className="text-xs font-bold text-amber-500 uppercase tracking-widest">INITIALIZING</span>
-        <BrandLogo size="md" />
+      <div className="flex items-center gap-3 mb-6">
+        <BrandLogo size="lg" isWarm={false} />
       </div>
       <GooeyLoader
         size="lg"

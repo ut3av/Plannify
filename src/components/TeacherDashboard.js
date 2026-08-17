@@ -187,20 +187,11 @@ export default function TeacherDashboard({
       
       {/* Top Navbar */}
       <nav className="sticky top-0 z-50 glass-panel border-b border-[#E8DDD0] dark:border-white/10 px-4 sm:px-6 py-3.5 flex justify-between items-center bg-white/95 dark:bg-slate-950/90 backdrop-blur-2xl">
-        <div className="flex items-center gap-3.5">
-          <img 
-            src="/favicon.png" 
-            alt="Plannify" 
-            className="w-9 h-9 object-contain drop-shadow-[0_2px_12px_rgba(217,119,6,0.4)]" 
-          />
-          <div className="flex flex-col">
-            <h1 className="flex items-center gap-2 group">
-              <BrandLogo size="md" isWarm={true} />
-            </h1>
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Faculty Portal
-            </div>
+        <div className="flex items-center gap-3">
+          <BrandLogo size="md" isWarm={theme === 'warm-white'} />
+          <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 pl-3 border-l border-[#E8DDD0] dark:border-slate-800">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Faculty Portal
           </div>
         </div>
         

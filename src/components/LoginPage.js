@@ -243,13 +243,8 @@ export default function LoginPage() {
         {/* LEFT COLUMN: BRAND HERO (5 cols) */}
         <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-[#20140E] via-[#2C1810] to-[#150C07] border-r border-[#332219] text-amber-100">
           <div>
-            <div className="flex items-center gap-3.5 mb-8">
-              <img 
-                src="/favicon.png" 
-                alt="Plannify" 
-                className="w-12 h-12 object-contain drop-shadow-[0_4px_20px_rgba(217,119,6,0.45)]" 
-              />
-              <BrandLogo size="lg" isWarm={true} />
+            <div className="mb-8">
+              <BrandLogo size="lg" isWarm={true} textColor="text-white" />
             </div>
 
             <h1 className="text-3xl font-black tracking-tight text-white mb-3 leading-snug">
@@ -264,7 +259,7 @@ export default function LoginPage() {
           <div className="space-y-3 pt-6 border-t border-[#332219] text-xs text-[#E8DDD0]">
             <div className="flex items-center gap-2.5">
               <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px]">✓</div>
-              <span>OR-Tools AI Constraint Solver</span>
+              <span>Google OR-Tools Constraint Solver</span>
             </div>
             <div className="flex items-center gap-2.5">
               <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[10px]">✓</div>
@@ -281,13 +276,8 @@ export default function LoginPage() {
         <div className="lg:col-span-7 p-8 lg:p-10 flex flex-col justify-center space-y-6">
 
           {/* Mobile Brand Header */}
-          <div className="flex lg:hidden items-center justify-center gap-2.5 mb-1 pb-4 border-b border-slate-200 dark:border-slate-800">
-            <img 
-              src="/favicon.png" 
-              alt="Plannify" 
-              className="w-9 h-9 object-contain drop-shadow-[0_2px_12px_rgba(217,119,6,0.4)]" 
-            />
-            <BrandLogo size="md" isWarm={true} />
+          <div className="flex lg:hidden items-center justify-center mb-1 pb-4 border-b border-slate-200 dark:border-slate-800">
+            <BrandLogo size="md" isWarm={false} />
           </div>
 
           {/* Header & Title */}

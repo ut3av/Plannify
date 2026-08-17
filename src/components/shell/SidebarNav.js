@@ -186,8 +186,10 @@ export default function SidebarNav({
           isWarm ? 'border-[#332219] bg-[#1a0f0a]' : 'border-slate-800/80 bg-slate-950/50'
         }`}>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center p-1">
-              <BrandLogo size="xs" />
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center p-1 border shadow-inner ${
+              isWarm ? 'bg-amber-500/15 border-amber-500/30' : 'bg-indigo-500/20 border-indigo-500/30'
+            }`}>
+              <BrandLogo onlyIcon size="sm" isWarm={isWarm} />
             </div>
             <div className="min-w-0">
               <p className={`text-xs font-black truncate uppercase tracking-wide font-display ${

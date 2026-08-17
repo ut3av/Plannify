@@ -13,14 +13,8 @@ export default function NotFoundPage() {
 
       <div className="relative z-10 max-w-xl w-full text-center space-y-8">
         {/* Brand Header */}
-        <div className="flex items-center justify-center gap-3">
-          <BrandLogo size="md" />
-          <div className="text-left">
-            <span className="text-sm font-black tracking-widest text-amber-400 uppercase font-display block leading-none">
-              Plannify.exe
-            </span>
-            <span className="text-[10px] text-slate-400 font-medium">Academic Intelligence OS</span>
-          </div>
+        <div className="flex items-center justify-center">
+          <BrandLogo size="lg" isWarm={false} />
         </div>
 
         {/* 404 Visual Canvas */}

@@ -77,14 +77,7 @@ export default function HeaderBar({
             isWarm ? 'border-[#E8DDD0]' : 'border-slate-800'
           }`}
         >
-          <img
-            src="/favicon.png"
-            alt="Plannify Logo"
-            className={`w-8 h-8 object-contain ${
-              isWarm ? 'drop-shadow-[0_2px_10px_rgba(217,119,6,0.35)]' : 'drop-shadow-[0_2px_10px_rgba(126,34,206,0.35)]'
-            } group-hover:scale-105 transition-transform`}
-          />
-          <BrandLogo size="md" isWarm={isWarm} className="hidden sm:inline-flex" />
+          <BrandLogo size="md" isWarm={isWarm} showIcon={true} />
         </button>
 
         {/* Dynamic Breadcrumbs */}
