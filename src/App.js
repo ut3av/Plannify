@@ -11,6 +11,7 @@ import AppShell from "./components/shell/AppShell";
 import NotFoundPage from "./components/common/NotFoundPage";
 
 // Dynamic Section / View Imports (React.lazy)
+const LandingPage = lazy(() => import("./components/landing/LandingPage"));
 const LoginPage = lazy(() => import("./components/LoginPage"));
 const TeacherDashboard = lazy(() => import("./components/TeacherDashboard"));
 const InstitutionalDashboard = lazy(() => import("./components/dashboard/InstitutionalDashboard"));
@@ -601,6 +602,7 @@ function AdminLayout() {
           />
           <Route path="/operations/integrations" element={<IntegrationsSection />} />
           <Route path="/operations/settings" element={<SystemSettings userRole={userRole} />} />
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/reports" element={<ReportsCenter />} />
           
           {/* Universal Catch-All Route for Admin Layout */}
@@ -647,13 +649,15 @@ function AdminLayout() {
 function AppContent() {
   const { user, userRole, handleLogout, theme, toggleTheme, teachers, result } = useAcademic();
 
-  // If user is not logged in, render the login page
+  // If user is not logged in, render the landing page as root and login route for auth
   if (!user) {
     return (
       <Suspense fallback={<PageLoadingFallback />}>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="*" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     );
