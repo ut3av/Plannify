@@ -223,6 +223,54 @@ export default function LoginPage() {
             data: { role: portalRole, name: name || email.split('@')[0] }
           });
         }
+
+        // Auto-sync signed-in teacher into cloud timetable state if role is teacher
+        if (signInData?.user) {
+          const effectiveRole = signInData.user.user_metadata?.role || portalRole;
+          if (effectiveRole === "teacher") {
+            try {
+              const teacherName = signInData.user.user_metadata?.name || name || email.split('@')[0];
+              const { data: cloudData } = await supabase
+                .from('timetable_state')
+                .select('*')
+                .eq('id', 'draft')
+                .single();
+
+              let tList = [];
+              if (cloudData) {
+                const rawTeachers = cloudData.teachers ?? cloudData.room;
+                if (rawTeachers) {
+                  try {
+                    tList = typeof rawTeachers === 'string' ? JSON.parse(rawTeachers) : rawTeachers;
+                  } catch {
+                    tList = [];
+                  }
+                }
+              }
+              if (!Array.isArray(tList)) tList = [];
+              if (!tList.some(t => (t.name || t)?.trim().toLowerCase() === teacherName.trim().toLowerCase())) {
+                tList.push({
+                  name: teacherName,
+                  department: signInData.user.user_metadata?.department || "Computer Applications",
+                  phone: signInData.user.user_metadata?.phone || "+91-9876543210",
+                  email: signInData.user.email,
+                  employee_id: signInData.user.user_metadata?.employee_id || `EMP-LNCT-${Math.abs(teacherName.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
+                  designation: signInData.user.user_metadata?.designation || "Assistant Professor",
+                  free_periods: 1
+                });
+                await supabase
+                  .from('timetable_state')
+                  .upsert({
+                    id: 'draft',
+                    teachers: tList,
+                    updated_at: new Date().toISOString()
+                  });
+              }
+            } catch (cloudErr) {
+              console.warn("Cloud state sync for signing-in faculty:", cloudErr);
+            }
+          }
+        }
       }
     } catch (e) {
       setError(e.message);
