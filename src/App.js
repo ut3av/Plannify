@@ -647,7 +647,7 @@ function AdminLayout() {
 // ── Root Application Router Component ──
 
 function AppContent() {
-  const { user, userRole, handleLogout, theme, toggleTheme, teachers, result } = useAcademic();
+  const { user, userRole, setUserRole, handleLogout, theme, toggleTheme, teachers, result } = useAcademic();
 
   // If user is not logged in, render the landing page as root and login route for auth
   if (!user) {
@@ -678,6 +678,7 @@ function AppContent() {
                 onLogout={handleLogout}
                 theme={theme}
                 onToggleTheme={toggleTheme}
+                onSwitchToAdmin={() => setUserRole("Admin")}
               />
             }
           />

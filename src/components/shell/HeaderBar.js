@@ -345,6 +345,23 @@ export default function HeaderBar({
                 </p>
               </div>
 
+              {onRoleChange && (
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    onRoleChange("teacher");
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 font-semibold transition-colors mt-1 ${
+                    isLight
+                      ? "hover:bg-indigo-50 text-indigo-700"
+                      : "hover:bg-indigo-500/20 text-indigo-300"
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span>Switch to Teacher Portal</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   setShowProfileMenu(false);

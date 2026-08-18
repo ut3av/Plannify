@@ -16,6 +16,7 @@ export default function TeacherDashboard({
   teachers = [],
   theme = "light",
   onToggleTheme,
+  onSwitchToAdmin,
 }) {
   const [activeTab, setActiveTab] = useState("timetable"); // "timetable" | "attendance" | "analytics" | "leave"
   const [backendFaculty, setBackendFaculty] = useState([]);
@@ -314,6 +315,18 @@ export default function TeacherDashboard({
               </div>
             )}
           </div>
+
+          {/* SWITCH BACK TO ADMIN VIEW BUTTON */}
+          {onSwitchToAdmin && (
+            <button
+              onClick={onSwitchToAdmin}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-xs font-bold text-indigo-600 dark:text-indigo-300 transition-all active:scale-95 shadow-sm"
+              title="Return to Admin Command Center"
+            >
+              <svg className="w-3.5 h-3.5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span>Admin Workspace</span>
+            </button>
+          )}
 
           {/* Theme Toggle */}
           {onToggleTheme && (
@@ -621,7 +634,7 @@ export default function TeacherDashboard({
 
       {/* Floating AI Assistant */}
       <div className="fixed bottom-8 right-8 z-[100]">
-        <AIChatBot result={result} isTeacherView={true} teacherName={teacherName} />
+        <AIChatBot result={result} teachers={teachers} isTeacherView={true} teacherName={teacherName} />
       </div>
     </div>
   );

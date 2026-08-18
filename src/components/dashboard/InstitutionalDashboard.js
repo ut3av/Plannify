@@ -110,8 +110,14 @@ export default function InstitutionalDashboard({
       {/* Top Operational Metric Cards (Dynamic Rolling Numbers & Staggered Entrance) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         {/* Card 1: Faculty */}
-        <div className="card p-4 stat-card-elevate animate-slide-up-fade stagger-1 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Faculty</p>
+        <div
+          onClick={() => onNavigate && onNavigate("faculty")}
+          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-1 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-indigo-500/50 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Faculty</p>
+            <span className="text-[10px] text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </div>
           <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
             <AnimatedCounter target={activeFaculty} duration={1000} />
           </div>
@@ -122,8 +128,14 @@ export default function InstitutionalDashboard({
         </div>
 
         {/* Card 2: Sections */}
-        <div className="card p-4 stat-card-elevate animate-slide-up-fade stagger-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Sections</p>
+        <div
+          onClick={() => onNavigate && onNavigate("academic/sections")}
+          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-indigo-500/50 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Sections</p>
+            <span className="text-[10px] text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </div>
           <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
             <AnimatedCounter target={sectionsCount} duration={1100} />
           </div>
@@ -134,8 +146,14 @@ export default function InstitutionalDashboard({
         </div>
 
         {/* Card 3: Subjects */}
-        <div className="card p-4 stat-card-elevate animate-slide-up-fade stagger-3 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Subjects</p>
+        <div
+          onClick={() => onNavigate && onNavigate("academic/subjects")}
+          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-3 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-violet-500/50 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Subjects</p>
+            <span className="text-[10px] text-violet-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </div>
           <div className="text-2xl font-black text-violet-600 dark:text-violet-400 mt-1">
             <AnimatedCounter target={subjectsCount} duration={1200} />
           </div>
@@ -146,8 +164,14 @@ export default function InstitutionalDashboard({
         </div>
 
         {/* Card 4: Classrooms */}
-        <div className="card p-4 stat-card-elevate animate-slide-up-fade stagger-4 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Classrooms</p>
+        <div
+          onClick={() => onNavigate && onNavigate("academic/rooms")}
+          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-4 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-purple-500/50 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Classrooms</p>
+            <span className="text-[10px] text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </div>
           <div className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">
             <AnimatedCounter target={roomsCount} duration={1300} />
           </div>
@@ -158,8 +182,14 @@ export default function InstitutionalDashboard({
         </div>
 
         {/* Card 5: Attendance Rate */}
-        <div className="card p-4 stat-card-elevate animate-slide-up-fade stagger-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Attendance</p>
+        <div
+          onClick={() => onNavigate && onNavigate("attendance")}
+          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-emerald-500/50 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Attendance</p>
+            <span className="text-[10px] text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </div>
           <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
             <AnimatedCounter target={attendanceRate} suffix="%" duration={1200} />
           </div>
@@ -170,8 +200,14 @@ export default function InstitutionalDashboard({
         </div>
 
         {/* Card 6: On Leave */}
-        <div className="card p-4 stat-card-elevate animate-slide-up-fade stagger-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">On Leave</p>
+        <div
+          onClick={() => onNavigate && onNavigate("leave")}
+          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-amber-500/50 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">On Leave</p>
+            <span className="text-[10px] text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </div>
           <div className="text-2xl font-black text-amber-600 dark:text-amber-300 mt-1">
             <AnimatedCounter target={onLeaveToday} duration={1000} />
           </div>
@@ -182,8 +218,14 @@ export default function InstitutionalDashboard({
         </div>
 
         {/* Card 7: Pending Leaves */}
-        <div className="card p-4 stat-card-elevate animate-slide-up-fade stagger-7 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Pending Leave</p>
+        <div
+          onClick={() => onNavigate && onNavigate("leave")}
+          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-7 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-rose-500/50 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Pending Leave</p>
+            <span className="text-[10px] text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </div>
           <div className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">
             <AnimatedCounter target={pendingLeaves} duration={1000} />
           </div>
@@ -194,8 +236,14 @@ export default function InstitutionalDashboard({
         </div>
 
         {/* Card 8: Substitutions */}
-        <div className="card p-4 stat-card-elevate animate-slide-up-fade stagger-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Substitutions</p>
+        <div
+          onClick={() => onNavigate && onNavigate("substitutions")}
+          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-teal-500/50 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Substitutions</p>
+            <span className="text-[10px] text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </div>
           <div className="text-2xl font-black text-teal-600 dark:text-teal-400 mt-1">
             <AnimatedCounter target={substitutionsToday} duration={1100} />
           </div>
