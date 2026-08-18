@@ -139,6 +139,24 @@ function saveStoredAttendance(records) {
   }
 }
 
+export function clearAllFacultyCaches() {
+  try {
+    localStorage.removeItem(LEAVES_STORAGE_KEY);
+    localStorage.removeItem(ATTENDANCE_STORAGE_KEY);
+    localStorage.removeItem(SUBSTITUTION_STORAGE_KEY);
+    localStorage.removeItem("planify_timetable_state");
+    localStorage.removeItem("planify_faculty_cache");
+    cachedFacultyProfiles = [];
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("planify_leave_updated"));
+      window.dispatchEvent(new CustomEvent("planify_attendance_updated"));
+      window.dispatchEvent(new CustomEvent("planify_substitution_updated"));
+    }
+  } catch (e) {
+    console.warn("Could not clear faculty caches:", e);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // Real-Time Subscriptions Manager
 // ─────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { syncRelationalData } from '../services/supabaseService';
+import { clearAllFacultyCaches } from '../services/realtimeFacultyService';
 import { API_BASE_URL } from '../apiConfig';
 import { DEMO_TIMETABLE_DATA, DEMO_RESULT, buildApiPayload, formatResult } from '../data/demoTimetableData';
 
@@ -44,26 +45,6 @@ const readCloudState = (data) => ({
   result: parseCloudJson(data.result, null),
 });
 
-const buildCloudPayload = ({ teachers, sections, subjects, rooms, timeSlots, result }) => ({
-  id: "draft",
-  teachers,
-  sections,
-  subjects,
-  rooms,
-  time_slots: timeSlots,
-  result: result || null,
-  updated_at: new Date().toISOString(),
-});
-
-const buildLegacyCloudPayload = ({ teachers, sections, subjects, rooms, timeSlots }) => ({
-  id: "draft",
-  teacher_name: JSON.stringify(timeSlots),
-  email: JSON.stringify(sections),
-  subject: JSON.stringify(rooms),
-  day: JSON.stringify(subjects),
-  room: JSON.stringify(teachers),
-  slot: new Date().toISOString(),
-});
 
 function getErrorMessage(error) {
   const detail = error?.response?.data?.detail;
@@ -247,26 +228,55 @@ export function AcademicProvider({ children }) {
         timeSlots: live.timeSlots,
         result: live.result
       };
-      
-      // 1. Primary Save (JSONB Draft)
-      const { error } = await supabase
-        .from('timetable_state')
-        .upsert(buildCloudPayload(stateToSave));
-      
-      if (error) {
-        const { error: legacyError } = await supabase
+
+      // Always save to localStorage first so client state is resilient
+      try {
+        localStorage.setItem("planify_timetable_state", JSON.stringify({
+          ...stateToSave,
+          timeSlots: stateToSave.timeSlots || DEFAULT_TIME_SLOTS,
+        }));
+      } catch {}
+
+      if (supabase) {
+        const payload = {
+          id: "draft",
+          teachers: stateToSave.teachers || [],
+          sections: stateToSave.sections || [],
+          subjects: stateToSave.subjects || [],
+          rooms: stateToSave.rooms || [],
+          time_slots: stateToSave.timeSlots || DEFAULT_TIME_SLOTS,
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error: sbError } = await supabase
           .from('timetable_state')
-          .upsert(buildLegacyCloudPayload(stateToSave));
-        if (legacyError) throw legacyError;
+          .upsert(payload);
+
+        if (sbError) {
+          const { error: retryError } = await supabase
+            .from('timetable_state')
+            .upsert({
+              id: 'draft',
+              teacher_name: JSON.stringify(payload.time_slots),
+              email: JSON.stringify(payload.sections),
+              subject: JSON.stringify(payload.rooms),
+              day: JSON.stringify(payload.subjects),
+              room: JSON.stringify(payload.teachers),
+              slot: new Date().toISOString(),
+            });
+          if (retryError && !isSilent) {
+            console.warn("Supabase timetable_state save warning:", retryError);
+          }
+        }
+
+        // Relational Sync (optional - safe catch)
+        if (stateToSave.result) {
+          syncRelationalData({ ...stateToSave, result: stateToSave.result }).catch(() => null);
+        }
       }
 
-      // 2. Relational Sync (Structured Tables for Make/Analytics)
-      if (live.result) {
-        await syncRelationalData({ ...stateToSave, result: live.result }).catch(() => null);
-      }
-      
       if (!isSilent) {
-        setRescheduleNote("All academic datasets and faculty successfully synchronized with cloud storage.");
+        setRescheduleNote("All academic datasets successfully synchronized with cloud storage.");
       }
     } catch (e) {
       console.warn("Cloud save notice:", e);
@@ -433,24 +443,30 @@ export function AcademicProvider({ children }) {
       result: null
     };
 
-    try {
-      await supabase
-        .from('timetable_state')
-        .upsert({
-          id: 'draft',
-          teachers: [],
-          sections: [],
-          subjects: [],
-          rooms: [],
-          timeSlots: defaultSlots,
-          updated_at: new Date().toISOString()
-        });
+    clearAllFacultyCaches();
 
-      supabase.from('attendance_records').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
-      supabase.from('substitution_log').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
-      supabase.from('leave_applications').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
-      supabase.from('faculty_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
-      supabase.from('leave_balances').delete().neq('faculty_id', '00000000-0000-0000-0000-000000000000').then(() => null).catch(() => null);
+    try {
+      if (supabase) {
+        await supabase
+          .from('timetable_state')
+          .upsert({
+            id: 'draft',
+            teachers: [],
+            sections: [],
+            subjects: [],
+            rooms: [],
+            time_slots: defaultSlots,
+            updated_at: new Date().toISOString()
+          });
+
+        await Promise.allSettled([
+          supabase.from('attendance_records').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('substitution_log').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('leave_applications').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('faculty_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('leave_balances').delete().neq('faculty_id', '00000000-0000-0000-0000-000000000000'),
+        ]);
+      }
     } catch (e) {
       console.warn("Could not reset Supabase draft state:", e);
     }

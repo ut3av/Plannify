@@ -300,13 +300,14 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
     }
   };
 
-  const handleReview = async (action) => {
-    if (!reviewForm.leaveId) return;
+  const handleReview = async (targetLeaveId, action, remarks = "", substituteId = null) => {
+    const id = targetLeaveId || reviewForm.leaveId;
+    if (!id) return;
     try {
-      await reviewLeaveApplication(reviewForm.leaveId, action, {
-        reviewed_by: facultyId || "Admin",
-        remarks: reviewForm.remarks,
-        substitute_id: reviewForm.substituteId || undefined,
+      await reviewLeaveApplication(id, action, {
+        reviewed_by: facultyId || (user?.name || "Admin"),
+        remarks: remarks || reviewForm.remarks || "",
+        substitute_id: substituteId || reviewForm.substituteId || undefined,
       });
 
       setNotificationMsg(`Leave application has been ${action === "approve" ? "approved" : "rejected"} in real-time.`);
@@ -715,14 +716,18 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
                                   onChange={(e) => setReviewForm({ ...reviewForm, remarks: e.target.value })}
                                 />
                                 <button
-                                  onClick={() => handleReview("approve")}
-                                  className="text-xs font-bold text-emerald-400 hover:text-emerald-300"
+                                  onClick={() => handleReview(l.id, reviewForm.action || "approve", reviewForm.remarks, reviewForm.substituteId)}
+                                  className={`text-xs font-bold px-2.5 py-1 rounded transition-colors ${
+                                    reviewForm.action === "reject"
+                                      ? "bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white"
+                                      : "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white"
+                                  }`}
                                 >
                                   Confirm
                                 </button>
                                 <button
                                   onClick={() => setReviewForm({ leaveId: null, action: "", remarks: "", substituteId: "" })}
-                                  className="text-xs text-slate-400 hover:text-white"
+                                  className="text-xs text-slate-400 hover:text-white p-1"
                                 >
                                   ✕
                                 </button>
@@ -731,16 +736,13 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => setReviewForm({ leaveId: l.id, action: "approve", remarks: "", substituteId: "" })}
-                                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
                                 >
                                   Approve
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    setReviewForm({ leaveId: l.id, action: "reject", remarks: "", substituteId: "" });
-                                    handleReview("reject");
-                                  }}
-                                  className="text-xs font-bold text-rose-500 hover:text-rose-600 px-2 py-1 rounded hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                                  onClick={() => handleReview(l.id, "reject")}
+                                  className="text-xs font-bold text-rose-500 hover:text-rose-600 px-2 py-1 rounded hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
                                 >
                                   Reject
                                 </button>
