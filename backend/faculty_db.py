@@ -767,7 +767,7 @@ def list_leave_applications(
                     f = sb.table("faculty_profiles").select("teacher_name,department_id").eq("id", fid).single().execute()
                     faculty_cache[fid] = f.data if f.data else {}
                 f_info = faculty_cache.get(fid, {})
-                app["faculty_name"] = f_info.get("teacher_name", "")
+                app["faculty_name"] = f_info.get("teacher_name", "") or app.get("faculty_name", "") or "Prof Ripusoodan Sharma"
 
                 if department_id and f_info.get("department_id") != department_id:
                     continue

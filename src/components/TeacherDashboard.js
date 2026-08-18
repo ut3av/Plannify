@@ -606,7 +606,11 @@ export default function TeacherDashboard({
               </div>
             </div>
 
-            <LeaveManagement facultyId={selectedTeacher?.id || user?.faculty_id || user?.id} isAdmin={false} />
+            <LeaveManagement
+              facultyId={selectedTeacher?.id || user?.faculty_id || user?.id}
+              facultyName={teacherName}
+              isAdmin={false}
+            />
           </div>
         )}
 

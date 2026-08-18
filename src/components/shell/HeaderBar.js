@@ -4,6 +4,25 @@ import BrandLogo from '../common/BrandLogo';
 import NotificationCenter from '../common/NotificationCenter';
 import { getLeaveApplications, subscribeToTable } from '../../services/realtimeFacultyService';
 
+const PAGE_ROUTE_MAP = {
+  dashboard: "/dashboard",
+  timetable: "/timetable",
+  faculty: "/faculty",
+  attendance: "/attendance",
+  leave: "/leave",
+  substitutions: "/substitutions",
+  analytics: "/analytics",
+  subjects: "/academic/subjects",
+  sections: "/academic/sections",
+  rooms: "/academic/rooms",
+  slots: "/academic/slots",
+  reschedule: "/operations/reschedule",
+  integrations: "/operations/integrations",
+  history: "/operations/history",
+  settings: "/operations/settings",
+  reports: "/reports",
+};
+
 export default function HeaderBar({
   isSidebarOpen,
   onToggleSidebar,
@@ -276,6 +295,8 @@ export default function HeaderBar({
             isOpen={showNotificationCenter}
             onClose={() => setShowNotificationCenter(false)}
             onNavigate={(targetTab) => {
+              const target = targetTab.startsWith('/') ? targetTab : (PAGE_ROUTE_MAP[targetTab] || `/${targetTab}`);
+              navigate(target);
               if (onSelectPage) onSelectPage(targetTab);
             }}
             onUpdateUnreadCount={(count) => setLiveUnreadCount(count)}

@@ -243,9 +243,21 @@ export default function NotificationCenter({
                   <p className="text-xs text-slate-300 leading-relaxed font-medium">
                     {item.description}
                   </p>
-                  <span className="text-[11px] text-amber-400 font-bold mt-2 inline-block group-hover:underline">
-                    Review in {item.actionTarget.toUpperCase()} →
-                  </span>
+                  <div className="mt-2 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAction(item);
+                      }}
+                      className="text-[11px] text-amber-400 hover:text-amber-300 font-bold inline-flex items-center gap-1 hover:underline cursor-pointer transition-colors"
+                    >
+                      Review in {item.actionTarget ? item.actionTarget.toUpperCase() : "LEAVE"} →
+                    </button>
+                    {item.unread && (
+                      <span className="text-[10px] text-amber-400/80 font-semibold">● Pending Action</span>
+                    )}
+                  </div>
                 </div>
                 {item.unread && (
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0 mt-1 shadow-sm shadow-amber-400/50 animate-pulse" />

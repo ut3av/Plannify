@@ -430,7 +430,30 @@ function AdminLayout() {
     <AppShell
       activePage={activePage}
       onSelectPage={(page, id) => {
-        if (id) navigate(`/faculty/${id}`);
+        if (id) {
+          navigate(`/faculty/${id}`);
+        } else if (page) {
+          const PAGE_ROUTE_MAP = {
+            dashboard: "/dashboard",
+            timetable: "/timetable",
+            faculty: "/faculty",
+            attendance: "/attendance",
+            leave: "/leave",
+            substitutions: "/substitutions",
+            analytics: "/analytics",
+            subjects: "/academic/subjects",
+            sections: "/academic/sections",
+            rooms: "/academic/rooms",
+            slots: "/academic/slots",
+            reschedule: "/operations/reschedule",
+            integrations: "/operations/integrations",
+            history: "/operations/history",
+            settings: "/operations/settings",
+            reports: "/reports",
+          };
+          const target = page.startsWith("/") ? page : (PAGE_ROUTE_MAP[page] || `/${page}`);
+          navigate(target);
+        }
       }}
       pageTitle={breadcrumbs.slice(-1)[0]}
       breadcrumbs={breadcrumbs}

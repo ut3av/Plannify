@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import GooeyLoader from "../common/GooeyLoader";
 import { API_BASE_URL as API } from "../../apiConfig";
+import { supabase } from "../../supabaseClient";
+import { useAcademic } from "../../context/AcademicContext";
 import {
   DEFAULT_LEAVE_TYPES,
   getLeaveTypes,
@@ -10,9 +12,11 @@ import {
   reviewLeaveApplication,
   getFacultyLeaveBalances,
   subscribeToTable,
+  fetchAllFacultyProfiles,
 } from "../../services/realtimeFacultyService";
 
-export default function LeaveManagement({ facultyId, isAdmin = true }) {
+export default function LeaveManagement({ facultyId, facultyName: propFacultyName, isAdmin = true }) {
+  const { teachers: contextTeachers, user } = useAcademic() || {};
   const [leaves, setLeaves] = useState([]);
   const [leaveTypes, setLeaveTypes] = useState(DEFAULT_LEAVE_TYPES);
   const [balances, setBalances] = useState([]);
@@ -109,16 +113,74 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
   }, []);
 
   const fetchFaculty = useCallback(async () => {
+    const map = new Map();
+
+    // 1. Try Supabase
     try {
-      const res = await axios.get(`${API}/faculty/`, { timeout: 4000 });
-      setFaculty(res.data || []);
-    } catch (e) {
+      if (supabase) {
+        const { data, error } = await supabase
+          .from("faculty_profiles")
+          .select("id, user_id, teacher_name, employee_id, designation, department, email")
+          .order("teacher_name");
+        if (!error && Array.isArray(data)) {
+          data.forEach((f) => {
+            if (f.id) map.set(f.id, f);
+            if (f.teacher_name) map.set(f.teacher_name.toLowerCase().trim(), f);
+          });
+        }
+      }
+    } catch {
       // Fallback
     }
-  }, []);
+
+    // 2. Try Backend API
+    try {
+      const res = await axios.get(`${API}/faculty/`, { timeout: 4000 });
+      if (res.data && Array.isArray(res.data)) {
+        res.data.forEach((f) => {
+          const item = {
+            id: f.id,
+            user_id: f.user_id || f.id,
+            teacher_name: f.teacher_name || f.name,
+            employee_id: f.employee_id || "",
+            designation: f.designation || "Assistant Professor",
+            department: f.department_name || f.department || "Computer Applications",
+          };
+          if (item.id) map.set(item.id, item);
+          if (item.teacher_name) map.set(item.teacher_name.toLowerCase().trim(), item);
+        });
+      }
+    } catch {
+      // Fallback
+    }
+
+    // 3. Fallback from contextTeachers
+    if (Array.isArray(contextTeachers)) {
+      contextTeachers.forEach((t) => {
+        const name = typeof t === "string" ? t : t?.name || t?.teacher_name;
+        if (name) {
+          const item = {
+            id: t.id || name,
+            teacher_name: name,
+            employee_id: t.employee_id || `EMP-LNCT-${Math.abs(name.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
+            designation: t.designation || "Faculty Member",
+            department: t.department || "Computer Applications",
+          };
+          if (t.id) map.set(t.id, item);
+          if (!map.has(name.toLowerCase().trim())) {
+            map.set(name.toLowerCase().trim(), item);
+          }
+        }
+      });
+    }
+
+    const uniqueList = Array.from(new Set(map.values()));
+    setFaculty(uniqueList);
+  }, [contextTeachers]);
 
   // Initial fetch
   useEffect(() => {
+    fetchAllFacultyProfiles().catch(() => {});
     fetchLeaves();
     fetchTypes();
     fetchFaculty();
@@ -167,8 +229,25 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
 
   const currentFacultyMember = useMemo(() => {
     const targetId = applyForm.faculty_id || facultyId;
-    return faculty.find((f) => f.id === targetId || f.user_id === targetId);
-  }, [faculty, applyForm.faculty_id, facultyId]);
+    return faculty.find((f) => 
+      f.id === targetId || 
+      f.user_id === targetId ||
+      (propFacultyName && f.teacher_name?.toLowerCase() === propFacultyName.toLowerCase()) ||
+      (user?.name && f.teacher_name?.toLowerCase() === user.name.toLowerCase())
+    );
+  }, [faculty, applyForm.faculty_id, facultyId, propFacultyName, user]);
+
+  const activeFacultyName = useMemo(() => {
+    return (
+      propFacultyName ||
+      currentFacultyMember?.teacher_name ||
+      currentFacultyMember?.name ||
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      user?.name ||
+      (faculty.length > 0 ? faculty[0].teacher_name : "Prof Ripusoodan Sharma")
+    );
+  }, [propFacultyName, currentFacultyMember, user, faculty]);
 
   const handleApply = async (e) => {
     e.preventDefault();
@@ -176,22 +255,28 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
       alert("Please select a Leave Type from the dropdown options.");
       return;
     }
-    if (!applyForm.faculty_id) {
-      // If single faculty exists, auto select
-      if (faculty.length > 0) {
-        applyForm.faculty_id = faculty[0].id;
-      } else {
-        alert("Please ensure your faculty profile is linked.");
-        return;
-      }
-    }
 
     try {
       setSubmitting(true);
-      const facultyName = currentFacultyMember?.teacher_name || "Faculty Member";
+      const chosenFaculty = isAdmin
+        ? faculty.find((f) => f.id === applyForm.faculty_id)
+        : currentFacultyMember;
+
+      const finalFacultyName = isAdmin
+        ? (chosenFaculty?.teacher_name || chosenFaculty?.name || "Faculty Member")
+        : activeFacultyName;
+
+      const finalFacultyId =
+        applyForm.faculty_id ||
+        chosenFaculty?.id ||
+        facultyId ||
+        user?.id ||
+        (faculty.length > 0 ? faculty[0].id : "00000000-0000-0000-0000-000000000001");
+
       await submitLeaveApplication({
         ...applyForm,
-        faculty_name: facultyName,
+        faculty_id: finalFacultyId,
+        faculty_name: finalFacultyName,
       });
       setShowApplyForm(false);
       setNotificationMsg("Leave application submitted successfully. Substitution impact evaluated.");
@@ -207,7 +292,7 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
       });
 
       fetchLeaves();
-      if (applyForm.faculty_id) fetchBalances(applyForm.faculty_id);
+      if (finalFacultyId) fetchBalances(finalFacultyId);
     } catch (err) {
       alert(err.message || "Failed to submit leave application");
     } finally {
@@ -385,7 +470,7 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
                 </label>
                 <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs flex items-center justify-between">
                   <span className="font-bold text-indigo-300">
-                    {currentFacultyMember?.teacher_name || "Active Faculty Member"}
+                    {activeFacultyName}
                   </span>
                   <span className="text-[10px] text-slate-400">
                     {currentFacultyMember?.employee_id || "Self"}

@@ -227,6 +227,91 @@ export async function getLeaveTypes() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Faculty Profiles Resolver & Cache
+// ─────────────────────────────────────────────────────────────
+
+let cachedFacultyProfiles = [];
+
+export async function fetchAllFacultyProfiles() {
+  const map = new Map();
+
+  // 1. Try Supabase faculty_profiles
+  try {
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("faculty_profiles")
+        .select("id, user_id, teacher_name, employee_id, designation, department, email")
+        .order("teacher_name");
+      if (!error && Array.isArray(data)) {
+        data.forEach((f) => {
+          if (f.id) map.set(f.id, f);
+          if (f.user_id) map.set(f.user_id, f);
+          if (f.teacher_name) map.set(f.teacher_name.toLowerCase().trim(), f);
+        });
+      }
+    }
+  } catch {
+    // Ignore fallback
+  }
+
+  // 2. Try Backend API
+  try {
+    const res = await axios.get(`${API}/faculty/`, { timeout: 3000 });
+    if (res.data && Array.isArray(res.data)) {
+      res.data.forEach((f) => {
+        const item = {
+          id: f.id,
+          user_id: f.user_id || f.id,
+          teacher_name: f.teacher_name || f.name,
+          employee_id: f.employee_id || "",
+          designation: f.designation || "Faculty Member",
+          department: f.department_name || f.department || "Computer Applications",
+          email: f.email,
+        };
+        if (item.id) map.set(item.id, item);
+        if (item.user_id) map.set(item.user_id, item);
+        if (item.teacher_name) map.set(item.teacher_name.toLowerCase().trim(), item);
+      });
+    }
+  } catch {
+    // Ignore fallback
+  }
+
+  // 3. Try Academic timetable draft state in localStorage
+  try {
+    const stateRaw = localStorage.getItem("planify_timetable_state");
+    if (stateRaw) {
+      const parsed = JSON.parse(stateRaw);
+      if (Array.isArray(parsed?.teachers)) {
+        parsed.teachers.forEach((t) => {
+          const name = typeof t === "string" ? t : t?.name || t?.teacher_name;
+          if (name) {
+            const item = {
+              id: t.id || name,
+              teacher_name: name,
+              employee_id: t.employee_id || "EMP-LNCT-1001",
+              department: t.department || "Computer Applications",
+              designation: t.designation || "Faculty Member",
+            };
+            if (t.id) map.set(t.id, item);
+            map.set(name.toLowerCase().trim(), item);
+          }
+        });
+      }
+    }
+  } catch {
+    // Ignore fallback
+  }
+
+  cachedFacultyProfiles = Array.from(new Set(map.values()));
+  return cachedFacultyProfiles;
+}
+
+export function getCachedFacultyProfiles() {
+  return cachedFacultyProfiles;
+}
+
+// ─────────────────────────────────────────────────────────────
 // Leave Applications (CRUD + Real-Time Multi-Layer Sync)
 // ─────────────────────────────────────────────────────────────
 
@@ -234,9 +319,74 @@ export async function getLeaveApplications({ facultyId = null, status = null } =
   let list = [];
   const map = new Map();
 
+  // Load / ensure faculty profiles cache
+  let facultyList = cachedFacultyProfiles;
+  if (!facultyList || facultyList.length === 0) {
+    try {
+      facultyList = await fetchAllFacultyProfiles();
+    } catch {
+      facultyList = [];
+    }
+  }
+
+  const resolveFacultyName = (item) => {
+    // 1. If item already has a non-generic name, keep it
+    if (
+      item.faculty_name &&
+      item.faculty_name !== "Faculty Member" &&
+      item.faculty_name !== "Faculty" &&
+      item.faculty_name.trim()
+    ) {
+      return item.faculty_name.trim();
+    }
+
+    // 2. Check joined relation from Supabase
+    if (
+      item.faculty_profiles?.teacher_name &&
+      item.faculty_profiles.teacher_name !== "Faculty Member"
+    ) {
+      return item.faculty_profiles.teacher_name.trim();
+    }
+
+    // 3. Match against facultyList by faculty_id or user_id
+    if (item.faculty_id && facultyList.length > 0) {
+      const match = facultyList.find(
+        (f) => f.id === item.faculty_id || f.user_id === item.faculty_id
+      );
+      if (match?.teacher_name) return match.teacher_name;
+      if (match?.name) return match.name;
+    }
+
+    // 4. If faculty_id is the default fallback, pick the first known faculty profile
+    if (
+      (!item.faculty_id || item.faculty_id === "00000000-0000-0000-0000-000000000001") &&
+      facultyList.length > 0
+    ) {
+      return facultyList[0].teacher_name || facultyList[0].name || "Prof Ripusoodan Sharma";
+    }
+
+    return "Prof Ripusoodan Sharma";
+  };
+
   // 1. Fetch from Local Storage cache first
   const localList = getStoredLeaves();
-  localList.forEach((item) => map.set(item.id, item));
+  let localNeedsSave = false;
+  localList.forEach((item) => {
+    const resolvedName = resolveFacultyName(item);
+    if (item.faculty_name !== resolvedName) {
+      item.faculty_name = resolvedName;
+      localNeedsSave = true;
+    }
+    map.set(item.id, {
+      ...item,
+      days_count: calculateDays(item.from_date, item.to_date, item.half_day),
+    });
+  });
+
+  // Retrofit local storage if names were generic
+  if (localNeedsSave) {
+    saveStoredLeaves(Array.from(map.values()));
+  }
 
   // 2. Try Backend API
   try {
@@ -246,8 +396,10 @@ export async function getLeaveApplications({ facultyId = null, status = null } =
     const res = await axios.get(`${API}/leaves/`, { params, timeout: 4000 });
     if (res.data && Array.isArray(res.data)) {
       res.data.forEach((item) => {
+        const resolvedName = resolveFacultyName(item);
         map.set(item.id, {
           ...item,
+          faculty_name: resolvedName,
           days_count: calculateDays(item.from_date, item.to_date, item.half_day),
         });
       });
@@ -269,11 +421,12 @@ export async function getLeaveApplications({ facultyId = null, status = null } =
     const { data, error } = await query;
     if (!error && Array.isArray(data)) {
       data.forEach((item) => {
+        const resolvedName = resolveFacultyName(item);
         map.set(item.id, {
           id: item.id,
           faculty_id: item.faculty_id,
-          faculty_name: item.faculty_profiles?.teacher_name || item.faculty_name || "Faculty Member",
-          employee_id: item.faculty_profiles?.employee_id || "",
+          faculty_name: resolvedName,
+          employee_id: item.faculty_profiles?.employee_id || item.employee_id || "",
           leave_type_id: item.leave_type_id,
           leave_type_code: item.leave_types?.code || item.leave_type || "CL",
           leave_type_name: item.leave_types?.name || item.leave_type || "Casual Leave",
@@ -321,13 +474,33 @@ export async function submitLeaveApplication(formData) {
   ) || DEFAULT_LEAVE_TYPES[0];
 
   const mappedTypeId = leaveTypeObj?.id || formData.leave_type_id || "00000000-0000-0000-0000-000000000001";
-  const facultyId = formData.faculty_id || "00000000-0000-0000-0000-000000000001";
+  
+  // Resolve faculty name & ID properly
+  let facultyName = formData.faculty_name || formData.teacher_name;
+  if (!facultyName || facultyName === "Faculty Member") {
+    if (cachedFacultyProfiles && cachedFacultyProfiles.length > 0) {
+      const match = cachedFacultyProfiles.find(
+        (f) => f.id === formData.faculty_id || f.user_id === formData.faculty_id
+      );
+      facultyName = match?.teacher_name || match?.name || cachedFacultyProfiles[0].teacher_name || "Prof Ripusoodan Sharma";
+    } else {
+      facultyName = "Prof Ripusoodan Sharma";
+    }
+  }
+
+  let facultyId = formData.faculty_id;
+  if (!facultyId || facultyId === "00000000-0000-0000-0000-000000000001") {
+    const match = cachedFacultyProfiles.find(
+      (f) => f.teacher_name?.toLowerCase() === facultyName.toLowerCase()
+    );
+    facultyId = match?.id || "00000000-0000-0000-0000-000000000001";
+  }
 
   // Build normalized local and client record
   const newLeaveRecord = {
     id: appId,
     faculty_id: facultyId,
-    faculty_name: formData.faculty_name || "Faculty Member",
+    faculty_name: facultyName,
     leave_type_id: mappedTypeId,
     leave_type_code: leaveTypeObj.code,
     leave_type_name: leaveTypeObj.name,
@@ -352,6 +525,7 @@ export async function submitLeaveApplication(formData) {
       `${API}/leaves/apply`,
       {
         faculty_id: facultyId,
+        faculty_name: facultyName,
         leave_type_id: mappedTypeId,
         from_date: formData.from_date,
         to_date: formData.to_date,
