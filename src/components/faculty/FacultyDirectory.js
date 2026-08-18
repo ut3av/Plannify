@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import { provisioningAuthClient } from "../../supabaseClient";
+import { provisioningAuthClient, supabase } from "../../supabaseClient";
 import DispatchPreviewModal from "../common/DispatchPreviewModal";
 import GooeyLoader from "../common/GooeyLoader";
+import { subscribeToTable } from "../../services/realtimeFacultyService";
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
@@ -43,18 +44,33 @@ export default function FacultyDirectory({
     accountPassword: "Plannify@2026",
   });
 
-  useEffect(() => {
-    fetchFaculty();
-    fetchDepartments();
-  }, []);
-
   const fetchFaculty = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/faculty/`);
-      setFaculty(res.data || []);
+      const res = await axios.get(`${API}/faculty/`, { timeout: 4000 });
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setFaculty(res.data);
+        return;
+      }
     } catch (e) {
-      console.error("Failed to fetch faculty:", e);
+      // Try Supabase directly
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('faculty_profiles')
+        .select('*, departments(name)')
+        .order('teacher_name');
+      if (!error && Array.isArray(data)) {
+        setFaculty(
+          data.map((f) => ({
+            ...f,
+            department_name: f.departments?.name || f.department_name || "Computer Applications",
+          }))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to fetch faculty:", err);
     } finally {
       setLoading(false);
     }
@@ -62,12 +78,47 @@ export default function FacultyDirectory({
 
   const fetchDepartments = async () => {
     try {
-      const res = await axios.get(`${API}/faculty/departments`);
-      setDepartments(res.data || []);
+      const res = await axios.get(`${API}/faculty/departments`, { timeout: 4000 });
+      if (res.data && Array.isArray(res.data)) {
+        setDepartments(res.data);
+        return;
+      }
     } catch (e) {
-      console.error("Failed to fetch departments:", e);
+      // Try Supabase directly
+    }
+
+    try {
+      const { data, error } = await supabase.from('departments').select('*').order('name');
+      if (!error && Array.isArray(data)) {
+        setDepartments(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch departments:", err);
     }
   };
+
+  useEffect(() => {
+    fetchFaculty();
+    fetchDepartments();
+
+    // Supabase real-time subscriptions
+    const unsubFaculty = subscribeToTable('faculty_profiles', () => {
+      fetchFaculty();
+    });
+    const unsubDept = subscribeToTable('departments', () => {
+      fetchDepartments();
+    });
+
+    const interval = setInterval(() => {
+      fetchFaculty();
+    }, 12000);
+
+    return () => {
+      clearInterval(interval);
+      unsubFaculty();
+      unsubDept();
+    };
+  }, []);
 
   const handleDelete = async (e, f) => {
     e.stopPropagation();

@@ -25,21 +25,33 @@ const parseCloudJson = (value, fallback) => {
   }
 };
 
+const DEFAULT_TIME_SLOTS = [
+  "09:00 AM - 09:45 AM",
+  "09:45 AM - 10:30 AM",
+  "10:30 AM - 11:20 AM",
+  "11:20 AM - 12:10 PM",
+  "01:00 PM - 01:50 PM",
+  "01:50 PM - 02:40 PM",
+  "02:40 PM - 03:30 PM"
+];
+
 const readCloudState = (data) => ({
-  teachers: parseCloudJson(data.teachers ?? data.room, null),
-  sections: parseCloudJson(data.sections ?? data.email, null),
-  subjects: parseCloudJson(data.subjects ?? data.day, null),
-  rooms: parseCloudJson(data.rooms ?? data.subject, null),
-  timeSlots: parseCloudJson(data.time_slots ?? data.timeSlots ?? data.teacher_name, null),
+  teachers: parseCloudJson(data.teachers ?? data.room, []),
+  sections: parseCloudJson(data.sections ?? data.email, []),
+  subjects: parseCloudJson(data.subjects ?? data.day, []),
+  rooms: parseCloudJson(data.rooms ?? data.subject, []),
+  timeSlots: parseCloudJson(data.time_slots ?? data.timeSlots ?? data.teacher_name, DEFAULT_TIME_SLOTS),
+  result: parseCloudJson(data.result, null),
 });
 
-const buildCloudPayload = ({ teachers, sections, subjects, rooms, timeSlots }) => ({
+const buildCloudPayload = ({ teachers, sections, subjects, rooms, timeSlots, result }) => ({
   id: "draft",
   teachers,
   sections,
   subjects,
   rooms,
   time_slots: timeSlots,
+  result: result || null,
   updated_at: new Date().toISOString(),
 });
 
@@ -88,12 +100,13 @@ export function AcademicProvider({ children }) {
   const [userRole, setUserRole] = useState("Admin");
   const [selectedFaculty, setSelectedFaculty] = useState(null);
 
-  const [teachers, setTeachers] = useState(DEMO_TIMETABLE_DATA.teachers);
-  const [sections, setSections] = useState(DEMO_TIMETABLE_DATA.sections);
-  const [subjects, setSubjects] = useState(DEMO_TIMETABLE_DATA.subjects);
-  const [rooms, setRooms] = useState(DEMO_TIMETABLE_DATA.rooms);
-  const [timeSlots, setTimeSlots] = useState(DEMO_TIMETABLE_DATA.timeSlots);
-  const [result, setResult] = useState(() => formatResult(DEMO_RESULT));
+  // Clean initial state: Demo data is NOT loaded automatically
+  const [teachers, setTeachers] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [timeSlots, setTimeSlots] = useState(DEFAULT_TIME_SLOTS);
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [rescheduleNote, setRescheduleNote] = useState("");
@@ -150,7 +163,7 @@ export function AcademicProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load from Supabase on mount
+  // Load from Supabase on mount & subscribe to Real-Time cloud state changes
   useEffect(() => {
     const loadCloudState = async () => {
       setLoading(true);
@@ -163,20 +176,53 @@ export function AcademicProvider({ children }) {
         
         if (data && !error) {
           const cloudState = readCloudState(data);
-          if (cloudState.teachers && cloudState.teachers.length > 0) setTeachers(cloudState.teachers);
-          if (cloudState.sections && cloudState.sections.length > 0) setSections(cloudState.sections);
-          if (cloudState.subjects && cloudState.subjects.length > 0) setSubjects(cloudState.subjects);
-          if (cloudState.rooms && cloudState.rooms.length > 0) setRooms(cloudState.rooms);
-          if (cloudState.timeSlots && cloudState.timeSlots.length > 0) setTimeSlots(cloudState.timeSlots);
+          if (Array.isArray(cloudState.teachers)) setTeachers(cloudState.teachers);
+          if (Array.isArray(cloudState.sections)) setSections(cloudState.sections);
+          if (Array.isArray(cloudState.subjects)) setSubjects(cloudState.subjects);
+          if (Array.isArray(cloudState.rooms)) setRooms(cloudState.rooms);
+          if (Array.isArray(cloudState.timeSlots) && cloudState.timeSlots.length > 0) setTimeSlots(cloudState.timeSlots);
+          if (cloudState.result) {
+            setResult(cloudState.result.timetable ? cloudState.result : formatResult(cloudState.result));
+          }
         }
-        setIsCloudLoaded(true);
       } catch (e) {
         console.warn("Supabase fetch failed. Ensure .env is set and table exists.", e);
       } finally {
+        setIsCloudLoaded(true);
         setLoading(false);
       }
     };
     loadCloudState();
+
+    // Supabase Realtime channel subscription for live sync across devices/portals
+    const channel = supabase
+      .channel('realtime_timetable_state')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'timetable_state', filter: 'id=eq.draft' },
+        (payload) => {
+          if (payload.new) {
+            const cloudState = readCloudState(payload.new);
+            if (Array.isArray(cloudState.teachers)) setTeachers(cloudState.teachers);
+            if (Array.isArray(cloudState.sections)) setSections(cloudState.sections);
+            if (Array.isArray(cloudState.subjects)) setSubjects(cloudState.subjects);
+            if (Array.isArray(cloudState.rooms)) setRooms(cloudState.rooms);
+            if (Array.isArray(cloudState.timeSlots) && cloudState.timeSlots.length > 0) setTimeSlots(cloudState.timeSlots);
+            if (cloudState.result) {
+              setResult(cloudState.result.timetable ? cloudState.result : formatResult(cloudState.result));
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      try {
+        supabase.removeChannel(channel);
+      } catch {
+        // Cleanup
+      }
+    };
   }, []);
 
   const activeStateRef = useRef({ teachers, sections, subjects, rooms, timeSlots, result });
@@ -198,7 +244,8 @@ export function AcademicProvider({ children }) {
         sections: live.sections,
         subjects: live.subjects,
         rooms: live.rooms,
-        timeSlots: live.timeSlots
+        timeSlots: live.timeSlots,
+        result: live.result
       };
       
       // 1. Primary Save (JSONB Draft)
@@ -237,14 +284,14 @@ export function AcademicProvider({ children }) {
     }
   }, []);
 
-  // Automatic Debounced Cloud Sync whenever state changes
+  // Automatic Debounced Cloud Sync whenever state changes (only after initial cloud fetch)
   useEffect(() => {
     if (!isCloudLoaded) return;
     const timer = setTimeout(() => {
       saveToCloud(true);
-    }, 1500);
+    }, 2000);
     return () => clearTimeout(timer);
-  }, [teachers, sections, subjects, rooms, timeSlots, isCloudLoaded, saveToCloud]);
+  }, [teachers, sections, subjects, rooms, timeSlots, result, isCloudLoaded, saveToCloud]);
 
   const payload = useMemo(
     () => buildApiPayload({ teachers, subjects, rooms, sections, timeSlots }),

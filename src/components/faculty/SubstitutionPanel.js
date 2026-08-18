@@ -1,8 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import GooeyLoader from "../common/GooeyLoader";
-
 import { API_BASE_URL as API } from "../../apiConfig";
+import {
+  getSubstitutionLogs,
+  assignSubstitution as assignSubService,
+  subscribeToTable,
+  getLeaveApplications,
+} from "../../services/realtimeFacultyService";
 
 export default function SubstitutionPanel() {
   const [substitutions, setSubstitutions] = useState([]);
@@ -11,44 +16,68 @@ export default function SubstitutionPanel() {
   const [suggestions, setSuggestions] = useState([]);
   const [selectedLeave, setSelectedLeave] = useState(null);
 
+  const fetchSubstitutions = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getSubstitutionLogs();
+      setSubstitutions(data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchApprovedLeaves = useCallback(async () => {
+    try {
+      const data = await getLeaveApplications({ status: "approved" });
+      const today = new Date().toISOString().split("T")[0];
+      const upcoming = (data || []).filter((l) => l.to_date >= today && !l.substitute_id);
+      setPendingLeaves(upcoming);
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSubstitutions();
     fetchApprovedLeaves();
-  }, []);
 
-  const fetchSubstitutions = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get(`${API}/substitution/history`);
-      setSubstitutions(res.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  };
+    const unsubSubs = subscribeToTable("substitution_log", () => {
+      fetchSubstitutions();
+    });
+    const unsubLeaves = subscribeToTable("leave_applications", () => {
+      fetchApprovedLeaves();
+    });
 
-  const fetchApprovedLeaves = async () => {
-    try {
-      const res = await axios.get(`${API}/leaves/`, { params: { status: "approved" } });
-      // Filter to upcoming leaves that need substitutes
-      const today = new Date().toISOString().split("T")[0];
-      const upcoming = (res.data || []).filter(l => l.to_date >= today && !l.substitute_id);
-      setPendingLeaves(upcoming);
-    } catch (e) { console.error(e); }
-  };
+    const interval = setInterval(() => {
+      fetchSubstitutions();
+      fetchApprovedLeaves();
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      unsubSubs();
+      unsubLeaves();
+    };
+  }, [fetchSubstitutions, fetchApprovedLeaves]);
 
   const fetchSuggestions = async (leave) => {
     setSelectedLeave(leave);
     try {
       const res = await axios.get(`${API}/substitution/suggest/${leave.id}`, {
-        params: { date: leave.from_date, slot: "9-10" }
+        params: { date: leave.from_date, slot: "9-10" },
       });
       setSuggestions(res.data || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const assignSubstitute = async (facultyId, facultyName) => {
     if (!selectedLeave) return;
     try {
-      await axios.post(`${API}/substitution/assign`, {
+      await assignSubService({
         leave_application_id: selectedLeave.id,
         original_faculty_id: selectedLeave.faculty_id,
         substitute_faculty_id: facultyId,
@@ -58,13 +87,13 @@ export default function SubstitutionPanel() {
         section: "",
         room: "",
       });
-      alert(`${facultyName} assigned as substitute`);
+      alert(`${facultyName} assigned as substitute in real-time.`);
       setSelectedLeave(null);
       setSuggestions([]);
       fetchSubstitutions();
       fetchApprovedLeaves();
     } catch (e) {
-      alert(e.response?.data?.detail || "Failed to assign substitute");
+      alert(e.message || "Failed to assign substitute");
     }
   };
 

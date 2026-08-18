@@ -1,10 +1,12 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import AIChatBot from './AIChatBot';
 import LeaveManagement from './faculty/LeaveManagement';
 import AttendanceDashboard from './faculty/AttendanceDashboard';
 import BrandLogo from './common/BrandLogo';
 import { API_BASE_URL as API } from '../apiConfig';
+import { supabase } from '../supabaseClient';
+import { subscribeToTable } from '../services/realtimeFacultyService';
 
 export default function TeacherDashboard({
   user,
@@ -20,20 +22,52 @@ export default function TeacherDashboard({
   const [teacherSearch, setTeacherSearch] = useState("");
   const dropdownRef = useRef(null);
 
-  // Fetch all registered faculty accounts from backend database
-  useEffect(() => {
-    const fetchRegisteredFaculty = async () => {
-      try {
-        const res = await axios.get(`${API}/faculty/`);
-        if (res.data && Array.isArray(res.data)) {
-          setBackendFaculty(res.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch registered faculty accounts:", err);
+  // Fetch all registered faculty accounts from backend database & Supabase
+  const fetchRegisteredFaculty = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/faculty/`, { timeout: 4000 });
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setBackendFaculty(res.data);
+        return;
       }
-    };
-    fetchRegisteredFaculty();
+    } catch (err) {
+      // Supabase fallback
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('faculty_profiles')
+        .select('*, departments(name)')
+        .order('teacher_name');
+      if (!error && Array.isArray(data)) {
+        setBackendFaculty(
+          data.map((f) => ({
+            ...f,
+            department_name: f.departments?.name || f.department_name || "Computer Applications",
+          }))
+        );
+      }
+    } catch (e) {
+      console.error("Failed to fetch registered faculty accounts:", e);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchRegisteredFaculty();
+
+    const unsubFaculty = subscribeToTable('faculty_profiles', () => {
+      fetchRegisteredFaculty();
+    });
+
+    const interval = setInterval(() => {
+      fetchRegisteredFaculty();
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      unsubFaculty();
+    };
+  }, [fetchRegisteredFaculty]);
 
   // Close dropdown on outside click
   useEffect(() => {
