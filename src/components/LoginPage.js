@@ -280,48 +280,52 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       {/* Background Mesh & Glow */}
       <div className="glow-mesh" />
-      <div className="absolute top-1/4 -left-20 w-80 h-80 bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-violet-600/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/4 -left-20 w-80 h-80 bg-indigo-600/10 dark:bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-violet-600/10 dark:bg-violet-600/15 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative w-full max-w-[1020px] grid lg:grid-cols-12 gap-0 overflow-hidden bg-white/95 dark:bg-slate-900/90 rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-xl">
+      <div className="relative w-full max-w-[1020px] grid lg:grid-cols-12 gap-0 overflow-hidden bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-xl">
 
         {/* LEFT COLUMN: BRAND HERO (5 cols) */}
-        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-[#1E1B4B] via-[#0F172A] to-[#020617] border-r border-slate-800 text-slate-100">
-          <div>
+        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 dark:from-indigo-950 dark:via-slate-900 dark:to-slate-950 border-r border-indigo-500/20 dark:border-slate-800 text-white relative overflow-hidden">
+          {/* Subtle Ambient Pattern / Glow */}
+          <div className="absolute -top-12 -right-12 w-64 h-64 bg-white/10 dark:bg-indigo-500/10 blur-3xl rounded-full pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-violet-400/15 dark:bg-violet-500/10 blur-3xl rounded-full pointer-events-none" />
+
+          <div className="relative z-10">
             <div className="mb-8">
               <BrandLogo size="lg" isWarm={false} textColor="text-white" />
             </div>
 
-            <h1 className="text-3xl font-black tracking-tight text-white mb-3 leading-snug">
+            <h1 className="text-3xl font-black tracking-tight text-white mb-3 leading-snug font-display">
               Smart Academic <br />
-              <span className="text-gradient">Operations Platform</span>
+              <span className="text-amber-300 dark:text-indigo-300">Operations Platform</span>
             </h1>
-            <p className="text-slate-300 text-xs leading-relaxed">
+            <p className="text-indigo-100/90 dark:text-slate-300 text-xs leading-relaxed font-medium">
               University-grade automated scheduling, real-time timetable optimization, and operational faculty analytics.
             </p>
           </div>
 
-          <div className="space-y-3 pt-6 border-t border-slate-800 text-xs text-slate-300">
-            <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <div className="space-y-3 pt-6 border-t border-white/20 dark:border-slate-800 text-xs text-white relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-white/20 dark:bg-emerald-500/20 text-white dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <span>Google OR-Tools Constraint Solver</span>
+              <span className="font-semibold text-white">Google OR-Tools Constraint Solver</span>
             </div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-[10px]">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-white/20 dark:bg-indigo-500/20 text-white dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <span>Role-Based Portal Access</span>
+              <span className="font-semibold text-white">Role-Based Portal Access</span>
             </div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-[10px]">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-white/20 dark:bg-purple-500/20 text-white dark:text-purple-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <span>Supabase Cloud Integration</span>
+              <span className="font-semibold text-white">Supabase Cloud Integration</span>
             </div>
           </div>
         </div>
@@ -492,7 +496,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setPortalRole("admin")}
                   className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${portalRole === "admin"
-                      ? "bg-indigo-500/15 border-indigo-500/50 text-slate-900 dark:text-white shadow-md shadow-indigo-600/10 font-bold"
+                      ? "bg-white dark:bg-indigo-500/15 border-indigo-500 text-slate-900 dark:text-white shadow-md shadow-indigo-600/10 font-bold"
                       : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                     }`}
                 >
@@ -512,7 +516,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setPortalRole("teacher")}
                   className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${portalRole === "teacher"
-                      ? "bg-indigo-500/15 border-indigo-500/50 text-slate-900 dark:text-white shadow-md shadow-indigo-600/10 font-bold"
+                      ? "bg-white dark:bg-indigo-500/15 border-indigo-500 text-slate-900 dark:text-white shadow-md shadow-indigo-600/10 font-bold"
                       : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                     }`}
                 >

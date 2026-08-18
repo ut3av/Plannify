@@ -567,9 +567,15 @@ input:-webkit-autofill:active {
 .light .bg-indigo-600 [class~="text-white"], .warm-white .bg-indigo-600 [class~="text-white"],
 .light .bg-indigo-600[class~="text-white"], .warm-white .bg-indigo-600[class~="text-white"],
 .light .bg-emerald-600 [class~="text-white"], .warm-white .bg-emerald-600 [class~="text-white"],
-.light .bg-red-600 [class~="text-white"], .warm-white .bg-red-600 [class~="text-white"],
 .light [class*="bg-gradient"] [class~="text-white"], .warm-white [class*="bg-gradient"] [class~="text-white"],
-.light [class*="bg-gradient"][class~="text-white"], .warm-white [class*="bg-gradient"][class~="text-white"] { color: #FFFFFF !important; }
+.light [class*="bg-gradient"][class~="text-white"], .warm-white [class*="bg-gradient"][class~="text-white"],
+.light [class*="bg-gradient"] .text-slate-100, .warm-white [class*="bg-gradient"] .text-slate-100,
+.light [class*="bg-gradient"] .text-slate-200, .warm-white [class*="bg-gradient"] .text-slate-200,
+.light [class*="bg-gradient"] .text-slate-300, .warm-white [class*="bg-gradient"] .text-slate-300,
+.light [class*="bg-gradient"] .text-indigo-100, .warm-white [class*="bg-gradient"] .text-indigo-100,
+.light [class*="bg-gradient"] .text-indigo-200, .warm-white [class*="bg-gradient"] .text-indigo-200 { 
+  color: #FFFFFF !important; 
+}
 
 .light .text-slate-100, .warm-white .text-slate-100 { color: #0F172A !important; }
 .light .text-slate-200, .warm-white .text-slate-200 { color: #1E293B !important; }
