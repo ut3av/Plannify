@@ -188,7 +188,11 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
 
     try {
       setSubmitting(true);
-      await submitLeaveApplication(applyForm);
+      const facultyName = currentFacultyMember?.teacher_name || "Faculty Member";
+      await submitLeaveApplication({
+        ...applyForm,
+        faculty_name: facultyName,
+      });
       setShowApplyForm(false);
       setNotificationMsg("Leave application submitted successfully. Substitution impact evaluated.");
       setTimeout(() => setNotificationMsg(""), 5000);
