@@ -183,7 +183,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
   });
 
   return (
-    <section className="glass-card overflow-hidden animate-fade-in text-slate-100">
+    <section className="glass-card overflow-hidden animate-fade-in text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
       {/* ── Print-Only Institutional Header ── */}
       <div className="print-only mb-6 border-b-2 border-slate-900 pb-4">
         <div className="flex items-center justify-between">
@@ -207,15 +207,15 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
       </div>
 
       {/* ── Interactive Screen Header Bar ── */}
-      <div className="p-6 border-b border-slate-800 bg-slate-900/90 no-print space-y-4">
+      <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/90 no-print space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
               <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
+                <span className="p-1.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 shrink-0">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </span>
-                <h2 className="text-lg sm:text-xl font-black tracking-tight text-white">
+                <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white">
                   Master Timetable Workspace
                 </h2>
               </div>
@@ -223,7 +223,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
                 {result.solver_status ? (result.solver_status.includes("OPTIMAL") ? "Optimal Active" : result.solver_status.split(" ")[0]) : "Optimal Active"}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Consolidated Academic View ({filteredAssignments.length} of {assignments.length} scheduled lectures & laboratory sessions)
             </p>
           </div>
@@ -248,7 +248,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search subject, teacher, room..."
-                className="input-premium text-xs py-1.5 pl-8 pr-3 bg-slate-800 border-slate-700 text-white placeholder-slate-500 w-44 md:w-56"
+                className="input-premium text-xs py-1.5 pl-8 pr-3 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 w-44 md:w-56"
               />
               <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
@@ -257,7 +257,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs font-bold"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs font-bold"
                 >
                   <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -280,9 +280,9 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
             {onExport && (
               <button
                 onClick={onExport}
-                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-all flex items-center gap-2"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all flex items-center gap-2"
               >
-                <svg className="w-3.5 h-3.5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <svg className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Export Excel
               </button>
             )}
@@ -290,13 +290,13 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
         </div>
 
         {/* ── Section & Teacher Filter Selector Bar ── */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-800/80 text-xs">
+        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-200 dark:border-slate-800/80 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Filter Section:</span>
+            <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Filter Section:</span>
             <select
               value={selectedSectionFilter}
               onChange={(e) => setSelectedSectionFilter(e.target.value)}
-              className="input-premium text-xs py-1 px-2.5 bg-slate-800 border-slate-700 text-white cursor-pointer rounded-lg"
+              className="input-premium text-xs py-1 px-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer rounded-lg"
             >
               <option value="ALL">All Sections (Master Matrix)</option>
               {allSectionsList.map(sec => (
@@ -306,11 +306,11 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Filter Faculty:</span>
+            <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Filter Faculty:</span>
             <select
               value={selectedTeacherFilter}
               onChange={(e) => setSelectedTeacherFilter(e.target.value)}
-              className="input-premium text-xs py-1 px-2.5 bg-slate-800 border-slate-700 text-white cursor-pointer rounded-lg max-w-[220px]"
+              className="input-premium text-xs py-1 px-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer rounded-lg max-w-[220px]"
             >
               <option value="ALL">All Faculty Members</option>
               {allTeachersList.map(t => (
@@ -326,7 +326,7 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
                 setSelectedTeacherFilter("ALL");
                 setSearchQuery("");
               }}
-              className="text-[11px] text-amber-400 hover:underline font-bold ml-auto"
+              className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold ml-auto"
             >
               Reset Filters
             </button>
@@ -335,22 +335,22 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
       </div>
 
       {/* ── 2D MASTER TIMETABLE GRID ── */}
-      <div className="overflow-x-auto p-4 md:p-6 bg-slate-950/60">
+      <div className="overflow-x-auto p-4 md:p-6 bg-slate-50 dark:bg-slate-950/60">
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
-              <th className="p-3 text-left font-mono font-bold uppercase tracking-wider text-slate-400 border border-slate-800/80 bg-slate-900/90 w-28 shrink-0">
+              <th className="p-3 text-left font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800/80 bg-slate-100/80 dark:bg-slate-900/90 w-28 shrink-0">
                 Day / Period
               </th>
               {timeSlots.map((slot, i) => (
                 <th
                   key={slot}
-                  className="p-3 text-center font-bold text-slate-300 border border-slate-800/80 bg-slate-900/90 min-w-[170px]"
+                  className="p-3 text-center font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 bg-slate-100/80 dark:bg-slate-900/90 min-w-[170px]"
                 >
-                  <div className="font-mono text-amber-800 dark:text-indigo-300 font-bold text-[11px]">
+                  <div className="font-mono text-indigo-700 dark:text-indigo-300 font-bold text-[11px]">
                     Period #{i + 1}
                   </div>
-                  <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                  <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
                     {slot}
                   </div>
                 </th>
@@ -359,8 +359,8 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
           </thead>
           <tbody>
             {days.map((day) => (
-              <tr key={day} className="hover:bg-slate-900/30 transition-colors">
-                <td className="p-3 font-mono font-black text-amber-700 dark:text-indigo-400 border border-slate-800/80 bg-slate-900/60 align-middle text-center uppercase tracking-wider">
+              <tr key={day} className="hover:bg-slate-100/40 dark:hover:bg-slate-900/30 transition-colors">
+                <td className="p-3 font-mono font-black text-indigo-700 dark:text-indigo-400 border border-slate-200 dark:border-slate-800/80 bg-slate-100/50 dark:bg-slate-900/60 align-middle text-center uppercase tracking-wider">
                   <div className="text-sm">{day}</div>
                   <div className="text-[10px] text-slate-500 font-normal">
                     {timeSlots.reduce((acc, slot) => acc + (displayTimetable[day][slot]?.length || 0), 0)} classes
@@ -372,10 +372,10 @@ export default function TimetableGrid({ result, subjects = [], loading, onExport
                   return (
                     <td
                       key={slot}
-                      className="p-2 border border-slate-800/80 align-top bg-slate-900/20 min-h-[90px]"
+                      className="p-2 border border-slate-200 dark:border-slate-800/80 align-top bg-white dark:bg-slate-900/20 min-h-[90px]"
                     >
                       {cellItems.length === 0 ? (
-                        <div className="h-16 flex items-center justify-center text-slate-600/60 text-[10px] font-mono italic">
+                        <div className="h-16 flex items-center justify-center text-slate-400 dark:text-slate-600/60 text-[10px] font-mono italic">
                           — Free Slot —
                         </div>
                       ) : (

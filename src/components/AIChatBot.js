@@ -330,19 +330,19 @@ export default function AIChatBot({
         <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2 group animate-fade-in">
           <button
             onClick={() => setIsOpen(true)}
-            className="flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-amber-600 via-amber-700 to-[#2C1810] text-white font-bold shadow-2xl hover:shadow-amber-900/50 hover:scale-105 transition-all duration-300 border border-amber-400/40 relative overflow-hidden"
+            className="flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white font-bold shadow-2xl hover:shadow-indigo-500/40 hover:scale-105 transition-all duration-300 border border-indigo-400/40 relative overflow-hidden"
             title="Open AI Timetable Co-Pilot"
           >
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="w-7 h-7 rounded-lg bg-amber-950/80 border border-amber-400/40 flex items-center justify-center p-1 shadow-inner shrink-0">
-              <BrandLogo onlyIcon size="xs" isWarm={true} />
+            <div className="w-7 h-7 rounded-lg bg-indigo-950/80 border border-indigo-400/40 flex items-center justify-center p-1 shadow-inner shrink-0">
+              <BrandLogo onlyIcon size="xs" isWarm={false} />
             </div>
             <div className="text-left">
               <div className="flex items-center gap-1.5 leading-none">
                 <span className="text-xs font-black tracking-wide uppercase font-display">Plannify AI</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               </div>
-              <p className="text-[10px] text-amber-200/80 font-medium">Assistant Active</p>
+              <p className="text-[10px] text-indigo-100/80 font-medium">Assistant Active</p>
             </div>
           </button>
         </div>
@@ -351,36 +351,36 @@ export default function AIChatBot({
       {/* Main Co-Pilot Chat Interface */}
       {isOpen && (
         <div
-          className={`fixed z-50 transition-all duration-300 flex flex-col bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden ${
+          className={`fixed z-50 transition-all duration-300 flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden ${
             isExpanded
               ? "inset-4 md:inset-10 rounded-3xl"
               : "bottom-4 right-4 w-[95vw] sm:w-[420px] md:w-[460px] h-[620px] max-h-[90vh] rounded-3xl"
           }`}
         >
           {/* Rich Header Bar */}
-          <div className="px-5 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950/70 border-b border-slate-800 flex items-center justify-between">
+          <div className="px-5 py-4 bg-slate-50 dark:bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center p-1.5 shadow-inner shrink-0">
+              <div className="w-9 h-9 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center p-1.5 shadow-inner shrink-0">
                 <BrandLogo onlyIcon size="sm" isWarm={false} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-black text-white tracking-wide font-display">
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-wide font-display">
                     Plannify AI Assistant
                   </h3>
-                  <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[9px] font-bold border border-indigo-500/30 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 text-[9px] font-bold border border-indigo-500/30 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Llama 3.3 70B
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">Constraint Solver & OCR Intelligence</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Constraint Solver & OCR Intelligence</p>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
               <button
                 onClick={handleResetChat}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 title="Reset conversation"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -388,7 +388,7 @@ export default function AIChatBot({
 
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors hidden sm:block"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden sm:block"
                 title={isExpanded ? "Collapse window" : "Expand window"}
               >
                 {isExpanded ? (
@@ -400,7 +400,7 @@ export default function AIChatBot({
 
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 title="Close Co-Pilot"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -409,7 +409,7 @@ export default function AIChatBot({
           </div>
 
           {/* Messages Scroll Area */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
+          <div className="flex-1 p-4 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
             {messages.map((msg) => {
               const isUser = msg.sender === 'user';
               return (
@@ -422,49 +422,45 @@ export default function AIChatBot({
                   <div
                     className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 mt-1 border ${
                       isUser
-                        ? "bg-amber-600 text-white border-amber-400/30"
-                        : "bg-slate-800 text-indigo-300 border-slate-700 p-1"
+                        ? "bg-indigo-600 text-white border-indigo-400/30"
+                        : "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 border border-slate-200 dark:border-slate-700 p-1"
                     }`}
                   >
                     {isUser ? "U" : <PlannifyIconMark size={16} isWarm={false} />}
                   </div>
 
                   <div
-                    className={`group relative rounded-2xl p-4 text-xs leading-relaxed shadow-lg ${
+                    className={`group relative rounded-2xl p-4 text-xs leading-relaxed shadow-sm ${
                       isUser
-                        ? "bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-tr-none"
-                        : "bg-slate-900/90 text-slate-200 border border-slate-800 rounded-tl-none"
+                        ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-tr-none"
+                        : "bg-white dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-tl-none"
                     }`}
                   >
                     {msg.image && (
                       <div className="mb-2 overflow-hidden rounded-xl border border-white/20">
                         <img src={msg.image} alt="Uploaded for OCR" className="max-h-48 w-full object-cover" />
                         <div className="bg-slate-950/80 px-2 py-1 text-[10px] text-slate-300 flex items-center gap-1.5">
-                          <svg className="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                          <svg className="w-3 h-3 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
                           Image attached for AI OCR processing
                         </div>
                       </div>
                     )}
 
-                    <div className="prose prose-invert prose-xs max-w-none prose-p:leading-relaxed prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-800">
+                    <div className="prose prose-xs max-w-none dark:prose-invert prose-p:leading-relaxed prose-pre:bg-slate-100 dark:prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-800">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.text}
                       </ReactMarkdown>
                     </div>
 
-                    <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-white/10">
+                    <div className="mt-2 flex items-center justify-between opacity-60 text-[10px]">
                       <span>{msg.timestamp}</span>
                       {!isUser && (
                         <button
                           onClick={() => handleCopy(msg.id, msg.text)}
-                          className="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity flex items-center gap-1 text-[10px]"
-                          title="Copy Markdown"
+                          className="hover:opacity-100 transition-opacity"
+                          title="Copy response"
                         >
-                          {copiedId === msg.id ? (
-                            <span className="text-emerald-400 font-bold">Copied</span>
-                          ) : (
-                            <span>Copy</span>
-                          )}
+                          {copiedId === msg.id ? "✓ Copied" : "Copy"}
                         </button>
                       )}
                     </div>
@@ -472,18 +468,14 @@ export default function AIChatBot({
                 </div>
               );
             })}
-
-            {/* Typing Indicator */}
             {isLoading && (
-              <div className="flex items-center gap-2.5 mr-auto max-w-[85%]">
-                <div className="w-7 h-7 rounded-xl bg-slate-800 text-indigo-300 border border-slate-700 flex items-center justify-center p-1">
+              <div className="flex gap-3 max-w-[80%] mr-auto">
+                <div className="w-7 h-7 rounded-xl bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center p-1 shrink-0">
                   <PlannifyIconMark size={16} isWarm={false} />
                 </div>
-                <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center gap-2 rounded-tl-none">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" />
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:0.15s]" />
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:0.3s]" />
-                  <span className="ml-1 text-[11px] text-slate-400 font-medium">Analyzing constraints & timetable logic...</span>
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-500 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
+                  Reasoning timetable constraints...
                 </div>
               </div>
             )}
@@ -491,8 +483,8 @@ export default function AIChatBot({
           </div>
 
           {/* Prompt Chips Bar */}
-          <div className="px-4 py-2 bg-slate-900/90 border-t border-slate-800/80">
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+          <div className="p-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-1.5">
               {SUGGESTIONS.map((s, idx) => (
                 <button
                   key={idx}
@@ -503,7 +495,7 @@ export default function AIChatBot({
                         ...prev,
                         {
                           id: Date.now().toString(),
-                          text: "**Academic Demo Dataset Loaded**\n\nI have populated the timetable grid, sections, faculty directory, and classroom allocations with complete demonstration data.",
+                          text: "**Sample Academic Scenario Loaded Successfully!**\n\n- 8 Active Faculty Members with assigned designations\n- 4 Academic Sections (MCA-A, MCA-B, BCA-A, BCA-B)\n- Complete course catalog with core lab & theory blocks",
                           sender: 'bot',
                           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         }
@@ -527,10 +519,10 @@ export default function AIChatBot({
                   }}
                   className={`whitespace-nowrap px-3 py-1 rounded-xl text-[11px] font-bold border transition-all flex items-center gap-1.5 active:scale-95 ${
                     s.action === "demo"
-                      ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                      ? "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/25"
                       : s.action === "clear_demo"
-                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30"
-                      : "bg-slate-800/90 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
+                      ? "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 hover:bg-rose-500/25"
+                      : "bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
                   <SuggestionIcon type={s.iconType} />
@@ -541,17 +533,17 @@ export default function AIChatBot({
           </div>
 
           {/* Input & Image Attachment Footer */}
-          <div className="p-3 bg-slate-900 border-t border-slate-800 space-y-2">
+          <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 space-y-2">
             {previewUrl && (
-              <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-800 border border-slate-700">
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <img src={previewUrl} alt="Thumbnail preview" className="w-10 h-10 object-cover rounded-lg" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-white truncate">Timetable Image Attached</p>
-                  <p className="text-[10px] text-slate-400">Ready for OCR extraction</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Timetable Image Attached</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Ready for OCR extraction</p>
                 </div>
                 <button
                   onClick={() => { setPreviewUrl(null); setSelectedImage(null); }}
-                  className="p-1 text-slate-400 hover:text-rose-400 transition-colors"
+                  className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -568,10 +560,10 @@ export default function AIChatBot({
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+                className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors"
                 title="Upload Timetable Image for OCR Extraction"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               </button>
 
               <input
@@ -580,13 +572,13 @@ export default function AIChatBot({
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Ask Plannify AI or attach timetable image..."
-                className="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
 
               <button
                 onClick={() => handleSend()}
                 disabled={isLoading || (!input.trim() && !selectedImage)}
-                className="p-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold transition-all shadow-lg shadow-amber-900/20"
+                className="p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white font-bold transition-all shadow-lg shadow-indigo-500/20"
                 title="Send Message"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>

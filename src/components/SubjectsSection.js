@@ -2,6 +2,16 @@ import React, { useState, useMemo } from "react";
 
 /* Theme-Adaptive Professional Color Palettes for Subject Badges */
 export const SUBJECT_PALETTES = {
+  light: [
+    { bg: "#FEF3C7", border: "#F59E0B", text: "#78350F", accent: "#92400E", tag: "Amber" },
+    { bg: "#FFEDD5", border: "#FB923C", text: "#7C2D12", accent: "#C2410C", tag: "Terracotta" },
+    { bg: "#ECFDF5", border: "#34D399", text: "#064E3B", accent: "#047857", tag: "Emerald" },
+    { bg: "#EFF6FF", border: "#60A5FA", text: "#1E3A8A", accent: "#1D4ED8", tag: "Cobalt" },
+    { bg: "#F5F3FF", border: "#A78BFA", text: "#4C1D95", accent: "#6D28D9", tag: "Plum" },
+    { bg: "#FFF1F2", border: "#FB7185", text: "#881337", accent: "#BE123C", tag: "Rose" },
+    { bg: "#F0FDFA", border: "#2DD4BF", text: "#134E4A", accent: "#0F766E", tag: "Teal" },
+    { bg: "#FEF9C3", border: "#EAB308", text: "#713F12", accent: "#A16207", tag: "Gold" },
+  ],
   warm: [
     { bg: "#FEF3C7", border: "#F59E0B", text: "#78350F", accent: "#92400E", tag: "Amber" },
     { bg: "#FFEDD5", border: "#FB923C", text: "#7C2D12", accent: "#C2410C", tag: "Terracotta" },
@@ -24,10 +34,10 @@ export const SUBJECT_PALETTES = {
   ]
 };
 
-export const SUBJECT_COLORS = SUBJECT_PALETTES.warm;
+export const SUBJECT_COLORS = SUBJECT_PALETTES.light;
 
-export function getSubjectColor(colorIndex = 0, isWarm = true) {
-  const palette = isWarm ? SUBJECT_PALETTES.warm : SUBJECT_PALETTES.dark;
+export function getSubjectColor(colorIndex = 0, isLight = true) {
+  const palette = isLight ? SUBJECT_PALETTES.light : SUBJECT_PALETTES.dark;
   return palette[colorIndex % palette.length] || palette[0];
 }
 
