@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import FacultyAnalyticsProfile from './FacultyAnalyticsProfile';
 import AIAnalyticsAssistantModal from './AIAnalyticsAssistantModal';
+import AnimatedCounter from '../common/AnimatedCounter';
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
@@ -248,10 +249,15 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
       {/* ── TOP KPI CARDS (DASHBOARD) ── */}
       {dashboardData && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          {Object.entries(dashboardData.kpis).map(([key, kpi]) => (
-            <div key={key} className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/30 transition-all group relative">
+          {Object.entries(dashboardData.kpis).map(([key, kpi], idx) => (
+            <div
+              key={key}
+              className={`p-4 rounded-2xl bg-slate-900/90 border border-slate-800 stat-card-elevate animate-slide-up-fade stagger-${(idx % 8) + 1} group relative`}
+            >
               <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider truncate">{kpi.title}</p>
-              <h3 className="text-xl font-black text-white mt-1">{kpi.value}</h3>
+              <h3 className="text-xl font-black text-white mt-1">
+                <AnimatedCounter target={kpi.value} duration={1000} />
+              </h3>
 
               {kpi.trend && (
                 <p className={`text-[10px] font-bold mt-1 flex items-center gap-1 ${
@@ -263,7 +269,7 @@ export default function FacultyAnalyticsModule({ initialFacultyId, onBackToSyste
               )}
 
               {/* Tooltip */}
-              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-20 w-48 p-2 rounded-lg bg-slate-950 text-[10px] text-slate-300 border border-slate-700 shadow-xl">
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-20 w-48 p-2 rounded-lg bg-slate-950 text-[10px] text-slate-300 border border-slate-700 shadow-xl pointer-events-none">
                 {kpi.tooltip}
               </div>
             </div>

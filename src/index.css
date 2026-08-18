@@ -845,3 +845,103 @@ input:-webkit-autofill:active {
   width: 40px;
   height: 40px;
 }
+
+/* ============================================================
+   Production-Grade Visual Wow-Factor & Micro-Animations
+   (Hardware-Accelerated 60 FPS Compositor Animations)
+   ============================================================ */
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleInSubtle {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseGlowRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes livePulseDot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
+.animate-slide-up-fade {
+  animation: slideUpFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in-subtle {
+  animation: scaleInSubtle 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pulse-live-dot {
+  animation: livePulseDot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.glow-amber-ring {
+  animation: pulseGlowRing 2.5s infinite;
+}
+
+/* Staggered Delay Utilities */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+
+/* Interactive Hover Card Elevate */
+.stat-card-elevate {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+  will-change: transform;
+}
+
+.stat-card-elevate:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 4px 10px -2px rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.45) !important;
+}
+
+/* Radial Dial Smooth SVG Transition */
+.radial-dial-circle {
+  transition: stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: stroke-dashoffset;
+}
+
+/* Smooth Progress Bar Width Fill */
+.bar-fill-anim {
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: width;
+}

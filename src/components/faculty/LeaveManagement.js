@@ -4,6 +4,7 @@ import GooeyLoader from "../common/GooeyLoader";
 import { API_BASE_URL as API } from "../../apiConfig";
 import { supabase } from "../../supabaseClient";
 import { useAcademic } from "../../context/AcademicContext";
+import AnimatedCounter from "../common/AnimatedCounter";
 import {
   DEFAULT_LEAVE_TYPES,
   getLeaveTypes,
@@ -396,23 +397,28 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
       {/* Leave Balance Cards */}
       {balances.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {balances.map((b) => (
-            <div key={b.id || b.leave_type_code} className="stat-card text-center p-3.5">
+          {balances.map((b, idx) => (
+            <div
+              key={b.id || b.leave_type_code}
+              className={`stat-card stat-card-elevate text-center p-3.5 animate-slide-up-fade stagger-${(idx % 8) + 1}`}
+            >
               <div
                 className="text-[11px] font-bold uppercase tracking-wider mb-1"
                 style={{ color: b.leave_type_color }}
               >
                 {b.leave_type_name || b.leave_type_code}
               </div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white">{b.remaining}</div>
+              <div className="text-2xl font-black text-slate-900 dark:text-white">
+                <AnimatedCounter target={b.remaining} duration={900} />
+              </div>
               <div className="text-[10px] text-slate-400 mt-0.5">
                 {b.used} used · {b.pending} pending / {b.total_allowed}
               </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-700/60 rounded-full h-1.5 mt-2">
+              <div className="w-full bg-slate-100 dark:bg-slate-700/60 rounded-full h-1.5 mt-2 overflow-hidden">
                 <div
-                  className="h-1.5 rounded-full transition-all"
+                  className="h-1.5 rounded-full bar-fill-anim"
                   style={{
-                    width: `${Math.min(100, (b.used / Math.max(1, b.total_allowed)) * 100)}%`,
+                    width: `${Math.min(100, ((b.total_allowed - b.remaining) / Math.max(1, b.total_allowed)) * 100)}%`,
                     background: b.leave_type_color,
                   }}
                 />

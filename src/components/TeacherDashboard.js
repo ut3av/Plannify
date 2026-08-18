@@ -4,6 +4,7 @@ import AIChatBot from './AIChatBot';
 import LeaveManagement from './faculty/LeaveManagement';
 import AttendanceDashboard from './faculty/AttendanceDashboard';
 import BrandLogo from './common/BrandLogo';
+import AnimatedCounter from './common/AnimatedCounter';
 import { API_BASE_URL as API } from '../apiConfig';
 import { supabase } from '../supabaseClient';
 import { subscribeToTable } from '../services/realtimeFacultyService';
@@ -446,9 +447,11 @@ export default function TeacherDashboard({
           <div className="space-y-8 animate-fade-in">
             {/* Top Quick Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="card p-6 bg-slate-900/80 border border-slate-800">
+              <div className="card p-6 bg-slate-900/80 border border-slate-800 stat-card-elevate">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Weekly Assigned Load</span>
-                <div className="text-4xl font-black text-white leading-none mt-1">{totalClasses} <span className="text-sm text-slate-500 font-bold uppercase">Slots</span></div>
+                <div className="text-4xl font-black text-white leading-none mt-1">
+                  <AnimatedCounter target={totalClasses} duration={1000} /> <span className="text-sm text-slate-500 font-bold uppercase">Slots</span>
+                </div>
               </div>
               
               <div className="card p-6 bg-slate-900/80 border border-slate-800">
