@@ -3,7 +3,7 @@
 # 🎓 Plannify.exe
 ### Next-Generation Academic Operations Platform & Mathematical Scheduling OS
 
-**Empowering universities, colleges, and educational institutions with Google OR-Tools CP-SAT constraint optimization, full-scale Faculty Management (FMS), and Make.com automation.**
+**Empowering universities, colleges, and educational institutions with Google OR-Tools CP-SAT constraint optimization, full-scale Faculty Management (FMS), and Make.com automation**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-19.2+-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
