@@ -41,7 +41,7 @@ export default function HeaderBar({
   onRemoveDemo,
   user,
   onLogout,
-  theme = 'warm-white',
+  theme = 'light',
   onToggleTheme,
   teachers = [],
 }) {
@@ -49,7 +49,7 @@ export default function HeaderBar({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [liveUnreadCount, setLiveUnreadCount] = useState(unreadNotificationsCount);
-  const isWarm = theme === 'warm-white';
+  const isLight = theme !== 'dark';
 
   // Live real-time background listener for pending faculty leaves
   const refreshUnreadCount = useCallback(async () => {
@@ -89,8 +89,8 @@ export default function HeaderBar({
 
   return (
     <header className={`h-16 backdrop-blur-md border-b px-4 flex items-center justify-between sticky top-0 z-30 transition-colors duration-300 ${
-      isWarm
-        ? 'bg-white/95 border-[#E8DDD0] text-[#1F140E]'
+      isLight
+        ? 'bg-white/95 border-slate-200 text-slate-900'
         : 'bg-slate-900/95 border-slate-800 text-slate-100'
     }`}>
       {/* LEFT: Toggle & Breadcrumbs */}
@@ -98,8 +98,8 @@ export default function HeaderBar({
         <button
           onClick={onToggleSidebar}
           className={`p-2 rounded-xl transition-colors border ${
-            isWarm
-              ? 'bg-[#F4EEE5] hover:bg-[#E8DDD0] text-[#5C4A3E] border-[#E8DDD0]'
+            isLight
+              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700/80'
           }`}
           title={isSidebarOpen ? "Collapse navigation" : "Expand navigation"}
@@ -118,15 +118,15 @@ export default function HeaderBar({
             navigate("/dashboard");
           }}
           className={`flex items-center gap-2.5 shrink-0 pr-3 border-r text-left cursor-pointer hover:opacity-90 transition-all group ${
-            isWarm ? 'border-[#E8DDD0]' : 'border-slate-800'
+            isLight ? 'border-slate-200' : 'border-slate-800'
           }`}
         >
-          <BrandLogo size="md" isWarm={isWarm} showIcon={true} />
+          <BrandLogo size="md" isWarm={false} showIcon={true} />
         </button>
 
         {/* Dynamic Breadcrumbs */}
         <nav className={`flex items-center gap-2 text-xs min-w-0 overflow-hidden ${
-          isWarm ? 'text-[#8F7B6D]' : 'text-slate-400'
+          isLight ? 'text-slate-500' : 'text-slate-400'
         }`}>
           <span
             onClick={() => {
@@ -134,17 +134,17 @@ export default function HeaderBar({
               navigate("/dashboard");
             }}
             className={`cursor-pointer font-medium ${
-              isWarm ? 'hover:text-[#1F140E]' : 'hover:text-slate-200'
+              isLight ? 'hover:text-slate-900' : 'hover:text-slate-200'
             }`}
           >
             Home
           </span>
           {breadcrumbs.map((crumb, idx) => (
             <React.Fragment key={idx}>
-              <span className={isWarm ? 'text-[#D4C4B0]' : 'text-slate-600'}>/</span>
+              <span className={isLight ? 'text-slate-300' : 'text-slate-600'}>/</span>
               <span className={`truncate ${idx === breadcrumbs.length - 1
-                ? `font-bold ${isWarm ? 'text-[#1F140E]' : 'text-white'}`
-                : `${isWarm ? 'hover:text-[#1F140E]' : 'hover:text-slate-200'} cursor-pointer`
+                ? `font-bold ${isLight ? 'text-slate-900' : 'text-white'}`
+                : `${isLight ? 'hover:text-slate-900' : 'hover:text-slate-200'} cursor-pointer`
               }`}>
                 {crumb}
               </span>
@@ -160,20 +160,20 @@ export default function HeaderBar({
           <button
             onClick={onToggleTheme}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-300 ${
-              isWarm
-                ? 'bg-amber-100 hover:bg-amber-200 border-amber-300/80 text-amber-900 shadow-sm'
-                : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-slate-100'
+              isLight
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 shadow-sm'
+                : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 text-amber-400 hover:text-amber-300'
             }`}
-            title={isWarm ? 'Switch to Dark theme' : 'Switch to Warm White theme'}
+            title={isLight ? 'Switch to Dark theme' : 'Switch to Light theme'}
           >
-            {isWarm ? (
+            {isLight ? (
               /* Moon icon for switching to dark */
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="w-3.5 h-3.5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
               </svg>
             ) : (
-              /* Sun icon for switching to warm white */
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              /* Sun icon for switching to light */
+              <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="5" />
                 <line x1="12" y1="1" x2="12" y2="3" />
                 <line x1="12" y1="21" x2="12" y2="23" />
@@ -185,7 +185,7 @@ export default function HeaderBar({
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
               </svg>
             )}
-            <span className="hidden md:inline-block">{isWarm ? 'Dark' : 'Warm'}</span>
+            <span className="hidden md:inline-block">{isLight ? 'Dark' : 'Light'}</span>
           </button>
         )}
 
@@ -193,8 +193,8 @@ export default function HeaderBar({
         <button
           onClick={onOpenSearch}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs transition-all ${
-            isWarm
-              ? 'bg-[#f3ede4]/80 hover:bg-[#e8ddd0] border-[#e8ddd0] text-[#a08b7a] hover:text-[#6b5344]'
+            isLight
+              ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-500 hover:text-slate-800'
               : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 text-slate-400 hover:text-slate-200'
           }`}
           title="Global Search (Ctrl+K)"
@@ -205,8 +205,8 @@ export default function HeaderBar({
           </svg>
           <span className="hidden md:inline-block">Search...</span>
           <kbd className={`hidden md:inline-block px-1.5 py-0.5 rounded border text-[10px] font-mono ${
-            isWarm
-              ? 'bg-[#f3ede4] border-[#e8ddd0] text-[#a08b7a]'
+            isLight
+              ? 'bg-white border-slate-200 text-slate-500'
               : 'bg-slate-900 border-slate-700 text-slate-400'
           }`}>
             Ctrl+K
@@ -219,8 +219,8 @@ export default function HeaderBar({
             onClick={onSaveCloud}
             disabled={isCloudSaving}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
-              isWarm
-                ? 'bg-amber-50 hover:bg-amber-100 border-amber-300/50 text-amber-700'
+              isLight
+                ? 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-700'
                 : 'bg-indigo-500/10 hover:bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
             }`}
             title="Save draft to Supabase Cloud"
@@ -239,13 +239,13 @@ export default function HeaderBar({
           <button
             onClick={onLoadDemo}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
-              isWarm
+              isLight
                 ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300/60 text-emerald-700'
                 : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
             }`}
             title="Load complete academic demo data across all modules"
           >
-            <svg className="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <svg className="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             <span className="hidden sm:inline">Load Demo Data</span>
           </button>
         )}
@@ -255,13 +255,13 @@ export default function HeaderBar({
           <button
             onClick={onRemoveDemo}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
-              isWarm
+              isLight
                 ? 'bg-rose-50 hover:bg-rose-100 border-rose-300/60 text-rose-700'
                 : 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 text-rose-300'
             }`}
             title="Remove demo data and switch to clean real implementation workspace"
           >
-            <svg className="w-3.5 h-3.5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <svg className="w-3.5 h-3.5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             <span className="hidden sm:inline">Remove Demo Data</span>
           </button>
         )}
@@ -270,8 +270,8 @@ export default function HeaderBar({
         <button
           onClick={() => setShowNotificationCenter(true)}
           className={`p-2 rounded-xl transition-colors border relative ${
-            isWarm
-              ? 'bg-[#f3ede4] hover:bg-[#e8ddd0] text-[#6b5344] border-[#e8ddd0]'
+            isLight
+              ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700/80'
           }`}
           title="Real-Time Notifications"
@@ -282,7 +282,7 @@ export default function HeaderBar({
           </svg>
           {liveUnreadCount > 0 && (
             <span className={`absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full text-white font-bold text-[9px] flex items-center justify-center animate-pulse shadow-sm ${
-              isWarm ? 'bg-amber-600' : 'bg-indigo-500'
+              isLight ? 'bg-indigo-600' : 'bg-indigo-500'
             }`}>
               {liveUnreadCount}
             </span>
@@ -308,23 +308,23 @@ export default function HeaderBar({
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className={`flex items-center gap-2 p-1 rounded-xl transition-colors border border-transparent ${
-              isWarm
-                ? 'hover:bg-[#f3ede4] hover:border-[#e8ddd0]'
+              isLight
+                ? 'hover:bg-slate-100 hover:border-slate-200'
                 : 'hover:bg-slate-800 hover:border-slate-700'
             }`}
           >
             <div className={`w-8 h-8 rounded-xl border flex items-center justify-center font-bold text-xs ${
-              isWarm
-                ? 'bg-amber-100 border-amber-300/60 text-amber-800'
+              isLight
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
                 : 'bg-indigo-600/30 border-indigo-400/40 text-indigo-300'
             }`}>
               {user?.email ? user.email[0].toUpperCase() : 'AD'}
             </div>
             <div className="text-left hidden xl:block leading-none pr-1">
-              <p className={`text-xs font-bold ${isWarm ? 'text-[#2c1810]' : 'text-slate-200'}`}>
+              <p className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
                 {user?.email?.split('@')[0] || 'Administrator'}
               </p>
-              <p className={`text-[10px] mt-0.5 ${isWarm ? 'text-[#a08b7a]' : 'text-slate-400'}`}>
+              <p className={`text-[10px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 {userRole || 'Admin'}
               </p>
             </div>
@@ -332,15 +332,15 @@ export default function HeaderBar({
 
           {showProfileMenu && (
             <div className={`absolute right-0 mt-2 w-52 rounded-2xl border shadow-2xl p-2 z-50 text-xs animate-fade-in ${
-              isWarm
-                ? 'bg-[#fffdf8] border-[#e8ddd0] text-[#2c1810]'
+              isLight
+                ? 'bg-white border-slate-200 text-slate-800 shadow-slate-200/80'
                 : 'bg-slate-900 border-slate-700 text-slate-200'
             }`}>
-              <div className={`px-3 py-2 border-b ${isWarm ? 'border-[#e8ddd0]' : 'border-slate-800'}`}>
-                <p className={`font-bold truncate ${isWarm ? 'text-[#2c1810]' : 'text-white'}`}>
+              <div className={`px-3 py-2 border-b ${isLight ? 'border-slate-100' : 'border-slate-800'}`}>
+                <p className={`font-bold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {user?.email || 'admin@lnctu.ac.in'}
                 </p>
-                <p className={`text-[10px] mt-0.5 ${isWarm ? 'text-amber-600' : 'text-indigo-400'}`}>
+                <p className={`text-[10px] mt-0.5 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`}>
                   Academic Dean / Admin
                 </p>
               </div>
@@ -350,7 +350,7 @@ export default function HeaderBar({
                   setShowProfileMenu(false);
                   if (onLogout) onLogout();
                 }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-500/20 text-red-400 flex items-center gap-2 mt-1 font-semibold transition-colors"
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-red-600 dark:hover:bg-red-500/20 dark:text-red-400 flex items-center gap-2 mt-1 font-semibold transition-colors"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 Sign Out

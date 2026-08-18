@@ -118,11 +118,11 @@ export default function LandingPage({ onExploreDemo }) {
   const currentRole = ROLE_SOLUTIONS[activeRoleTab];
 
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-slate-100 selection:bg-amber-500 selection:text-slate-950 font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white font-sans antialiased overflow-x-hidden">
       
       {/* ── TOP ANNOUNCEMENT BANNER ── */}
-      <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 text-slate-950 text-xs font-bold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
-        <span className="bg-slate-950 text-amber-400 text-[10px] uppercase font-black px-2 py-0.5 rounded-full">New</span>
+      <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white text-xs font-bold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
+        <span className="bg-white/20 text-white text-[10px] uppercase font-black px-2 py-0.5 rounded-full">New</span>
         <span>Plannify Academic OS v3.70 is live with Google OR-Tools AI Constraint Engine</span>
         <button onClick={handleLaunchApp} className="underline hover:opacity-80 ml-1 font-extrabold flex items-center gap-1">
           Explore Portal →
@@ -130,7 +130,7 @@ export default function LandingPage({ onExploreDemo }) {
       </div>
 
       {/* ── STICKY NAVIGATION BAR ── */}
-      <header className="sticky top-0 z-50 bg-[#0B0F17]/90 backdrop-blur-md border-b border-slate-800/80 transition-all">
+      <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
           {/* Brand Logo */}
@@ -139,9 +139,9 @@ export default function LandingPage({ onExploreDemo }) {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-display font-black text-xl tracking-tight text-white">
-                  Plannify<span className="text-amber-500">.exe</span>
+                  Plannify<span className="text-indigo-500">.exe</span>
                 </span>
-                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
                   Academic OS
                 </span>
               </div>
@@ -151,25 +151,25 @@ export default function LandingPage({ onExploreDemo }) {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-300">
-            <a href="#features" className="hover:text-amber-400 transition-colors">Features</a>
-            <a href="#solutions" className="hover:text-amber-400 transition-colors">Solutions</a>
-            <a href="#metrics" className="hover:text-amber-400 transition-colors">Live Impact</a>
-            <a href="#comparison" className="hover:text-amber-400 transition-colors">Why Plannify</a>
-            <a href="#faq" className="hover:text-amber-400 transition-colors">FAQ</a>
+            <a href="#features" className="hover:text-indigo-400 transition-colors">Features</a>
+            <a href="#solutions" className="hover:text-indigo-400 transition-colors">Solutions</a>
+            <a href="#metrics" className="hover:text-indigo-400 transition-colors">Live Impact</a>
+            <a href="#comparison" className="hover:text-indigo-400 transition-colors">Why Plannify</a>
+            <a href="#faq" className="hover:text-indigo-400 transition-colors">FAQ</a>
           </nav>
 
           {/* Right Action Buttons */}
           <div className="flex items-center gap-3">
             <button
               onClick={handleDemoClick}
-              className="btn-secondary text-xs py-2 px-3.5 font-bold flex items-center gap-1.5 hover:border-amber-500/40"
+              className="btn-secondary text-xs py-2 px-3.5 font-bold flex items-center gap-1.5 hover:border-indigo-500/40"
             >
-              <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <svg className="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               <span>1-Click Demo</span>
             </button>
             <button
               onClick={handleLaunchApp}
-              className="btn-primary text-xs py-2.5 px-4 font-bold shadow-lg shadow-amber-900/30 flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform"
+              className="btn-primary text-xs py-2.5 px-4 font-bold shadow-lg shadow-indigo-900/30 flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform"
             >
               <span>Sign In / Launch</span>
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -181,22 +181,22 @@ export default function LandingPage({ onExploreDemo }) {
       {/* ── HERO SECTION ── */}
       <section className="relative pt-16 pb-24 overflow-hidden border-b border-slate-800/60">
         {/* Ambient Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-amber-600/15 via-orange-600/10 to-indigo-600/10 blur-[130px] rounded-full pointer-events-none" />
-        <div className="absolute top-10 left-10 w-96 h-96 bg-amber-500/5 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-indigo-600/15 via-violet-600/10 to-indigo-600/10 blur-[130px] rounded-full pointer-events-none" />
+        <div className="absolute top-10 left-10 w-96 h-96 bg-indigo-500/5 blur-3xl rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
           <div className="max-w-4xl mx-auto text-center space-y-6">
             
             {/* Pill Tag */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-amber-500/30 text-amber-400 text-xs font-bold tracking-wide shadow-md">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-indigo-500/30 text-indigo-400 text-xs font-bold tracking-wide shadow-md">
               <span className="w-2 h-2 rounded-full bg-emerald-400 pulse-live-dot" />
               <span>Academic Operating System for Higher Education</span>
             </div>
 
             {/* Main Headline */}
             <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-[1.1] font-display">
-              Build <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-200">100% Conflict-Free</span> University Timetables in Seconds.
+              Build <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-600">100% Conflict-Free</span> University Timetables in Seconds.
             </h1>
 
             {/* Subtitle */}
@@ -208,7 +208,7 @@ export default function LandingPage({ onExploreDemo }) {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <button
                 onClick={handleLaunchApp}
-                className="w-full sm:w-auto btn-primary text-sm py-3.5 px-8 font-black shadow-xl shadow-amber-900/40 flex items-center justify-center gap-2.5 hover:scale-105 active:scale-95 transition-all"
+                className="w-full sm:w-auto btn-primary text-sm py-3.5 px-8 font-black shadow-xl shadow-indigo-900/40 flex items-center justify-center gap-2.5 hover:scale-105 active:scale-95 transition-all"
               >
                 <span>Launch Academic Workspace</span>
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -216,7 +216,7 @@ export default function LandingPage({ onExploreDemo }) {
 
               <button
                 onClick={handleDemoClick}
-                className="w-full sm:w-auto btn-secondary text-sm py-3.5 px-7 font-bold flex items-center justify-center gap-2 hover:bg-slate-800/80 hover:border-amber-500/40 transition-all"
+                className="w-full sm:w-auto btn-secondary text-sm py-3.5 px-7 font-bold flex items-center justify-center gap-2 hover:bg-slate-800/80 hover:border-indigo-500/40 transition-all"
               >
                 <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 <span>Explore Interactive Demo</span>

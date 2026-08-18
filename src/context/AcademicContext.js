@@ -95,14 +95,22 @@ export function AcademicProvider({ children }) {
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
-  // Theme state: 'warm-white' (primary) | 'dark'
+  // Theme state: 'light' (primary default) | 'dark'
   const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem('planify-theme') || 'warm-white'; } catch { return 'warm-white'; }
+    try {
+      const saved = localStorage.getItem('planify-theme');
+      if (saved === 'warm-white' || !saved) {
+        return 'light';
+      }
+      return saved;
+    } catch {
+      return 'light';
+    }
   });
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => {
-      const next = prev === 'warm-white' ? 'dark' : 'warm-white';
+      const next = prev === 'dark' ? 'light' : 'dark';
       try { localStorage.setItem('planify-theme', next); } catch {}
       return next;
     });
@@ -111,8 +119,8 @@ export function AcademicProvider({ children }) {
   // Apply theme class to document root
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('dark', 'warm-white');
-    root.classList.add(theme);
+    root.classList.remove('dark', 'light', 'warm-white');
+    root.classList.add(theme === 'dark' ? 'dark' : 'light');
   }, [theme]);
 
   // Check active Supabase session

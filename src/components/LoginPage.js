@@ -286,25 +286,25 @@ export default function LoginPage() {
       <div className="absolute top-1/4 -left-20 w-80 h-80 bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-violet-600/15 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative w-full max-w-[1020px] grid lg:grid-cols-12 gap-0 overflow-hidden bg-slate-900/90 rounded-[32px] shadow-2xl border border-slate-800 backdrop-blur-xl">
+      <div className="relative w-full max-w-[1020px] grid lg:grid-cols-12 gap-0 overflow-hidden bg-white/95 dark:bg-slate-900/90 rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-xl">
 
         {/* LEFT COLUMN: BRAND HERO (5 cols) */}
-        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-[#20140E] via-[#2C1810] to-[#150C07] border-r border-[#332219] text-amber-100">
+        <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-10 bg-gradient-to-br from-[#1E1B4B] via-[#0F172A] to-[#020617] border-r border-slate-800 text-slate-100">
           <div>
             <div className="mb-8">
-              <BrandLogo size="lg" isWarm={true} textColor="text-white" />
+              <BrandLogo size="lg" isWarm={false} textColor="text-white" />
             </div>
 
             <h1 className="text-3xl font-black tracking-tight text-white mb-3 leading-snug">
               Smart Academic <br />
               <span className="text-gradient">Operations Platform</span>
             </h1>
-            <p className="text-[#D4C4B0] text-xs leading-relaxed">
+            <p className="text-slate-300 text-xs leading-relaxed">
               University-grade automated scheduling, real-time timetable optimization, and operational faculty analytics.
             </p>
           </div>
 
-          <div className="space-y-3 pt-6 border-t border-[#332219] text-xs text-[#E8DDD0]">
+          <div className="space-y-3 pt-6 border-t border-slate-800 text-xs text-slate-300">
             <div className="flex items-center gap-2.5">
               <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -312,13 +312,13 @@ export default function LoginPage() {
               <span>Google OR-Tools Constraint Solver</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[10px]">
+              <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-[10px]">
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <span>Role-Based Portal Access</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-[10px]">
+              <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-[10px]">
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <span>Supabase Cloud Integration</span>
@@ -336,7 +336,7 @@ export default function LoginPage() {
 
           {/* Header & Title */}
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
+            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
               {isRecoveryMode
                 ? "Security Recovery"
                 : isForgotPassword
@@ -365,15 +365,15 @@ export default function LoginPage() {
 
           {/* Alert Messages */}
           {error && (
-            <div className="p-3.5 rounded-xl font-semibold border text-xs bg-rose-500/10 border-rose-500/30 text-rose-300 animate-slide-down flex items-start gap-2">
-              <svg className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div className="p-3.5 rounded-xl font-semibold border text-xs bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300 animate-slide-down flex items-start gap-2">
+              <svg className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               <span>{error}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="p-3.5 rounded-xl font-semibold border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-300 animate-slide-down flex items-start gap-2">
-              <svg className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <div className="p-3.5 rounded-xl font-semibold border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-300 animate-slide-down flex items-start gap-2">
+              <svg className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
               <span>{successMessage}</span>
             </div>
           )}
@@ -382,20 +382,20 @@ export default function LoginPage() {
           {isRecoveryMode ? (
             <form onSubmit={handleSetNewPassword} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-300 mb-1">New Password *</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">New Password *</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 pr-10 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full px-3.5 py-2.5 pr-10 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     placeholder="Enter at least 6 characters"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 focus:outline-none p-1 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none p-1 transition-colors"
                     title={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -408,20 +408,20 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-300 mb-1">Confirm New Password *</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Confirm New Password *</label>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 pr-10 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full px-3.5 py-2.5 pr-10 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     placeholder="Repeat new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 focus:outline-none p-1 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none p-1 transition-colors"
                     title={showConfirmPassword ? "Hide password" : "Show password"}
                   >
                     {showConfirmPassword ? (
@@ -436,7 +436,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full py-3 text-xs font-bold gap-2 justify-center shadow-lg shadow-amber-500/20 mt-2"
+                className="btn-primary w-full py-3 text-xs font-bold gap-2 justify-center shadow-lg shadow-indigo-500/20 mt-2"
               >
                 {loading ? "Updating Credentials..." : "Set New Password & Sign In"}
               </button>
@@ -444,7 +444,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setIsRecoveryMode(false); setIsForgotPassword(false); setError(""); setSuccessMessage(""); }}
-                className="w-full text-center text-xs font-semibold text-slate-400 hover:text-amber-300 transition-colors pt-2"
+                className="w-full text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors pt-2"
               >
                 ← Return to Sign In
               </button>
@@ -453,16 +453,16 @@ export default function LoginPage() {
             /* VIEW 2: FORGOT PASSWORD REQUEST FORM */
             <form onSubmit={handleForgotPassword} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-300 mb-1">Registered Email Address *</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Registered Email Address *</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="e.g. faculty@lnctu.ac.in or admin@lnctu.ac.in"
                 />
-                <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                   We will send a secure Supabase authentication link allowing you to choose a new password.
                 </p>
               </div>
@@ -470,7 +470,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full py-3 text-xs font-bold gap-2 justify-center shadow-lg shadow-amber-500/20 mt-2"
+                className="btn-primary w-full py-3 text-xs font-bold gap-2 justify-center shadow-lg shadow-indigo-500/20 mt-2"
               >
                 {loading ? "Sending Recovery Link..." : "Send Password Reset Link"}
               </button>
@@ -478,7 +478,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setIsForgotPassword(false); setError(""); setSuccessMessage(""); }}
-                className="w-full text-center text-xs font-semibold text-slate-400 hover:text-amber-300 transition-colors pt-2"
+                className="w-full text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors pt-2"
               >
                 ← Back to Sign In
               </button>
@@ -492,16 +492,16 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setPortalRole("admin")}
                   className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${portalRole === "admin"
-                      ? "bg-amber-500/15 border-amber-500/50 text-slate-900 dark:text-white shadow-md shadow-amber-600/10 font-bold"
+                      ? "bg-indigo-500/15 border-indigo-500/50 text-slate-900 dark:text-white shadow-md shadow-indigo-600/10 font-bold"
                       : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                     }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold flex items-center gap-1.5">
-                      <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                       Admin
                     </span>
-                    {portalRole === "admin" && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
+                    {portalRole === "admin" && <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse" />}
                   </div>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-tight">
                     Full institutional operations, timetable solver, faculty management, & settings
@@ -512,16 +512,16 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setPortalRole("teacher")}
                   className={`p-3 rounded-xl text-left transition-all flex flex-col justify-between border ${portalRole === "teacher"
-                      ? "bg-amber-500/15 border-amber-500/50 text-slate-900 dark:text-white shadow-md shadow-amber-600/10 font-bold"
+                      ? "bg-indigo-500/15 border-indigo-500/50 text-slate-900 dark:text-white shadow-md shadow-indigo-600/10 font-bold"
                       : "bg-transparent border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                     }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold flex items-center gap-1.5">
-                      <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                       Faculty Member
                     </span>
-                    {portalRole === "teacher" && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
+                    {portalRole === "teacher" && <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse" />}
                   </div>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-tight">
                     Personal timetable schedule, individual attendance, workload analytics, & Leave Apply
@@ -535,25 +535,25 @@ export default function LoginPage() {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold text-slate-300 mb-1">Full Name *</label>
+                        <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
                         <input
                           type="text"
                           required
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           placeholder="e.g. Dr. Arvind Kumar"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-bold text-slate-300 mb-1">Phone / Mobile *</label>
+                        <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Phone / Mobile *</label>
                         <input
                           type="tel"
                           required
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           placeholder="+91-9876543210"
                         />
                       </div>
@@ -563,11 +563,11 @@ export default function LoginPage() {
                       <>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className="block font-bold text-slate-300 mb-1">Designation</label>
+                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Designation</label>
                             <select
                               value={designation}
                               onChange={(e) => setDesignation(e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
                               <option value="Professor">Professor</option>
                               <option value="Associate Professor">Associate Professor</option>
@@ -579,14 +579,14 @@ export default function LoginPage() {
 
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className="font-bold text-slate-300">Employee ID</label>
+                              <label className="font-bold text-slate-700 dark:text-slate-300">Employee ID</label>
                               <span className="text-[10px] text-slate-500 font-mono">ID</span>
                             </div>
                             <input
                               type="text"
                               value={employeeId}
                               onChange={(e) => setEmployeeId(e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-amber-500"
+                              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                               placeholder="EMP-LNCT-1001"
                             />
                           </div>
@@ -597,25 +597,25 @@ export default function LoginPage() {
                 )}
 
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">Email Address *</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address *</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     placeholder={portalRole === "admin" ? "admin@planify.edu" : "faculty@planify.edu"}
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block font-bold text-slate-300">Password *</label>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300">Password *</label>
                     {!isSignUp && (
                       <button
                         type="button"
                         onClick={() => { setIsForgotPassword(true); setIsSignUp(false); setError(""); setSuccessMessage(""); }}
-                        className="text-[11px] font-semibold text-amber-500 hover:text-amber-400 transition-colors"
+                        className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors"
                       >
                         Forgot password?
                       </button>
@@ -627,13 +627,13 @@ export default function LoginPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-3.5 py-2.5 pr-10 bg-slate-800/80 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      className="w-full px-3.5 py-2.5 pr-10 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="••••••••"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 focus:outline-none p-1 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none p-1 transition-colors"
                       title={showPassword ? "Hide password" : "Show password"}
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
@@ -655,7 +655,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-primary w-full py-3 text-xs font-bold gap-2 justify-center shadow-lg shadow-amber-500/20 mt-2"
+                  className="btn-primary w-full py-3 text-xs font-bold gap-2 justify-center shadow-lg shadow-indigo-500/20 mt-2"
                 >
                   {loading ? "Authenticating..." : (isSignUp ? `Initialize ${portalRole === 'admin' ? 'Admin' : 'Faculty'} Account` : `Sign In to ${portalRole === 'admin' ? 'Admin OS' : 'Faculty Portal'}`)}
                 </button>
@@ -663,7 +663,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => { setIsSignUp(!isSignUp); setIsForgotPassword(false); setError(""); setSuccessMessage(""); }}
-                  className="w-full text-center text-xs font-semibold text-slate-400 hover:text-amber-300 transition-colors pt-2"
+                  className="w-full text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors pt-2"
                 >
                   {isSignUp ? "Already registered? Sign In" : "Need an account? Register new identity"}
                 </button>

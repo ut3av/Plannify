@@ -16,7 +16,7 @@ export default function AppShell({
   onRemoveDemo,
   user,
   onLogout,
-  theme = 'warm-white',
+  theme = 'light',
   onToggleTheme,
   teachers = [],
   children,
@@ -24,12 +24,12 @@ export default function AppShell({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  const isWarm = theme === 'warm-white';
+  const isLight = theme !== 'dark';
 
   return (
     <div className={`min-h-screen font-sans flex flex-col antialiased transition-colors duration-300 ${
-      isWarm
-        ? 'bg-[#FAF8F3] text-[#1F140E]'
+      isLight
+        ? 'bg-slate-50 text-slate-900'
         : 'bg-slate-950 text-slate-100'
     }`}>
       {/* Top Header Bar */}

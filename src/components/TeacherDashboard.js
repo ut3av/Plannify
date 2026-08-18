@@ -14,7 +14,7 @@ export default function TeacherDashboard({
   result,
   onLogout,
   teachers = [],
-  theme = "warm-white",
+  theme = "light",
   onToggleTheme,
 }) {
   const [activeTab, setActiveTab] = useState("timetable"); // "timetable" | "attendance" | "analytics" | "leave"
@@ -217,14 +217,14 @@ export default function TeacherDashboard({
   }, [schedule]);
 
   return (
-    <div className="min-h-screen text-slate-900 dark:text-slate-100 selection:bg-amber-500/30 selection:text-white bg-[var(--bg-main)]">
+    <div className="min-h-screen text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 selection:text-white bg-[var(--bg-main)]">
       <div className="glow-mesh" />
       
       {/* Top Navbar */}
-      <nav className="sticky top-0 z-50 glass-panel border-b border-[#E8DDD0] dark:border-white/10 px-4 sm:px-6 py-3.5 flex justify-between items-center bg-white/95 dark:bg-slate-950/90 backdrop-blur-2xl">
+      <nav className="sticky top-0 z-50 glass-panel border-b border-slate-200 dark:border-white/10 px-4 sm:px-6 py-3.5 flex justify-between items-center bg-white/95 dark:bg-slate-950/90 backdrop-blur-2xl">
         <div className="flex items-center gap-3">
-          <BrandLogo size="md" isWarm={theme === 'warm-white'} />
-          <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 pl-3 border-l border-[#E8DDD0] dark:border-slate-800">
+          <BrandLogo size="md" isWarm={false} />
+          <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 pl-3 border-l border-slate-200 dark:border-slate-800">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Faculty Portal
           </div>

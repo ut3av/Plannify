@@ -3,44 +3,44 @@
 @tailwind utilities;
 
 @layer base {
-  :root, .warm-white {
-    --bg-main: #FAF8F3;
+  :root, .light, .warm-white {
+    --bg-main: #F8FAFC;
     --bg-surface: #FFFFFF;
-    --bg-subtle: #F4EEE5;
+    --bg-subtle: #F1F5F9;
     --bg-elevated: #FFFFFF;
-    --text-primary: #1F140E;
-    --text-secondary: #5C4A3E;
-    --text-muted: #8F7B6D;
-    --border-default: #E8DDD0;
-    --border-subtle: #F4EEE5;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --border-default: #E2E8F0;
+    --border-subtle: #F1F5F9;
     
-    /* Primary Warm Identity: Amber Gold & Terracotta */
-    --primary: #B45309;
-    --primary-light: #FEF3C7;
-    --primary-hover: #92400E;
-    --primary-active: #78350F;
-    --accent-terracotta: #C2410C;
+    /* Primary Modern Identity: Vibrant Indigo & Accents */
+    --primary: #4F46E5;
+    --primary-light: #EEF2FF;
+    --primary-hover: #4338CA;
+    --primary-active: #3730A3;
+    --accent-terracotta: #EA580C;
     --accent-gold: #D97706;
-    --accent-teal: #0D7377;
+    --accent-teal: #0D9488;
     --accent-teal-light: #CCFBF1;
-    --accent-amber: #B45309;
+    --accent-amber: #D97706;
     --accent-amber-light: #FEF3C7;
-    --accent-red: #B91C1C;
+    --accent-red: #DC2626;
     --accent-red-light: #FEE2E2;
-    --accent-green: #15803D;
+    --accent-green: #16A34A;
     --accent-green-light: #DCFCE7;
 
-    /* Warm Ambient Shadows */
-    --shadow-sm: 0 1px 3px 0 rgba(120, 70, 30, 0.05);
-    --shadow-md: 0 4px 12px -2px rgba(120, 70, 30, 0.07), 0 2px 4px -2px rgba(120, 70, 30, 0.04);
-    --shadow-lg: 0 12px 24px -4px rgba(120, 70, 30, 0.09), 0 4px 8px -2px rgba(120, 70, 30, 0.04);
+    /* Crisp Clean Ambient Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
     --radius: 14px;
 
-    /* Warm Sidebar & Header */
-    --sidebar-bg: #20140E;
-    --sidebar-border: #332219;
+    /* Modern Light Sidebar & Header */
+    --sidebar-bg: #0F172A;
+    --sidebar-border: #1E293B;
     --header-bg: #FFFFFF;
-    --header-border: #E8DDD0;
+    --header-border: #E2E8F0;
   }
 
   .dark {
@@ -525,196 +525,122 @@ input:-webkit-autofill:active {
 }
 
 /* ══════════════════════════════════════════════════════════
-   WARM WHITE — Universal Utility Mapping & Contrast Alignment
-   Maps dark slate utility classes to warm porcelain/amber tokens
+   LIGHT / WHITE THEME — Universal Utility Mapping & Contrast Alignment
+   Maps dark slate utility classes to pure white & crisp slate tokens
    ══════════════════════════════════════════════════════════ */
 
-.warm-white .bg-slate-950      { background-color: #FAF8F3 !important; }
-.warm-white .bg-slate-950\/90  { background-color: rgba(250,248,243,0.90) !important; }
-.warm-white .bg-slate-950\/80  { background-color: rgba(250,248,243,0.80) !important; }
-.warm-white .bg-slate-950\/40  { background-color: rgba(250,248,243,0.40) !important; }
-.warm-white .bg-slate-900      { background-color: #FFFFFF !important; }
-.warm-white .bg-slate-900\/95  { background-color: rgba(255,255,255,0.96) !important; }
-.warm-white .bg-slate-900\/90  { background-color: rgba(255,255,255,0.90) !important; }
-.warm-white .bg-slate-900\/80  { background-color: rgba(255,255,255,0.80) !important; }
-.warm-white .bg-slate-900\/60  { background-color: rgba(255,255,255,0.60) !important; }
-.warm-white .bg-slate-800      { background-color: #F4EEE5 !important; }
-.warm-white .bg-slate-800\/90  { background-color: rgba(244,238,229,0.90) !important; }
-.warm-white .bg-slate-800\/80  { background-color: rgba(244,238,229,0.80) !important; }
-.warm-white .bg-slate-800\/60  { background-color: rgba(244,238,229,0.60) !important; }
-.warm-white .bg-slate-800\/40  { background-color: rgba(244,238,229,0.40) !important; }
-.warm-white .bg-slate-700      { background-color: #E8DDD0 !important; }
-.warm-white .bg-slate-600      { background-color: #D4C4B0 !important; }
+.light .bg-slate-950, .warm-white .bg-slate-950      { background-color: #F8FAFC !important; }
+.light .bg-slate-950\/90, .warm-white .bg-slate-950\/90  { background-color: rgba(248,250,252,0.92) !important; }
+.light .bg-slate-950\/80, .warm-white .bg-slate-950\/80  { background-color: rgba(248,250,252,0.85) !important; }
+.light .bg-slate-950\/40, .warm-white .bg-slate-950\/40  { background-color: rgba(248,250,252,0.40) !important; }
+.light .bg-slate-900, .warm-white .bg-slate-900      { background-color: #FFFFFF !important; }
+.light .bg-slate-900\/95, .warm-white .bg-slate-900\/95  { background-color: rgba(255,255,255,0.98) !important; }
+.light .bg-slate-900\/90, .warm-white .bg-slate-900\/90  { background-color: rgba(255,255,255,0.92) !important; }
+.light .bg-slate-900\/80, .warm-white .bg-slate-900\/80  { background-color: rgba(255,255,255,0.85) !important; }
+.light .bg-slate-900\/60, .warm-white .bg-slate-900\/60  { background-color: rgba(255,255,255,0.65) !important; }
+.light .bg-slate-800, .warm-white .bg-slate-800      { background-color: #F1F5F9 !important; }
+.light .bg-slate-800\/90, .warm-white .bg-slate-800\/90  { background-color: rgba(241,245,249,0.90) !important; }
+.light .bg-slate-800\/80, .warm-white .bg-slate-800\/80  { background-color: rgba(241,245,249,0.80) !important; }
+.light .bg-slate-800\/60, .warm-white .bg-slate-800\/60  { background-color: rgba(241,245,249,0.60) !important; }
+.light .bg-slate-800\/40, .warm-white .bg-slate-800\/40  { background-color: rgba(241,245,249,0.40) !important; }
+.light .bg-slate-700, .warm-white .bg-slate-700      { background-color: #E2E8F0 !important; }
+.light .bg-slate-600, .warm-white .bg-slate-600      { background-color: #CBD5E1 !important; }
 
-/* Text in Warm Mode */
-.warm-white [class~="text-white"]  { color: #1F140E !important; }
-.warm-white .btn-primary [class~="text-white"],
-.warm-white .btn-primary[class~="text-white"],
-.warm-white .btn-gradient [class~="text-white"],
-.warm-white .btn-gradient[class~="text-white"],
-.warm-white .btn-premium [class~="text-white"],
-.warm-white .btn-premium[class~="text-white"],
-.warm-white .btn-danger [class~="text-white"],
-.warm-white .btn-danger[class~="text-white"],
-.warm-white .btn-primary { color: #FFFFFF !important; }
-.warm-white .btn-gradient { color: #FFFFFF !important; }
-.warm-white .btn-premium { color: #FFFFFF !important; }
-.warm-white .btn-danger { color: #FFFFFF !important; }
+/* Text in Light Mode */
+.light [class~="text-white"], .warm-white [class~="text-white"]  { color: #0F172A !important; }
+.light .btn-primary [class~="text-white"], .warm-white .btn-primary [class~="text-white"],
+.light .btn-primary[class~="text-white"], .warm-white .btn-primary[class~="text-white"],
+.light .btn-gradient [class~="text-white"], .warm-white .btn-gradient [class~="text-white"],
+.light .btn-gradient[class~="text-white"], .warm-white .btn-gradient[class~="text-white"],
+.light .btn-premium [class~="text-white"], .warm-white .btn-premium [class~="text-white"],
+.light .btn-premium[class~="text-white"], .warm-white .btn-premium[class~="text-white"],
+.light .btn-danger [class~="text-white"], .warm-white .btn-danger [class~="text-white"],
+.light .btn-danger[class~="text-white"], .warm-white .btn-danger[class~="text-white"],
+.light .btn-primary, .warm-white .btn-primary { color: #FFFFFF !important; }
+.light .btn-gradient, .warm-white .btn-gradient { color: #FFFFFF !important; }
+.light .btn-premium, .warm-white .btn-premium { color: #FFFFFF !important; }
+.light .btn-danger, .warm-white .btn-danger { color: #FFFFFF !important; }
 
 /* Keep white text on saturated badges and solid colored pills */
-.warm-white .bg-amber-600 [class~="text-white"],
-.warm-white .bg-amber-600[class~="text-white"],
-.warm-white .bg-emerald-600 [class~="text-white"],
-.warm-white .bg-red-600 [class~="text-white"],
-.warm-white [class*="bg-gradient"] [class~="text-white"],
-.warm-white [class*="bg-gradient"][class~="text-white"] { color: #FFFFFF !important; }
+.light .bg-amber-600 [class~="text-white"], .warm-white .bg-amber-600 [class~="text-white"],
+.light .bg-amber-600[class~="text-white"], .warm-white .bg-amber-600[class~="text-white"],
+.light .bg-indigo-600 [class~="text-white"], .warm-white .bg-indigo-600 [class~="text-white"],
+.light .bg-indigo-600[class~="text-white"], .warm-white .bg-indigo-600[class~="text-white"],
+.light .bg-emerald-600 [class~="text-white"], .warm-white .bg-emerald-600 [class~="text-white"],
+.light .bg-red-600 [class~="text-white"], .warm-white .bg-red-600 [class~="text-white"],
+.light [class*="bg-gradient"] [class~="text-white"], .warm-white [class*="bg-gradient"] [class~="text-white"],
+.light [class*="bg-gradient"][class~="text-white"], .warm-white [class*="bg-gradient"][class~="text-white"] { color: #FFFFFF !important; }
 
-.warm-white .text-slate-100 { color: #1F140E !important; }
-.warm-white .text-slate-200 { color: #3D2A1E !important; }
-.warm-white .text-slate-300 { color: #5C4A3E !important; }
-.warm-white .text-slate-400 { color: #786455 !important; }
-.warm-white .text-slate-500 { color: #8F7B6D !important; }
-.warm-white .text-slate-600 { color: #A08B7A !important; }
+.light .text-slate-100, .warm-white .text-slate-100 { color: #0F172A !important; }
+.light .text-slate-200, .warm-white .text-slate-200 { color: #1E293B !important; }
+.light .text-slate-300, .warm-white .text-slate-300 { color: #334155 !important; }
+.light .text-slate-400, .warm-white .text-slate-400 { color: #64748B !important; }
+.light .text-slate-500, .warm-white .text-slate-500 { color: #64748B !important; }
+.light .text-slate-600, .warm-white .text-slate-600 { color: #475569 !important; }
 
-/* Borders in Warm Mode */
-.warm-white .border-slate-900  { border-color: #E8DDD0 !important; }
-.warm-white .border-slate-800  { border-color: #E8DDD0 !important; }
-.warm-white .border-slate-800\/80 { border-color: rgba(232,221,208,0.80) !important; }
-.warm-white .border-slate-700  { border-color: #E8DDD0 !important; }
-.warm-white .border-slate-700\/80 { border-color: rgba(232,221,208,0.80) !important; }
-.warm-white .border-slate-600  { border-color: #D4C4B0 !important; }
+/* Borders in Light Mode */
+.light .border-slate-900, .warm-white .border-slate-900  { border-color: #E2E8F0 !important; }
+.light .border-slate-800, .warm-white .border-slate-800  { border-color: #E2E8F0 !important; }
+.light .border-slate-800\/80, .warm-white .border-slate-800\/80 { border-color: rgba(226,232,240,0.85) !important; }
+.light .border-slate-700, .warm-white .border-slate-700  { border-color: #E2E8F0 !important; }
+.light .border-slate-700\/80, .warm-white .border-slate-700\/80 { border-color: rgba(226,232,240,0.85) !important; }
+.light .border-slate-600, .warm-white .border-slate-600  { border-color: #CBD5E1 !important; }
 
-/* Hovers in Warm Mode */
-.warm-white .hover\:bg-slate-800:hover   { background-color: #F4EEE5 !important; }
-.warm-white .hover\:bg-slate-800\/60:hover { background-color: rgba(244,238,229,0.60) !important; }
-.warm-white .hover\:bg-slate-700:hover   { background-color: #E8DDD0 !important; }
-.warm-white .hover\:text-slate-100:hover { color: #1F140E !important; }
-.warm-white .hover\:text-slate-200:hover { color: #3D2A1E !important; }
+/* Hovers in Light Mode */
+.light .hover\:bg-slate-800:hover, .warm-white .hover\:bg-slate-800:hover   { background-color: #F1F5F9 !important; }
+.light .hover\:bg-slate-800\/60:hover, .warm-white .hover\:bg-slate-800\/60:hover { background-color: rgba(241,245,249,0.60) !important; }
+.light .hover\:bg-slate-700:hover, .warm-white .hover\:bg-slate-700:hover   { background-color: #E2E8F0 !important; }
+.light .hover\:text-slate-100:hover, .warm-white .hover\:text-slate-100:hover { color: #0F172A !important; }
+.light .hover\:text-slate-200:hover, .warm-white .hover\:text-slate-200:hover { color: #1E293B !important; }
 
-/* Indigo / Purple Remapping to Warm Amber / Gold */
-.warm-white .bg-indigo-500      { background-color: #D97706 !important; }
-.warm-white .bg-indigo-500\/10  { background-color: rgba(217,119,6,0.08) !important; }
-.warm-white .bg-indigo-500\/20  { background-color: rgba(217,119,6,0.15) !important; }
-.warm-white .bg-indigo-600      { background-color: #B45309 !important; }
-.warm-white .bg-indigo-600\/15  { background-color: rgba(180,83,9,0.12) !important; }
-.warm-white .bg-indigo-600\/20  { background-color: rgba(180,83,9,0.18) !important; }
-.warm-white .text-indigo-300    { color: #B45309 !important; }
-.warm-white .text-indigo-400    { color: #B45309 !important; }
-.warm-white .text-indigo-500    { color: #92400E !important; }
-.warm-white .text-indigo-600    { color: #78350F !important; }
-.warm-white .border-indigo-500\/30 { border-color: rgba(217,119,6,0.25) !important; }
-.warm-white .border-indigo-500\/50 { border-color: rgba(217,119,6,0.40) !important; }
+/* Vibrant High-Contrast Text Variants for Badges & Alerts */
+.light .text-indigo-400, .warm-white .text-indigo-400     { color: #4F46E5 !important; }
+.light .text-indigo-300, .warm-white .text-indigo-300     { color: #6366F1 !important; }
+.light .text-amber-400, .warm-white .text-amber-400       { color: #D97706 !important; }
+.light .text-amber-300, .warm-white .text-amber-300       { color: #B45309 !important; }
+.light .text-emerald-400, .warm-white .text-emerald-400   { color: #16A34A !important; }
+.light .text-emerald-300, .warm-white .text-emerald-300   { color: #15803D !important; }
+.light .text-rose-400, .warm-white .text-rose-400         { color: #E11D48 !important; }
+.light .text-rose-300, .warm-white .text-rose-300         { color: #BE123C !important; }
+.light .text-teal-400, .warm-white .text-teal-400         { color: #0D9488 !important; }
+.light .text-teal-300, .warm-white .text-teal-300         { color: #0F766E !important; }
+.light .text-purple-400, .warm-white .text-purple-400     { color: #7C3AED !important; }
+.light .text-purple-300, .warm-white .text-purple-300     { color: #6D28D9 !important; }
+.light .text-orange-400, .warm-white .text-orange-400     { color: #EA580C !important; }
+.light .text-red-500, .warm-white .text-red-500           { color: #DC2626 !important; }
+.light .text-red-400, .warm-white .text-red-400           { color: #B91C1C !important; }
+.light .text-cyan-400, .warm-white .text-cyan-400         { color: #0891B2 !important; }
 
-.warm-white .from-indigo-600    { --tw-gradient-from: #B45309 !important; }
-.warm-white .to-indigo-500      { --tw-gradient-to: #D97706 !important; }
-.warm-white .shadow-indigo-500\/20 { --tw-shadow-color: rgba(180,83,9,0.15) !important; }
+/* Tinted Badge & Alert Surface Remapping */
+.light .bg-indigo-500\/10, .warm-white .bg-indigo-500\/10   { background-color: rgba(79, 70, 229, 0.08) !important; }
+.light .bg-indigo-500\/20, .warm-white .bg-indigo-500\/20   { background-color: rgba(79, 70, 229, 0.14) !important; }
+.light .border-indigo-500\/30, .warm-white .border-indigo-500\/30 { border-color: rgba(79, 70, 229, 0.25) !important; }
+.light .bg-amber-500\/10, .warm-white .bg-amber-500\/10     { background-color: rgba(245, 158, 11, 0.10) !important; }
+.light .bg-amber-500\/20, .warm-white .bg-amber-500\/20     { background-color: rgba(245, 158, 11, 0.18) !important; }
+.light .border-amber-500\/30, .warm-white .border-amber-500\/30 { border-color: rgba(245, 158, 11, 0.30) !important; }
+.light .bg-emerald-500\/10, .warm-white .bg-emerald-500\/10 { background-color: rgba(16, 185, 129, 0.10) !important; }
+.light .bg-emerald-500\/20, .warm-white .bg-emerald-500\/20 { background-color: rgba(16, 185, 129, 0.18) !important; }
+.light .border-emerald-500\/30, .warm-white .border-emerald-500\/30 { border-color: rgba(16, 185, 129, 0.30) !important; }
+.light .bg-rose-500\/10, .warm-white .bg-rose-500\/10       { background-color: rgba(244, 63, 94, 0.10) !important; }
+.light .bg-rose-500\/20, .warm-white .bg-rose-500\/20       { background-color: rgba(244, 63, 94, 0.18) !important; }
+.light .border-rose-500\/30, .warm-white .border-rose-500\/30 { border-color: rgba(244, 63, 94, 0.30) !important; }
 
-/* ── Amber / Gold text — dark readable variants ─────────── */
-.warm-white .text-amber-200     { color: #92400E !important; }
-.warm-white .text-amber-300     { color: #B45309 !important; }
-.warm-white .text-amber-300\/80 { color: rgba(180, 83, 9, 0.85) !important; }
-.warm-white .text-amber-400     { color: #B45309 !important; }
-.warm-white .text-amber-100     { color: #78350F !important; }
-
-/* ── Indigo → Warm Amber remaps ──────────────────────────── */
-.warm-white .text-indigo-200    { color: #92400E !important; }
-.warm-white .text-indigo-300\/80 { color: rgba(146, 64, 14, 0.85) !important; }
-
-/* ── Emerald / Green text ────────────────────────────────── */
-.warm-white .text-emerald-300   { color: #15803D !important; }
-.warm-white .text-emerald-400   { color: #166534 !important; }
-.warm-white .text-emerald-600\/80 { color: rgba(22, 101, 52, 0.85) !important; }
-
-/* ── Rose / Red text ─────────────────────────────────────── */
-.warm-white .text-rose-400      { color: #BE123C !important; }
-.warm-white .text-rose-300      { color: #E11D48 !important; }
-
-/* ── Teal text ───────────────────────────────────────────── */
-.warm-white .text-teal-400      { color: #0D7377 !important; }
-.warm-white .text-teal-300      { color: #0F766E !important; }
-
-/* ── Purple text ─────────────────────────────────────────── */
-.warm-white .text-purple-300    { color: #7E22CE !important; }
-.warm-white .text-purple-400    { color: #7C3AED !important; }
-
-/* ── Orange text ─────────────────────────────────────────── */
-.warm-white .text-orange-400    { color: #C2410C !important; }
-
-/* ── Green text ──────────────────────────────────────────── */
-.warm-white .text-green-600     { color: #15803D !important; }
-
-/* ── Red text ────────────────────────────────────────────── */
-.warm-white .text-red-500       { color: #B91C1C !important; }
-.warm-white .text-red-400       { color: #DC2626 !important; }
-
-/* ── Cyan text ───────────────────────────────────────────── */
-.warm-white .text-cyan-400      { color: #0E7490 !important; }
-
-/* ── Colored text on colored tinted backgrounds ──────────── */
-/* Amber alert cards (Attention Required / leave pending) */
-.warm-white .bg-amber-500\/10  { background-color: rgba(254, 243, 199, 0.50) !important; }
-.warm-white .bg-amber-500\/20  { background-color: rgba(254, 243, 199, 0.70) !important; }
-.warm-white .border-amber-500\/30 { border-color: rgba(180, 83, 9, 0.25) !important; }
-.warm-white .bg-amber-500\/10 .text-amber-200,
-.warm-white [class*="bg-amber-500"] .text-amber-200 { color: #78350F !important; }
-
-/* Indigo alert cards (insights) */
-.warm-white .bg-indigo-500\/10 { background-color: rgba(254, 243, 199, 0.40) !important; }
-.warm-white .bg-indigo-500\/20 { background-color: rgba(254, 243, 199, 0.60) !important; }
-.warm-white .border-indigo-500\/30 { border-color: rgba(180, 83, 9, 0.25) !important; }
-
-/* Emerald tinted backgrounds */
-.warm-white .bg-emerald-500\/10 { background-color: rgba(220, 252, 231, 0.50) !important; }
-.warm-white .bg-emerald-500\/20 { background-color: rgba(220, 252, 231, 0.70) !important; }
-.warm-white .border-emerald-500\/30 { border-color: rgba(21, 128, 61, 0.25) !important; }
-
-/* Rose tinted backgrounds */
-.warm-white .bg-rose-500\/10   { background-color: rgba(255, 228, 230, 0.50) !important; }
-.warm-white .bg-rose-500\/20   { background-color: rgba(255, 228, 230, 0.70) !important; }
-.warm-white .border-rose-500\/30 { border-color: rgba(190, 18, 60, 0.25) !important; }
-
-/* Purple tinted backgrounds */
-.warm-white .bg-purple-500\/20 { background-color: rgba(243, 232, 255, 0.60) !important; }
-
-/* Indigo badge/tag backgrounds */
-.warm-white .bg-indigo-600\/30 { background-color: rgba(254, 243, 199, 0.50) !important; }
-.warm-white .border-indigo-500\/40 { border-color: rgba(180, 83, 9, 0.30) !important; }
-.warm-white .border-indigo-400\/40 { border-color: rgba(180, 83, 9, 0.30) !important; }
-
-/* ── Amber icon color ────────────────────────────────────── */
-.warm-white .text-amber-400.w-5,
-.warm-white svg.text-amber-400 { color: #B45309 !important; }
-.warm-white .text-indigo-400.w-5,
-.warm-white svg.text-indigo-400 { color: #B45309 !important; }
-
-/* ── Hover overrides for warm ────────────────────────────── */
-.warm-white .hover\:text-indigo-300:hover { color: #92400E !important; }
-.warm-white .hover\:text-rose-400:hover   { color: #BE123C !important; }
-.warm-white .hover\:bg-rose-500\/20:hover { background-color: rgba(255, 228, 230, 0.70) !important; }
-.warm-white .hover\:bg-amber-500\/20:hover { background-color: rgba(254, 243, 199, 0.70) !important; }
-.warm-white .hover\:bg-indigo-500\/20:hover { background-color: rgba(254, 243, 199, 0.60) !important; }
-.warm-white .hover\:bg-emerald-500\/20:hover { background-color: rgba(220, 252, 231, 0.70) !important; }
-.warm-white .hover\:bg-indigo-600:hover { background-color: #B45309 !important; }
-
-/* Sidebar inside Warm Mode preserves rich espresso obsidian */
-.warm-white aside {
-  background-color: #20140E !important;
-  border-color: #332219 !important;
+/* Sidebar in Light Mode: Sleek Obsidian Slate Nav */
+.light aside, .warm-white aside {
+  background-color: #0F172A !important;
+  border-color: #1E293B !important;
 }
-.warm-white aside [class~="text-white"] { color: #FAF5EE !important; }
-.warm-white aside .text-slate-400 { color: #A08B7A !important; }
-.warm-white aside .text-amber-200\/60 { color: rgba(253, 230, 138, 0.75) !important; }
-.warm-white aside .text-amber-700\/50 { color: #D4C4B0 !important; }
-.warm-white aside .hover\:bg-slate-800\/60:hover { background-color: rgba(255, 255, 255, 0.06) !important; }
-/* Sidebar overrides: keep light text inside dark sidebar */
-.warm-white aside .text-amber-200     { color: #FDE68A !important; }
-.warm-white aside .text-amber-300     { color: #FCD34D !important; }
-.warm-white aside .text-amber-400     { color: #FBBF24 !important; }
-.warm-white aside .text-emerald-300   { color: #6EE7B7 !important; }
-.warm-white aside .text-emerald-400   { color: #34D399 !important; }
-.warm-white aside .text-indigo-300    { color: #FCD34D !important; }
-.warm-white aside .text-purple-300    { color: #C4B5FD !important; }
-.warm-white aside .text-purple-400    { color: #A78BFA !important; }
+.light aside [class~="text-white"], .warm-white aside [class~="text-white"] { color: #FFFFFF !important; }
+.light aside .text-slate-400, .warm-white aside .text-slate-400 { color: #94A3B8 !important; }
+.light aside .hover\:bg-slate-800\/60:hover, .warm-white aside .hover\:bg-slate-800\/60:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
+.light aside .text-amber-200, .warm-white aside .text-amber-200     { color: #FDE68A !important; }
+.light aside .text-amber-300, .warm-white aside .text-amber-300     { color: #FCD34D !important; }
+.light aside .text-amber-400, .warm-white aside .text-amber-400     { color: #FBBF24 !important; }
+.light aside .text-emerald-300, .warm-white aside .text-emerald-300 { color: #6EE7B7 !important; }
+.light aside .text-emerald-400, .warm-white aside .text-emerald-400 { color: #34D399 !important; }
+.light aside .text-indigo-300, .warm-white aside .text-indigo-300   { color: #A5B4FC !important; }
+.light aside .text-purple-300, .warm-white aside .text-purple-300   { color: #C4B5FD !important; }
+.light aside .text-purple-400, .warm-white aside .text-purple-400   { color: #A78BFA !important; }
 
 /* Print Stylesheet */
 .print-only {

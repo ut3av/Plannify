@@ -70,9 +70,8 @@ export default function SidebarNav({
   activePage,
   onSelectPage,
   userRole = "Admin",
-  theme = "warm-white",
+  theme = "light",
 }) {
-  const isWarm = theme === 'warm-white';
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -83,16 +82,11 @@ export default function SidebarNav({
 
   return (
     <aside
-      className={`fixed left-0 top-16 bottom-0 z-20 backdrop-blur-md border-r transition-all duration-300 flex flex-col ${
+      className={`fixed left-0 top-16 bottom-0 z-20 backdrop-blur-md border-r transition-all duration-300 flex flex-col bg-[#0F172A] border-[#1E293B] ${
         isOpen ? "w-64" : "w-16"
-      } ${
-        isWarm
-          ? 'border-[#332219]'
-          : 'bg-slate-900/95 border-slate-800'
       }`}
-      style={isWarm ? { backgroundColor: '#20140E' } : undefined}
     >
-      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-6 scrollbar-thin scrollbar-thumb-amber-900/40">
+      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-6 scrollbar-thin scrollbar-thumb-slate-700/40">
         {NAV_GROUPS.map((group, groupIdx) => {
           const isFaculty = userRole === "Faculty" || userRole === "Teacher" || userRole === "teacher";
           if (isFaculty && group.title === "ACADEMIC SETUP") {
@@ -105,15 +99,11 @@ export default function SidebarNav({
           return (
             <div key={groupIdx} className="space-y-1">
               {isOpen ? (
-                <p className={`px-3 text-[10px] font-bold uppercase tracking-widest mb-2 ${
-                  isWarm ? 'text-amber-200/50' : 'text-slate-500'
-                }`}>
+                <p className="px-3 text-[10px] font-bold uppercase tracking-widest mb-2 text-slate-400">
                   {group.title}
                 </p>
               ) : (
-                <div className={`w-full h-px my-2 ${
-                  isWarm ? 'bg-[#332219]' : 'bg-slate-800'
-                }`} />
+                <div className="w-full h-px my-2 bg-slate-800" />
               )}
 
               {filteredItems.map((item) => {
@@ -125,21 +115,11 @@ export default function SidebarNav({
                     title={!isOpen ? item.label : undefined}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all relative group ${
                       isActive
-                        ? isWarm
-                          ? 'bg-amber-600/25 text-amber-100 border border-amber-500/50 shadow-md shadow-amber-900/30 font-bold'
-                          : 'bg-indigo-600/20 text-white border border-indigo-500/40 shadow-lg shadow-indigo-500/10 font-bold'
-                        : isWarm
-                          ? 'text-[#D4C4B0] hover:text-amber-100 hover:bg-white/[0.06] border border-transparent'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+                        ? 'bg-indigo-600/20 text-white border border-indigo-500/40 shadow-lg shadow-indigo-500/10 font-bold'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
                     }`}
                   >
-                    <div className={`${
-                      isActive
-                        ? isWarm ? 'text-amber-400' : 'text-indigo-400'
-                        : isWarm
-                          ? 'text-[#A08B7A] group-hover:text-amber-200'
-                          : 'text-slate-400 group-hover:text-slate-200'
-                    }`}>
+                    <div className={isActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-200'}>
                       <NavIcon icon={item.icon} />
                     </div>
 
@@ -155,20 +135,14 @@ export default function SidebarNav({
                           ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
                           : item.badge === "Excel"
                           ? "bg-emerald-600/20 text-emerald-400 border border-emerald-600/30"
-                          : isWarm
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                          : "bg-slate-800 text-slate-400 border border-slate-700"
+                          : "bg-slate-800 text-slate-300 border border-slate-700"
                       }`}>
                         {item.badge}
                       </span>
                     )}
 
                     {!isOpen && (
-                      <div className={`absolute left-full ml-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl border ${
-                        isWarm
-                          ? 'bg-[#20140E] text-amber-100 border-[#332219]'
-                          : 'bg-slate-900 text-white border-slate-700'
-                      }`}>
+                      <div className="absolute left-full ml-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl border bg-slate-900 text-white border-slate-700">
                         {item.label}
                       </div>
                     )}
@@ -182,26 +156,18 @@ export default function SidebarNav({
 
       {/* System Status / Brand Footer */}
       {isOpen ? (
-        <div className={`p-4 border-t ${
-          isWarm ? 'border-[#332219] bg-[#1a0f0a]' : 'border-slate-800/80 bg-slate-950/50'
-        }`}>
+        <div className="p-4 border-t border-slate-800/80 bg-slate-950/50">
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center p-1 border shadow-inner ${
-              isWarm ? 'bg-amber-500/15 border-amber-500/30' : 'bg-indigo-500/20 border-indigo-500/30'
-            }`}>
-              <BrandLogo onlyIcon size="sm" isWarm={isWarm} />
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center p-1 border shadow-inner bg-indigo-500/20 border-indigo-500/30">
+              <BrandLogo onlyIcon size="sm" isWarm={false} />
             </div>
             <div className="min-w-0">
-              <p className={`text-xs font-black truncate uppercase tracking-wide font-display ${
-                isWarm ? 'text-amber-100' : 'text-white'
-              }`}>
+              <p className="text-xs font-black truncate uppercase tracking-wide font-display text-white">
                 Data Dynamos
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className={`text-[10px] font-bold ${
-                  isWarm ? 'text-amber-300/80' : 'text-slate-400'
-                }`}>
+                <span className="text-[10px] font-bold text-slate-400">
                   We The Th3ee!
                 </span>
               </div>
@@ -209,9 +175,7 @@ export default function SidebarNav({
           </div>
         </div>
       ) : (
-        <div className={`py-4 border-t flex justify-center ${
-          isWarm ? 'border-[#332219]' : 'border-slate-800'
-        }`}>
+        <div className="py-4 border-t flex justify-center border-slate-800">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 animate-pulse" title="System Operational" />
         </div>
       )}
