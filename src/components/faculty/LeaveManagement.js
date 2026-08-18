@@ -273,27 +273,38 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
         <div>
           <div className="flex items-center gap-2.5">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Leave Management & Timetable Impact
+              {isAdmin ? "Faculty Leave Oversight & Approval Console" : "Personal Leave & Balance Management"}
             </h2>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
               ● Live Sync
             </span>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Track leave requests, balance quotas, and live conflict impacts across schedule slots
+            {isAdmin
+              ? "Review faculty leave applications, approve/reject requests, and allocate proxy substitutions"
+              : "Track your leave balance quotas, apply for leave, and check review status"}
           </p>
         </div>
 
-        <button
-          onClick={() => setShowApplyForm(!showApplyForm)}
-          className="btn-primary gap-2 text-xs py-2 px-4 shadow-lg shadow-indigo-500/20"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          {showApplyForm ? "Close Form" : "Apply Leave"}
-        </button>
+        {!isAdmin ? (
+          <button
+            onClick={() => setShowApplyForm(!showApplyForm)}
+            className="btn-primary gap-2 text-xs py-2 px-4 shadow-lg shadow-indigo-500/20"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            {showApplyForm ? "Close Form" : "Apply Leave"}
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              Admin Review Mode
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Leave Balance Cards */}
@@ -325,8 +336,8 @@ export default function LeaveManagement({ facultyId, isAdmin = true }) {
         </div>
       )}
 
-      {/* Apply Leave Modal Form */}
-      {showApplyForm && (
+      {/* Apply Leave Modal Form (Only in Teacher / Faculty Mode) */}
+      {!isAdmin && showApplyForm && (
         <div className="card p-6 bg-slate-900/95 border border-indigo-500/30 shadow-2xl animate-slide-down text-slate-100">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
             <div>

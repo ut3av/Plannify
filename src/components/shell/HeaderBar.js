@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
 import NotificationCenter from '../common/NotificationCenter';
+import { getLeaveApplications, subscribeToTable } from '../../services/realtimeFacultyService';
 
 export default function HeaderBar({
   isSidebarOpen,
@@ -30,6 +31,30 @@ export default function HeaderBar({
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [liveUnreadCount, setLiveUnreadCount] = useState(unreadNotificationsCount);
   const isWarm = theme === 'warm-white';
+
+  // Live real-time background listener for pending faculty leaves
+  const refreshUnreadCount = useCallback(async () => {
+    try {
+      const leaves = await getLeaveApplications({ status: "pending" });
+      setLiveUnreadCount(leaves.length);
+    } catch {
+      // Fallback
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUnreadCount();
+
+    const unsubLeave = subscribeToTable("leave_applications", () => {
+      refreshUnreadCount();
+    });
+
+    const interval = setInterval(refreshUnreadCount, 6000);
+    return () => {
+      clearInterval(interval);
+      unsubLeave();
+    };
+  }, [refreshUnreadCount]);
 
   // Keyboard shortcut Ctrl+K / Cmd+K for command palette
   useEffect(() => {
