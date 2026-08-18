@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
 import AnimatedCounter from '../common/AnimatedCounter';
 import RadialProgressDial from '../common/RadialProgressDial';
+import MarkerHighlight from './MarkerHighlight';
+import SpotlightCard from './SpotlightCard';
+import InteractiveHeroCanvas from './InteractiveHeroCanvas';
 
 export default function LandingPage({ onExploreDemo }) {
   const navigate = useNavigate();
@@ -180,6 +183,9 @@ export default function LandingPage({ onExploreDemo }) {
 
       {/* ── HERO SECTION ── */}
       <section className="relative pt-16 pb-24 overflow-hidden border-b border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-950">
+        {/* Antigravity Interactive Constraint Node Canvas */}
+        <InteractiveHeroCanvas />
+
         {/* Ambient Glows */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-indigo-500/10 via-violet-500/10 to-pink-500/5 blur-[130px] rounded-full pointer-events-none" />
         <div className="absolute top-10 left-10 w-96 h-96 bg-indigo-500/5 blur-3xl rounded-full pointer-events-none" />
@@ -189,14 +195,14 @@ export default function LandingPage({ onExploreDemo }) {
           <div className="max-w-4xl mx-auto text-center space-y-6">
             
             {/* Pill Tag */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold tracking-wide shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold tracking-wide shadow-sm hover:scale-105 transition-transform cursor-default">
               <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-live-dot" />
               <span>Academic Operating System for Higher Education</span>
             </div>
 
-            {/* Main Headline */}
-            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1] font-display">
-              Build <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-800 dark:to-indigo-300">100% Conflict-Free</span> University Timetables in Seconds.
+            {/* Main Headline with Eye-Catching Hand-Drawn Highlight */}
+            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15] font-display">
+              Build <MarkerHighlight color="yellow" variant="scribble">100% Conflict-Free</MarkerHighlight> University Timetables in Seconds.
             </h1>
 
             {/* Subtitle */}
@@ -241,9 +247,11 @@ export default function LandingPage({ onExploreDemo }) {
 
           </div>
 
-          {/* ── INTERACTIVE PRODUCT PREVIEW CARD (CREATRIX/OPENEDUCAT STYLE) ── */}
-          <div className="mt-14 max-w-5xl mx-auto rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-5 shadow-2xl relative stat-card-elevate">
-            
+          {/* ── INTERACTIVE PRODUCT PREVIEW CARD WITH ANTIGRAVITY 3D TILT & SPOTLIGHT ── */}
+          <SpotlightCard
+            tilt={true}
+            className="mt-14 max-w-5xl mx-auto rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-5 shadow-2xl relative stat-card-elevate"
+          >
             {/* Window Top Bar */}
             <div className="flex items-center justify-between pb-3 px-2 border-b border-slate-200 dark:border-slate-800 text-xs">
               <div className="flex items-center gap-2">
@@ -338,7 +346,7 @@ export default function LandingPage({ onExploreDemo }) {
               </div>
 
             </div>
-          </div>
+          </SpotlightCard>
 
         </div>
       </section>
@@ -350,7 +358,7 @@ export default function LandingPage({ onExploreDemo }) {
           <div className="text-center max-w-3xl mx-auto mb-14">
             <span className="text-xs uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Enterprise Performance</span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-1 font-display">
-              Quantifiable Impact on University Operations
+              Why 50+ Institutions Trust <MarkerHighlight color="coral" variant="brush">Plannify Academic OS</MarkerHighlight>
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
               Transforming academic administration from spreadsheet guesswork into deterministic mathematical precision.
@@ -360,7 +368,7 @@ export default function LandingPage({ onExploreDemo }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* Metric 1 */}
-            <div className="card p-6 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm stat-card-elevate text-center">
+            <SpotlightCard className="card p-6 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm stat-card-elevate text-center">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
@@ -369,10 +377,10 @@ export default function LandingPage({ onExploreDemo }) {
               </h3>
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">Average Solve Speed</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Full multi-section schedule calculated in under 4 seconds.</p>
-            </div>
+            </SpotlightCard>
 
             {/* Metric 2 */}
-            <div className="card p-6 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm stat-card-elevate text-center">
+            <SpotlightCard className="card p-6 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm stat-card-elevate text-center">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
               </div>
@@ -381,10 +389,10 @@ export default function LandingPage({ onExploreDemo }) {
               </h3>
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">Conflict-Free Guarantee</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Zero teacher double-bookings or classroom capacity overflows.</p>
-            </div>
+            </SpotlightCard>
 
             {/* Metric 3 */}
-            <div className="card p-6 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm stat-card-elevate text-center">
+            <SpotlightCard className="card p-6 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm stat-card-elevate text-center">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
@@ -393,10 +401,10 @@ export default function LandingPage({ onExploreDemo }) {
               </h3>
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">Workload Equilibrium</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Fair lecture distributions honoring contractual teaching limits.</p>
-            </div>
+            </SpotlightCard>
 
             {/* Metric 4 */}
-            <div className="card p-6 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm stat-card-elevate text-center">
+            <SpotlightCard className="card p-6 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm stat-card-elevate text-center">
               <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto mb-3">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
               </div>
@@ -405,7 +413,7 @@ export default function LandingPage({ onExploreDemo }) {
               </h3>
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">Administrative Time Saved</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Replaces endless manual reschedule phone calls and paper notes.</p>
-            </div>
+            </SpotlightCard>
 
           </div>
 
@@ -418,7 +426,7 @@ export default function LandingPage({ onExploreDemo }) {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-xs uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Modular Platform</span>
           <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight mt-1 font-display">
-            The 4 Pillars of Plannify Academic OS
+            Our Academic <MarkerHighlight color="yellow" variant="scribble">OS Modules</MarkerHighlight>
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
             Everything your university needs to orchestrate classes, faculty, rooms, leaves, and attendance seamlessly.
@@ -428,7 +436,7 @@ export default function LandingPage({ onExploreDemo }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
           {/* Pillar 1 */}
-          <div className="card p-8 bg-slate-50/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md stat-card-elevate relative overflow-hidden flex flex-col justify-between">
+          <SpotlightCard className="card p-8 bg-slate-50/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md stat-card-elevate relative overflow-hidden flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/30">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -453,10 +461,10 @@ export default function LandingPage({ onExploreDemo }) {
               <span className="text-indigo-600 dark:text-indigo-400 font-bold">Google OR-Tools Engine</span>
               <span className="text-slate-500 font-mono">solver.solve()</span>
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* Pillar 2 */}
-          <div className="card p-8 bg-slate-50/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md stat-card-elevate relative overflow-hidden flex flex-col justify-between">
+          <SpotlightCard className="card p-8 bg-slate-50/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md stat-card-elevate relative overflow-hidden flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/30">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -481,10 +489,10 @@ export default function LandingPage({ onExploreDemo }) {
               <span className="text-purple-600 dark:text-purple-400 font-bold">Instant Proxy Assignment</span>
               <span className="text-slate-500 font-mono">realtime_leaves</span>
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* Pillar 3 */}
-          <div className="card p-8 bg-slate-50/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md stat-card-elevate relative overflow-hidden flex flex-col justify-between">
+          <SpotlightCard className="card p-8 bg-slate-50/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md stat-card-elevate relative overflow-hidden flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/30">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -509,10 +517,10 @@ export default function LandingPage({ onExploreDemo }) {
               <span className="text-emerald-600 dark:text-emerald-400 font-bold">Deterministic Audit Trails</span>
               <span className="text-slate-500 font-mono">analytics_360</span>
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* Pillar 4 */}
-          <div className="card p-8 bg-slate-50/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md stat-card-elevate relative overflow-hidden flex flex-col justify-between">
+          <SpotlightCard className="card p-8 bg-slate-50/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md stat-card-elevate relative overflow-hidden flex flex-col justify-between">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/30">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polygon points="2 17 12 22 22 17"/><polygon points="2 12 12 17 22 12"/></svg>
@@ -537,7 +545,7 @@ export default function LandingPage({ onExploreDemo }) {
               <span className="text-indigo-600 dark:text-indigo-400 font-bold">Role-Based Access Control</span>
               <span className="text-slate-500 font-mono">multi_role</span>
             </div>
-          </div>
+          </SpotlightCard>
 
         </div>
       </section>
@@ -549,7 +557,7 @@ export default function LandingPage({ onExploreDemo }) {
           <div className="text-center max-w-3xl mx-auto mb-12">
             <span className="text-xs uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Tailored Experience</span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-1 font-display">
-              Designed for Every University Stakeholder
+              Designed for <MarkerHighlight color="emerald" variant="brush">Every Stakeholder</MarkerHighlight>
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
               Select your role below to see how Plannify eliminates daily friction in your workflow.
@@ -583,7 +591,7 @@ export default function LandingPage({ onExploreDemo }) {
           </div>
 
           {/* Active Role Content Card */}
-          <div className="max-w-5xl mx-auto card p-8 bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-xl stat-card-elevate">
+          <SpotlightCard className="max-w-5xl mx-auto card p-8 bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 shadow-xl stat-card-elevate">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               
               <div className="lg:col-span-7 space-y-4">
@@ -632,7 +640,7 @@ export default function LandingPage({ onExploreDemo }) {
 
                 <button
                   onClick={handleLaunchApp}
-                  className="w-full btn-primary text-xs py-2.5 font-bold flex items-center justify-center gap-2 mt-2"
+                  className="w-full btn-primary text-xs py-2.5 font-bold flex items-center justify-center gap-2 mt-2 shadow-lg shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all"
                 >
                   <span>Experience this Perspective</span>
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -640,7 +648,7 @@ export default function LandingPage({ onExploreDemo }) {
               </div>
 
             </div>
-          </div>
+          </SpotlightCard>
 
         </div>
       </section>
@@ -651,7 +659,7 @@ export default function LandingPage({ onExploreDemo }) {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-xs uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">The Market Benchmark</span>
           <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight mt-1 font-display">
-            Why Universities Choose Plannify
+            Why Universities <MarkerHighlight color="coral" variant="brush">Choose Plannify</MarkerHighlight>
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
             Compare Plannify against manual spreadsheet scheduling and bloated legacy ERP solutions.
@@ -766,7 +774,7 @@ export default function LandingPage({ onExploreDemo }) {
               </span>
               
               <h2 className="text-3xl sm:text-5xl font-black tracking-tight font-display text-white">
-                Ready to Modernize Your Academic Scheduling?
+                Ready to <MarkerHighlight color="yellow" variant="scribble"><span className="text-slate-950 font-black">Modernize</span></MarkerHighlight> Your Academic Scheduling?
               </h2>
 
               <p className="text-sm font-medium text-indigo-100 leading-relaxed">
