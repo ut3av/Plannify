@@ -121,7 +121,6 @@ GEMINI_API_KEY=your_gemini_api_key
 
 # Automation (Make.com)
 MAKE_WEBHOOK_URL=https://hook.eu1.make.com/your-custom-webhook-id
-MAKE_SECRET=your_make_secret
 
 # Supabase Cloud Database
 SUPABASE_URL=https://your-project.supabase.co
