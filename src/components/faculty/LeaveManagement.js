@@ -136,7 +136,7 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
 
     // 2. Try Backend API
     try {
-      const res = await axios.get(`${API}/faculty/`, { timeout: 4000 });
+      const res = await axios.get(`${API}/faculty`, { timeout: 4000 });
       if (res.data && Array.isArray(res.data)) {
         res.data.forEach((f) => {
           const item = {

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, Any
 from urllib.parse import urlparse
 import copy
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from ortools.sat.python import cp_model
@@ -127,24 +127,17 @@ app.include_router(analytics_router)
 
 # --- Middleware & Error Handling ---
 cors_env = os.getenv("CORS_ORIGINS", "*")
-if cors_env.strip() == "*":
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    origins = [o.strip() for o in cors_env.split(",") if o.strip()]
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_origin_regex=r"https://.*\.(vercel\.app|netlify\.app|onrender\.com)",
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+explicit_origins = [o.strip() for o in cors_env.split(",") if o.strip() and o.strip() != "*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=explicit_origins if explicit_origins else [],
+    allow_origin_regex=r"^https?://.*",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 @app.get("/")
 def root():
@@ -159,19 +152,45 @@ def root():
 def health_check():
     return {"status": "ok"}
 
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    origin = request.headers.get("origin")
+    response = JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=exc.headers,
+    )
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    else:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
+async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global error: {exc}", exc_info=True)
-    return JSONResponse(
+    origin = request.headers.get("origin")
+    response = JSONResponse(
         status_code=500,
         content={
             "detail": {
                 "message": "An unexpected server error occurred.",
                 "suggestions": ["Refresh the page.", "Check connectivity."],
-                "facts": [str(exc)[:100]]
+                "facts": [str(exc)[:150]]
             }
         }
     )
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    else:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 class SubjectInput(BaseModel):
     code: str = ""

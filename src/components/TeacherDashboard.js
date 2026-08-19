@@ -27,7 +27,7 @@ export default function TeacherDashboard({
   // Fetch all registered faculty accounts from backend database & Supabase
   const fetchRegisteredFaculty = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/faculty/`, { timeout: 4000 });
+      const res = await axios.get(`${API}/faculty`, { timeout: 4000 });
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setBackendFaculty(res.data);
         return;

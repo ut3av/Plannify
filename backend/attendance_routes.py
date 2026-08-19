@@ -235,9 +235,8 @@ async def import_csv(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
 
-# ── Daily / Monthly View ───────────────────────────────────
-
-@router.get("/")
+@router.get("", response_model=None)
+@router.get("/", response_model=None)
 def get_attendance_records(
     date: Optional[str] = Query(None, description="YYYY-MM-DD"),
     faculty_id: Optional[str] = Query(None),

@@ -47,7 +47,7 @@ export default function FacultyDirectory({
   const fetchFaculty = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/faculty/`, { timeout: 4000 });
+      const res = await axios.get(`${API}/faculty`, { timeout: 4000 });
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setFaculty(res.data);
         return;
@@ -221,7 +221,7 @@ export default function FacultyDirectory({
       let newlyCreated = false;
       for (const f of unsynced) {
         try {
-          await axios.post(`${API}/faculty/`, {
+          await axios.post(`${API}/faculty`, {
             teacher_name: f.teacher_name,
             employee_id: f.employee_id,
             designation: f.designation,
@@ -236,7 +236,7 @@ export default function FacultyDirectory({
         }
       }
       if (newlyCreated) {
-        const res = await axios.get(`${API}/faculty/`).catch(() => null);
+        const res = await axios.get(`${API}/faculty`).catch(() => null);
         if (res?.data) setFaculty(res.data);
       }
     };
@@ -250,7 +250,7 @@ export default function FacultyDirectory({
       setErrorMessage("");
       setSuccessMessage("");
       const [facRes, deptRes] = await Promise.all([
-        axios.get(`${API}/faculty/`),
+        axios.get(`${API}/faculty`),
         axios.get(`${API}/faculty/departments`)
       ]);
       if (facRes.data) setFaculty(facRes.data);

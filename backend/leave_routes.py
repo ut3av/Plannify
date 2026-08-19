@@ -58,7 +58,8 @@ def submit_leave(data: LeaveApply):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/")
+@router.get("", response_model=None)
+@router.get("/", response_model=None)
 def get_leaves(
     faculty_id: Optional[str] = Query(None),
     status: Optional[str] = Query(None),

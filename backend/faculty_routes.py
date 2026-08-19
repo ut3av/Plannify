@@ -116,7 +116,8 @@ def remove_department(dept_id: str):
 
 # ── Faculty CRUD ────────────────────────────────────────────
 
-@router.get("/")
+@router.get("", response_model=None)
+@router.get("/", response_model=None)
 def get_all_faculty(
     department_id: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
@@ -146,7 +147,8 @@ def get_faculty_detail(faculty_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/")
+@router.post("", response_model=None)
+@router.post("/", response_model=None)
 def add_faculty(data: FacultyCreate):
     try:
         payload = data.model_dump(exclude_none=True)

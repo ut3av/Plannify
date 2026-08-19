@@ -274,7 +274,7 @@ export async function fetchAllFacultyProfiles() {
 
   // 2. Try Backend API
   try {
-    const res = await axios.get(`${API}/faculty/`, { timeout: 3000 });
+    const res = await axios.get(`${API}/faculty`, { timeout: 3000 });
     if (res.data && Array.isArray(res.data)) {
       res.data.forEach((f) => {
         const item = {
@@ -700,7 +700,7 @@ export async function getAttendanceRecords({ date = null, facultyId = null, mont
     if (month) params.month = month;
     if (year) params.year = year;
 
-    const endpoint = month && year ? `${API}/attendance/report/monthly` : `${API}/attendance/`;
+    const endpoint = month && year ? `${API}/attendance/report/monthly` : `${API}/attendance`;
     const res = await axios.get(endpoint, { params, timeout: 4000 });
     if (res.data && Array.isArray(res.data)) {
       res.data.forEach((r) => map.set(r.id || `${r.faculty_id}-${r.date}`, r));

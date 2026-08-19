@@ -47,7 +47,7 @@ export default function AttendanceDashboard({ facultyId, isTeacherView = false }
 
   const fetchFaculty = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/faculty/`, { timeout: 4000 });
+      const res = await axios.get(`${API}/faculty`, { timeout: 4000 });
       setFaculty(res.data || []);
     } catch (e) {
       // Graceful fallback
