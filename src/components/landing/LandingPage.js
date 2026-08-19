@@ -682,7 +682,7 @@ export default function LandingPage({ onExploreDemo }) {
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
                 <tr>
                   <td className="py-4 px-6 font-bold text-slate-900 dark:text-white">Full Schedule Generation Speed</td>
-                  <td className="py-4 px-6 font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-500/5 border-x border-indigo-200 dark:border-indigo-500/20">⚡ &lt; 3.5 Seconds (AI Engine)</td>
+                  <td className="py-4 px-6 font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-500/5 border-x border-indigo-200 dark:border-indigo-500/20"> &lt; 3.5 Seconds (AI Engine)</td>
                   <td className="py-4 px-6 text-slate-500 dark:text-slate-400">10–15 Minutes (Wizard Steps)</td>
                   <td className="py-4 px-6 text-rose-500 dark:text-rose-400">2–3 Weeks of Manual Cross-referencing</td>
                 </tr>
@@ -695,13 +695,13 @@ export default function LandingPage({ onExploreDemo }) {
                 <tr>
                   <td className="py-4 px-6 font-bold text-slate-900 dark:text-white">Live Faculty Leave &amp; Substitute Match</td>
                   <td className="py-4 px-6 font-black text-emerald-600 dark:text-emerald-400 bg-indigo-50/50 dark:bg-indigo-500/5 border-x border-indigo-200 dark:border-indigo-500/20">✓ Real-time Notification &amp; 1-Click Proxy</td>
-                  <td className="py-4 px-6 text-slate-500 dark:text-slate-400">⚠️ Complex Multi-Step Workflow</td>
+                  <td className="py-4 px-6 text-slate-500 dark:text-slate-400"> Complex Multi-Step Workflow</td>
                   <td className="py-4 px-6 text-rose-500 dark:text-rose-400">✗ Frantic WhatsApp Group Calls</td>
                 </tr>
                 <tr>
                   <td className="py-4 px-6 font-bold text-slate-900 dark:text-white">UI &amp; Interaction Speed</td>
-                  <td className="py-4 px-6 font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-500/5 border-x border-indigo-200 dark:border-indigo-500/20">⚡ 60 FPS GPU Micro-Animations (&lt; 2KB)</td>
-                  <td className="py-4 px-6 text-slate-500 dark:text-slate-400">🐌 Sluggish Odoo/Java Page Refreshes</td>
+                  <td className="py-4 px-6 font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-500/5 border-x border-indigo-200 dark:border-indigo-500/20"> 60 FPS GPU Micro-Animations (&lt; 2KB)</td>
+                  <td className="py-4 px-6 text-slate-500 dark:text-slate-400"> Sluggish Odoo/Java Page Refreshes</td>
                   <td className="py-4 px-6 text-slate-500 dark:text-slate-400">Desktop Dependent</td>
                 </tr>
                 <tr>
