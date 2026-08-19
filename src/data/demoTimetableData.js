@@ -2651,8 +2651,28 @@ export const DEMO_RESULT = {
 };
 
 export function buildApiPayload(data) {
+  const formattedTeachers = (data.teachers || []).map(t => {
+    if (typeof t === "string") {
+      const cleanName = t.trim();
+      return {
+        name: cleanName,
+        email: `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
+        phone: "+91-9876543210",
+        free_periods: 1
+      };
+    }
+    const cleanName = (t?.name || "Faculty Member").trim();
+    return {
+      ...t,
+      name: cleanName,
+      free_periods: t?.free_periods !== undefined ? t.free_periods : 1,
+      email: (t?.email || "").trim() || `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
+      phone: (t?.phone || "").trim() || "+91-9876543210",
+    };
+  });
+
   return {
-    teachers: data.teachers,
+    teachers: formattedTeachers,
     subjects: data.subjects,
     rooms: data.rooms,
     sections: data.sections,

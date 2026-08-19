@@ -517,19 +517,35 @@ export function AcademicProvider({ children }) {
 
   const handleAddFaculty = useCallback((newFaculty) => {
     if (!newFaculty) return;
-    const name = newFaculty.teacher_name || newFaculty.name;
+    const name = (newFaculty.teacher_name || newFaculty.name || "").trim();
     if (!name) return;
 
     setTeachers(prev => {
       const currentList = Array.isArray(prev) ? prev : [];
       const exists = currentList.some(t => {
-        const tName = (t?.name || t)?.toLowerCase();
+        const tName = ((typeof t === 'string' ? t : t?.name) || '').toLowerCase().trim();
         return tName === name.toLowerCase();
       });
       if (exists) return currentList;
 
       const free_periods = newFaculty.free_periods !== undefined ? newFaculty.free_periods : 1;
-      const updated = [...currentList, { name, free_periods }];
+      const cleanEmail = (newFaculty.email || "").trim() || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`;
+      const cleanPhone = (newFaculty.phone || "").trim() || "+91-9876543210";
+      const cleanDept = newFaculty.department || newFaculty.department_name || "Computer Applications";
+      const cleanEmpId = newFaculty.employee_id || `EMP-${Date.now().toString().slice(-4)}`;
+
+      const newTeacherObj = {
+        name,
+        free_periods,
+        email: cleanEmail,
+        phone: cleanPhone,
+        department: cleanDept,
+        employee_id: cleanEmpId,
+        designation: newFaculty.designation || "Faculty Member",
+        status: newFaculty.status || "active"
+      };
+
+      const updated = [...currentList, newTeacherObj];
       
       saveToCloud(true, {
         teachers: updated,

@@ -18,6 +18,7 @@ if current_dir not in sys.path:
 
 import copy
 import logging
+import re
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, Any
@@ -133,10 +134,14 @@ async def global_exception_handler(request: Request, exc: Exception):
 def notify_make(event: str, data: dict) -> dict:
     webhook_url = os.getenv("MAKE_WEBHOOK_URL", "").strip()
     if not webhook_url:
+        load_dotenv(override=True)
+        webhook_url = os.getenv("MAKE_WEBHOOK_URL", "").strip()
+
+    if not webhook_url:
         return {
             "enabled": False,
             "delivered": False,
-            "message": "Set MAKE_WEBHOOK_URL in .env to enable Make automation workflows.",
+            "message": "Set MAKE_WEBHOOK_URL in backend/.env to enable Make automation workflows.",
         }
 
     payload = {
@@ -355,11 +360,17 @@ async def trigger_bulk_emails():
             LAST_TIMETABLE["time_slots"],
             LAST_TIMETABLE["assignments"],
         )
+        safe_name = teacher.name.strip()
+        safe_email = (teacher.email or "").strip()
+        if not safe_email:
+            cleaned_handle = re.sub(r'[^a-zA-Z0-9]', '.', safe_name.lower()).strip('.')
+            safe_email = f"{cleaned_handle or 'faculty'}@lnctu.ac.in"
+
         teachers_data.append({
-            "name": teacher.name,
-            "email": teacher.email or "",
-            "phone": teacher.phone or "",
-            "filename": f"Timetable_{teacher.name.replace(' ', '_')}.xlsx",
+            "name": safe_name,
+            "email": safe_email,
+            "phone": (teacher.phone or "").strip() or "+91-9876543210",
+            "filename": f"Timetable_{safe_name.replace(' ', '_')}.xlsx",
             "excel_base64": excel_base64,
             "is_proxy_alert": teacher.is_substitute,
         })
@@ -381,6 +392,62 @@ async def trigger_bulk_emails():
     return {
         "status": "triggered",
         "message": f"Bulk email workflow initiated for {len(teachers_data)} teachers.",
+        "make_response": result,
+    }
+
+
+class MakeTestRequest(BaseModel):
+    event: Optional[str] = "manual_test"
+    payload: Optional[Dict[str, Any]] = None
+
+
+@app.post("/make/test")
+def test_make_webhook(request: MakeTestRequest):
+    event = request.event or "manual_test"
+    custom_msg = (request.payload or {}).get("message", "Ping from Plannify.exe Academic Operations")
+    
+    # Rich sample schema payload to allow Make.com to auto-detect all data structures
+    test_data = {
+        "event": event,
+        "message": custom_msg,
+        "action": "manual_webhook_test",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "teacher_count": 1,
+        "teachers": [
+            {
+                "name": "Dr. Sharma",
+                "email": "sharma@example.edu",
+                "phone": "+919876543210",
+                "filename": "Timetable_Dr_Sharma.xlsx",
+                "excel_base64": "UEsDBBQAAAAIAAA...",
+                "is_proxy_alert": False,
+            }
+        ],
+        "proxy_alert": {
+            "original_teacher": "Prof. Verma",
+            "proxy_teacher": "Dr. Sharma",
+            "proxy_phone": "+919876543210",
+            "proxy_email": "sharma@example.edu",
+            "day": "Monday",
+            "slot": "09:00 - 10:00 AM",
+            "room": "Room 302",
+            "subject": "CS301 Data Structures",
+            "section": "CSE-A",
+            "reason": "Medical Leave"
+        }
+    }
+
+    result = notify_make(event, test_data)
+
+    if not result.get("delivered"):
+        raise HTTPException(
+            status_code=500,
+            detail=result.get("message", "Failed to deliver webhook ping to Make.com. Verify MAKE_WEBHOOK_URL.")
+        )
+
+    return {
+        "status": "success",
+        "message": "Make Automation Instance Verified & Online! Webhook delivered successfully.",
         "make_response": result,
     }
 
