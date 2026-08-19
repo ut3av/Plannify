@@ -348,31 +348,72 @@ def export_teacher_excel(request: TeacherExcelRequest):
     }
 
 
-@app.post("/make/email-all")
-async def trigger_bulk_emails():
-    if not LAST_TIMETABLE or not LAST_REQUEST:
-        raise HTTPException(status_code=400, detail="Generate a timetable before sending emails.")
+class BulkEmailRequest(BaseModel):
+    timetable_data: Optional[dict] = None
+    teachers: Optional[List[dict]] = None
+    time_slots: Optional[List[str]] = None
 
-    teachers_data = []
-    for teacher in LAST_REQUEST.teachers:
-        excel_base64 = create_teacher_excel(
-            teacher.name,
-            LAST_TIMETABLE["time_slots"],
-            LAST_TIMETABLE["assignments"],
+
+@app.post("/make/email-all")
+async def trigger_bulk_emails(request: Optional[BulkEmailRequest] = None):
+    # 1. Check if payload was supplied by client
+    active_tt = None
+    teachers_pool = []
+    slots_pool = DEFAULT_SLOTS
+
+    if request and request.timetable_data:
+        active_tt = request.timetable_data
+        slots_pool = request.time_slots or active_tt.get("time_slots") or DEFAULT_SLOTS
+        if request.teachers:
+            teachers_pool = request.teachers
+
+    # 2. Check in-memory state
+    if not active_tt and LAST_TIMETABLE:
+        active_tt = LAST_TIMETABLE
+        slots_pool = LAST_TIMETABLE.get("time_slots", DEFAULT_SLOTS)
+        if LAST_REQUEST and LAST_REQUEST.teachers:
+            teachers_pool = [t.model_dump() if hasattr(t, "model_dump") else t for t in LAST_REQUEST.teachers]
+
+    # 3. Check SQLite / Supabase saved timetables fallback
+    if not active_tt:
+        saved = get_timetables_from_db()
+        if saved:
+            doc = get_timetable_by_id(saved[0].get("id"))
+            if doc and "timetable_data" in doc:
+                active_tt = doc["timetable_data"]
+                slots_pool = active_tt.get("time_slots", DEFAULT_SLOTS)
+
+    if not active_tt:
+        raise HTTPException(
+            status_code=400,
+            detail="No timetable available. Please click 'Generate AI Timetable' first."
         )
-        safe_name = teacher.name.strip()
-        safe_email = (teacher.email or "").strip()
+
+    # Resolve teachers list from timetable assignments if empty
+    if not teachers_pool:
+        t_names = set(a.get("teacher") for a in active_tt.get("assignments", []) if a.get("teacher"))
+        teachers_pool = [{"name": name} for name in sorted(t_names)]
+
+    assignments = active_tt.get("assignments", [])
+    teachers_data = []
+    for t_item in teachers_pool:
+        t_name = (t_item.get("name") or "").strip()
+        if not t_name:
+            continue
+        excel_base64 = create_teacher_excel(t_name, slots_pool, assignments)
+        
+        safe_email = (t_item.get("email") or "").strip()
         if not safe_email:
-            cleaned_handle = re.sub(r'[^a-zA-Z0-9]', '.', safe_name.lower()).strip('.')
+            cleaned_handle = re.sub(r'[^a-zA-Z0-9]', '.', t_name.lower()).strip('.')
             safe_email = f"{cleaned_handle or 'faculty'}@lnctu.ac.in"
 
         teachers_data.append({
-            "name": safe_name,
+            "name": t_name,
             "email": safe_email,
-            "phone": (teacher.phone or "").strip() or "+91-9876543210",
-            "filename": f"Timetable_{safe_name.replace(' ', '_')}.xlsx",
+            "phone": (t_item.get("phone") or "").strip() or "+91-9876543210",
+            "filename": f"Timetable_{t_name.replace(' ', '_')}.xlsx",
             "excel_base64": excel_base64,
-            "is_proxy_alert": teacher.is_substitute,
+            "is_proxy_alert": bool(t_item.get("is_substitute", False)),
         })
 
     result = notify_make(
@@ -386,8 +427,11 @@ async def trigger_bulk_emails():
         },
     )
 
-    if not result["delivered"]:
-        raise HTTPException(status_code=500, detail=result["message"])
+    if not result.get("delivered"):
+        raise HTTPException(
+            status_code=500,
+            detail=result.get("message") or "Failed to deliver webhook payload to Make.com. Make sure MAKE_WEBHOOK_URL is added to Render Environment."
+        )
 
     return {
         "status": "triggered",

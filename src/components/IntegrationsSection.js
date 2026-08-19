@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../apiConfig";
 import { supabase } from "../supabaseClient";
+import { useAcademic } from "../context/AcademicContext";
 
 export default function IntegrationsSection() {
+  const { result, teachers, timeSlots } = useAcademic();
   const [loading, setLoading] = useState(false);
   const [distributing, setDistributing] = useState(false);
   const [status, setStatus] = useState(null);
@@ -67,7 +69,12 @@ export default function IntegrationsSection() {
     setDistributing(true);
     setDistributeStatus(null);
     try {
-      const response = await axios.post(`${API_BASE_URL}/make/email-all`);
+      const payload = {
+        timetable_data: result || null,
+        teachers: teachers || [],
+        time_slots: timeSlots || [],
+      };
+      const response = await axios.post(`${API_BASE_URL}/make/email-all`, payload);
       setDistributeStatus({
         success: true,
         message: response.data?.message || "Bulk distribution triggered successfully. Dispatching timetables to registered faculty."
@@ -76,7 +83,7 @@ export default function IntegrationsSection() {
     } catch (err) {
       setDistributeStatus({
         success: false,
-        error: err.response?.data?.detail || "Distribution request failed. Verify Make.com webhook configuration in .env.",
+        error: err.response?.data?.detail || "Distribution request failed. Verify Make.com webhook configuration in Render Environment.",
       });
     } finally {
       setDistributing(false);
