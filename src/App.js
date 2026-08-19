@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback } from "react";
+import React, { Suspense, useCallback } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { saveAs } from "file-saver";
@@ -10,31 +10,31 @@ import GooeyLoader from "./components/common/GooeyLoader";
 import AppShell from "./components/shell/AppShell";
 import NotFoundPage from "./components/common/NotFoundPage";
 import NetworkStatusWatcher from "./components/common/NetworkStatusWatcher";
+import ErrorBoundary from "./components/common/ErrorBoundary";
+import { lazyWithRetry } from "./utils/lazyWithRetry";
 
-// Dynamic Section / View Imports (React.lazy)
-const LandingPage = lazy(() => import("./components/landing/LandingPage"));
-const LoginPage = lazy(() => import("./components/LoginPage"));
-const NoInternetPage = lazy(() => import("./components/common/NoInternetPage"));
-const TeacherDashboard = lazy(() => import("./components/TeacherDashboard"));
-const InstitutionalDashboard = lazy(() => import("./components/dashboard/InstitutionalDashboard"));
-const TimetableGrid = lazy(() => import("./components/TimetableGrid"));
-const FacultyDashboardStats = lazy(() => import("./components/faculty/FacultyDashboardStats"));
-const FacultyDirectory = lazy(() => import("./components/faculty/FacultyDirectory"));
-const FacultyProfile = lazy(() => import("./components/faculty/FacultyProfile"));
-const AttendanceDashboard = lazy(() => import("./components/faculty/AttendanceDashboard"));
-const FacultyAnalyticsModule = lazy(() => import("./components/faculty/FacultyAnalyticsModule"));
-const LeaveManagement = lazy(() => import("./components/faculty/LeaveManagement"));
-const SubstitutionPanel = lazy(() => import("./components/faculty/SubstitutionPanel"));
-const SubjectsSection = lazy(() => import("./components/SubjectsSection"));
-const SectionsManagement = lazy(() => import("./components/sections/SectionsManagement"));
-const RoomsSection = lazy(() => import("./components/RoomsSection"));
-const TimeSlotsSection = lazy(() => import("./components/TimeSlotsSection"));
-const ReschedulePanel = lazy(() => import("./components/ReschedulePanel"));
-const HistorySection = lazy(() => import("./components/HistorySection"));
-const IntegrationsSection = lazy(() => import("./components/IntegrationsSection"));
-const SystemSettings = lazy(() => import("./components/settings/SystemSettings"));
-const ReportsCenter = lazy(() => import("./components/reports/ReportsCenter"));
-const AIChatBot = lazy(() => import("./components/AIChatBot"));
+// Dynamic Section / View Imports with Chunk Auto-Recovery
+const LandingPage = lazyWithRetry(() => import("./components/landing/LandingPage"), "LandingPage");
+const LoginPage = lazyWithRetry(() => import("./components/LoginPage"), "LoginPage");
+const NoInternetPage = lazyWithRetry(() => import("./components/common/NoInternetPage"), "NoInternetPage");
+const TeacherDashboard = lazyWithRetry(() => import("./components/TeacherDashboard"), "TeacherDashboard");
+const InstitutionalDashboard = lazyWithRetry(() => import("./components/dashboard/InstitutionalDashboard"), "InstitutionalDashboard");
+const TimetableGrid = lazyWithRetry(() => import("./components/TimetableGrid"), "TimetableGrid");
+const FacultyDashboardStats = lazyWithRetry(() => import("./components/faculty/FacultyDashboardStats"), "FacultyDashboardStats");
+const FacultyDirectory = lazyWithRetry(() => import("./components/faculty/FacultyDirectory"), "FacultyDirectory");
+const FacultyProfile = lazyWithRetry(() => import("./components/faculty/FacultyProfile"), "FacultyProfile");
+const AttendanceDashboard = lazyWithRetry(() => import("./components/faculty/AttendanceDashboard"), "AttendanceDashboard");
+const FacultyAnalyticsModule = lazyWithRetry(() => import("./components/faculty/FacultyAnalyticsModule"), "FacultyAnalyticsModule");
+const LeaveManagement = lazyWithRetry(() => import("./components/faculty/LeaveManagement"), "LeaveManagement");
+const SubstitutionPanel = lazyWithRetry(() => import("./components/faculty/SubstitutionPanel"), "SubstitutionPanel");
+const SubjectsSection = lazyWithRetry(() => import("./components/SubjectsSection"), "SubjectsSection");
+const SectionsManagement = lazyWithRetry(() => import("./components/sections/SectionsManagement"), "SectionsManagement");
+const RoomsSection = lazyWithRetry(() => import("./components/RoomsSection"), "RoomsSection");
+const TimeSlotsSection = lazyWithRetry(() => import("./components/TimeSlotsSection"), "TimeSlotsSection");
+const IntegrationsSection = lazyWithRetry(() => import("./components/IntegrationsSection"), "IntegrationsSection");
+const SystemSettings = lazyWithRetry(() => import("./components/settings/SystemSettings"), "SystemSettings");
+const AIChatBot = lazyWithRetry(() => import("./components/AIChatBot"), "AIChatBot");
+const PublicTimetablePortal = lazyWithRetry(() => import("./components/public/PublicTimetablePortal"), "PublicTimetablePortal");
 
 function ModuleLoadingFallback() {
   return (
@@ -403,14 +403,9 @@ function AdminLayout() {
     timeSlots,
     setTimeSlots,
     result,
-    setResult,
     loading,
     error,
     rescheduleNote,
-    setRescheduleNote,
-    reschedulePreselect,
-    rescheduleTimetable,
-    assignProxy,
     saveToCloud,
     generateDemoTimetable,
     handleRemoveDemoData,
@@ -448,11 +443,12 @@ function AdminLayout() {
             sections: "/academic/sections",
             rooms: "/academic/rooms",
             slots: "/academic/slots",
-            reschedule: "/operations/reschedule",
             integrations: "/operations/integrations",
-            history: "/operations/history",
             settings: "/operations/settings",
-            reports: "/reports",
+            "public-portal": "/public/timetable",
+            reschedule: "/timetable",
+            history: "/timetable",
+            reports: "/analytics",
           };
           const target = page.startsWith("/") ? page : (PAGE_ROUTE_MAP[page] || `/${page}`);
           navigate(target);
@@ -588,39 +584,11 @@ function AdminLayout() {
           />
           <Route path="/slots" element={<Navigate to="/academic/slots" replace />} />
           
-          {/* Operations Routes & Shorthands */}
-          <Route
-            path="/operations/reschedule"
-            element={
-              <ReschedulePanel
-                teachers={teachers}
-                days={result?.days || ["Mon", "Tue", "Wed", "Thu", "Fri"]}
-                slots={result?.time_slots || timeSlots}
-                hasResult={!!result}
-                result={result}
-                loading={loading}
-                preselect={reschedulePreselect}
-                onBackToTimetable={() => navigate("/timetable")}
-                onReschedule={rescheduleTimetable}
-                onAssignProxy={assignProxy}
-              />
-            }
-          />
-          <Route path="/reschedule" element={<Navigate to="/operations/reschedule" replace />} />
-          
-          <Route
-            path="/operations/history"
-            element={
-              <HistorySection
-                onSelectTimetable={(data) => {
-                  setResult(data);
-                  navigate("/timetable");
-                  setRescheduleNote("Loaded saved timetable from database.");
-                }}
-              />
-            }
-          />
-          <Route path="/history" element={<Navigate to="/operations/history" replace />} />
+          {/* Operations Routes & Clean Redirects */}
+          <Route path="/operations/reschedule" element={<Navigate to="/timetable" replace />} />
+          <Route path="/reschedule" element={<Navigate to="/timetable" replace />} />
+          <Route path="/operations/history" element={<Navigate to="/timetable" replace />} />
+          <Route path="/history" element={<Navigate to="/timetable" replace />} />
           
           <Route path="/operations/integrations" element={<IntegrationsSection />} />
           <Route path="/integrations" element={<Navigate to="/operations/integrations" replace />} />
@@ -628,6 +596,10 @@ function AdminLayout() {
           <Route path="/operations/settings" element={<SystemSettings userRole={userRole} />} />
           <Route path="/settings" element={<Navigate to="/operations/settings" replace />} />
           
+          {/* Public Timetable Portal for Live Sharing & Mobile Viewers */}
+          <Route path="/public/timetable" element={<PublicTimetablePortal />} />
+          <Route path="/p/:batchId" element={<PublicTimetablePortal />} />
+
           {/* Faculty / Portal View for Admin */}
           <Route
             path="/portal"
@@ -646,7 +618,7 @@ function AdminLayout() {
           {/* Offline Diagnostics & No Internet Route */}
           <Route path="/offline" element={<NoInternetPage />} />
           <Route path="/landing" element={<LandingPage />} />
-          <Route path="/reports" element={<ReportsCenter />} />
+          <Route path="/reports" element={<Navigate to="/analytics" replace />} />
           
           {/* Universal Catch-All Route for Admin Layout */}
           <Route path="*" element={<NotFoundPage />} />
@@ -698,7 +670,7 @@ function AppContent() {
     navigate("/dashboard");
   };
 
-  // If user is not logged in, render the landing page as root and login route for auth
+  // If user is not logged in, allow public timetable viewing or landing page & login
   if (!user) {
     return (
       <Suspense fallback={<PageLoadingFallback />}>
@@ -707,6 +679,8 @@ function AppContent() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/home" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/public/timetable" element={<PublicTimetablePortal />} />
+          <Route path="/p/:batchId" element={<PublicTimetablePortal />} />
           <Route path="/offline" element={<NoInternetPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -748,6 +722,8 @@ function AppContent() {
               />
             }
           />
+          <Route path="/public/timetable" element={<PublicTimetablePortal />} />
+          <Route path="/p/:batchId" element={<PublicTimetablePortal />} />
           <Route path="/" element={<Navigate to="/portal" replace />} />
           <Route path="/home" element={<Navigate to="/portal" replace />} />
           <Route path="/login" element={<Navigate to="/portal" replace />} />
@@ -774,10 +750,13 @@ function AppContent() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AcademicProvider>
-        <AppContent />
-      </AcademicProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AcademicProvider>
+          <AppContent />
+        </AcademicProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
+

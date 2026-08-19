@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import HeaderBar from './HeaderBar';
 import SidebarNav from './SidebarNav';
 import CommandPaletteModal from './CommandPaletteModal';
+import ShareTimetableModal from '../common/ShareTimetableModal';
 
 export default function AppShell({
   activePage,
@@ -23,6 +24,7 @@ export default function AppShell({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
   const isLight = theme !== 'dark';
 
@@ -43,6 +45,7 @@ export default function AppShell({
         userRole={userRole}
         onRoleChange={onRoleChange}
         onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenQRModal={() => setIsQRModalOpen(true)}
         onSaveCloud={onSaveCloud}
         isCloudSaving={isCloudSaving}
         onLoadDemo={onLoadDemo}
@@ -84,6 +87,12 @@ export default function AppShell({
           onSelectPage(page, id);
           setIsSearchOpen(false);
         }}
+      />
+
+      {/* Global Student Branch QR Code Modal */}
+      <ShareTimetableModal
+        isOpen={isQRModalOpen}
+        onClose={() => setIsQRModalOpen(false)}
       />
     </div>
   );

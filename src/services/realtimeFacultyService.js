@@ -213,6 +213,86 @@ export function seedDemoFacultyData() {
   }
 }
 
+/**
+ * Unified Faculty Pipeline: Syncs teachers configured in the Timetable Workspace
+ * directly into the Institutional Faculty Profiles directory and leave ledgers.
+ */
+export async function syncFacultyFromTimetable(teachersList = []) {
+  if (!Array.isArray(teachersList) || teachersList.length === 0) return [];
+  try {
+    const profiles = teachersList.map((t, idx) => {
+      const name = typeof t === "string" ? t : (t.name || t.teacher_name || `Faculty ${idx + 1}`);
+      const designation = (typeof t === "object" && t.designation)
+        ? t.designation
+        : (name.startsWith("Dr") ? "Associate Professor" : (name.startsWith("Prof") ? "Professor" : "Assistant Professor"));
+      const dept = (typeof t === "object" && t.department) ? t.department : "Computer Applications";
+      const empId = (typeof t === "object" && t.employee_id) ? t.employee_id : `EMP-LNCT-${String(idx + 1).padStart(3, "0")}`;
+
+      return {
+        id: empId,
+        teacher_name: name,
+        employee_id: empId,
+        department: dept,
+        designation: designation,
+        email: (typeof t === "object" && t.email) ? t.email : `${name.toLowerCase().replace(/[^a-z]/g, '')}@lnctu.ac.in`,
+        phone: (typeof t === "object" && t.phone) ? t.phone : "+91-9893700000",
+        free_periods: (typeof t === "object" && t.free_periods !== undefined) ? t.free_periods : 1,
+        max_weekly_hours: (typeof t === "object" && t.max_weekly_hours) ? t.max_weekly_hours : 18,
+        status: "active",
+        ugc_compliant: true,
+      };
+    });
+
+    localStorage.setItem("planify_faculty_cache", JSON.stringify(profiles));
+    cachedFacultyProfiles = profiles;
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("planify_faculty_updated", { detail: profiles }));
+    }
+
+    // Try backend bulk sync asynchronously
+    axios.post(`${API}/faculty/bulk-sync`, { faculty: profiles }).catch(() => null);
+
+    return profiles;
+  } catch (e) {
+    console.warn("Unified faculty sync notice:", e);
+    return [];
+  }
+}
+
+/**
+ * Calculates real-time UGC Workload compliance (14-18 hours/week standard).
+ */
+export function getFacultyWorkloadAnalytics(teachersList = [], subjectsList = []) {
+  const workloadMap = {};
+  teachersList.forEach((t) => {
+    const name = typeof t === "string" ? t : t.name;
+    workloadMap[name] = {
+      name,
+      department: (typeof t === "object" && t.department) ? t.department : "General",
+      max_weekly_hours: (typeof t === "object" && t.max_weekly_hours) ? t.max_weekly_hours : 18,
+      assigned_slots: 0,
+      ugc_compliant: true,
+      load_percentage: 0,
+    };
+  });
+
+  subjectsList.forEach((s) => {
+    const teacher = s.teacher;
+    const required = Number(s.required_slots) || 3;
+    if (workloadMap[teacher]) {
+      workloadMap[teacher].assigned_slots += required;
+    }
+  });
+
+  Object.values(workloadMap).forEach((w) => {
+    w.load_percentage = Math.min(100, Math.round((w.assigned_slots / w.max_weekly_hours) * 100));
+    w.ugc_compliant = w.assigned_slots <= w.max_weekly_hours;
+  });
+
+  return Object.values(workloadMap);
+}
+
 // ─────────────────────────────────────────────────────────────
 // Real-Time Subscriptions Manager
 // ─────────────────────────────────────────────────────────────

@@ -888,3 +888,75 @@ input:-webkit-autofill:active {
   transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: width;
 }
+
+/* ==========================================================================
+   PRINT READY STYLES (A4 Landscape Clean Institutional Print)
+   ========================================================================== */
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 8mm 6mm;
+  }
+
+  body, html {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print,
+  nav,
+  header.no-print,
+  button,
+  select,
+  input,
+  .btn-primary,
+  .btn-secondary,
+  .btn-gradient,
+  .ai-chat-bubble,
+  #floating-ai-assistant {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-container {
+    border: 1.5px solid #0f172a !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
+    padding: 4px 6px !important;
+  }
+
+  th {
+    background: #f1f5f9 !important;
+    font-weight: 800 !important;
+  }
+}

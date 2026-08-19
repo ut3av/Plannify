@@ -27,16 +27,8 @@ export const NAV_GROUPS = [
   {
     title: "OPERATIONS",
     items: [
-      { id: "reschedule", path: "/operations/reschedule", label: "Reschedule Engine", icon: "refresh-cw", badge: "AI" },
       { id: "integrations", path: "/operations/integrations", label: "Automation & Broadcast", icon: "zap", badge: "Live" },
-      { id: "history", path: "/operations/history", label: "Version Control & Audit", icon: "history", badge: null },
       { id: "settings", path: "/operations/settings", label: "System Settings", icon: "settings", badge: null },
-    ],
-  },
-  {
-    title: "REPORTS",
-    items: [
-      { id: "reports", path: "/reports", label: "Reports Center", icon: "file-text", badge: "Excel" },
     ],
   },
 ];

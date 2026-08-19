@@ -13,3 +13,4 @@ jest.mock('@splinetool/react-spline', () => {
     return <div data-testid="spline-mock" />;
   };
 }, { virtual: true });
+

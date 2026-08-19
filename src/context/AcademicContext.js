@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { syncRelationalData } from '../services/supabaseService';
-import { clearAllFacultyCaches, seedDemoFacultyData } from '../services/realtimeFacultyService';
+import { clearAllFacultyCaches, seedDemoFacultyData, syncFacultyFromTimetable, getFacultyWorkloadAnalytics } from '../services/realtimeFacultyService';
 import { API_BASE_URL } from '../apiConfig';
 import { DEMO_TIMETABLE_DATA, DEMO_RESULT, buildApiPayload, formatResult } from '../data/demoTimetableData';
 
@@ -218,6 +218,18 @@ export function AcademicProvider({ children }) {
   useEffect(() => {
     activeStateRef.current = { teachers, sections, subjects, rooms, timeSlots, result };
   });
+
+  // Unified Faculty Pipeline: Automatically sync faculty directory profiles and leave ledgers
+  useEffect(() => {
+    if (teachers && teachers.length > 0) {
+      syncFacultyFromTimetable(teachers);
+    }
+  }, [teachers]);
+
+  // Real-time UGC Workload Compliance calculation
+  const facultyWorkloadAudit = useMemo(() => {
+    return getFacultyWorkloadAnalytics(teachers, subjects);
+  }, [teachers, subjects]);
 
   // Cloud Save function (supports silent background auto-sync & manual save)
   const saveToCloud = useCallback(async (isSilent = false, overrideState = null) => {
@@ -636,6 +648,7 @@ export function AcademicProvider({ children }) {
     handleTeachersChange,
     assignProxy,
     rescheduleTimetable,
+    facultyWorkloadAudit,
     handleLogout
   };
 

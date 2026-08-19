@@ -16,11 +16,12 @@ const PAGE_ROUTE_MAP = {
   sections: "/academic/sections",
   rooms: "/academic/rooms",
   slots: "/academic/slots",
-  reschedule: "/operations/reschedule",
   integrations: "/operations/integrations",
-  history: "/operations/history",
   settings: "/operations/settings",
-  reports: "/reports",
+  "public-portal": "/public/timetable",
+  reschedule: "/timetable",
+  history: "/timetable",
+  reports: "/analytics",
 };
 
 export default function HeaderBar({
@@ -33,6 +34,7 @@ export default function HeaderBar({
   userRole,
   onRoleChange,
   onOpenSearch,
+  onOpenQRModal,
   onOpenNotifications,
   unreadNotificationsCount = 0,
   onSaveCloud,
@@ -212,6 +214,27 @@ export default function HeaderBar({
             Ctrl+K
           </kbd>
         </button>
+
+        {/* Student Branch QR Code Generator Quick Action */}
+        {onOpenQRModal && (
+          <button
+            onClick={onOpenQRModal}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+              isLight
+                ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-400 text-emerald-800'
+                : 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/40 text-emerald-300'
+            }`}
+            title="Generate & print student branch timetable QR codes"
+          >
+            <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+            </svg>
+            <span className="hidden sm:inline">Student QR</span>
+          </button>
+        )}
 
         {/* Cloud Sync Quick Action */}
         {onSaveCloud && (
