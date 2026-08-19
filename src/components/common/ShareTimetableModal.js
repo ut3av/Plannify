@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { generateQRCodeMatrix } from '../../utils/qrCodeGenerator';
+import React, { useState, useMemo, useEffect } from 'react';
+import { generateQRCodeMatrix, generateQRCodeDataURL } from '../../utils/qrCodeGenerator';
 
 const BRANCH_OPTIONS = [
   { id: "BCA", label: "BCA", subtitle: "Bachelor of Computer Applications (All Sections A–F)" },
@@ -12,22 +12,46 @@ const VERCEL_DOMAIN = "https://plannify-alpha.vercel.app";
 
 export default function ShareTimetableModal({ isOpen, onClose }) {
   const [selectedBranch, setSelectedBranch] = useState("BCA");
-  const [useProductionUrl, setUseProductionUrl] = useState(true);
+  const [urlMode, setUrlMode] = useState("current"); // 'current' | 'production' | 'custom'
+  const [customHost, setCustomHost] = useState("");
   const [copied, setCopied] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState("");
 
-  const baseUrl = useProductionUrl
-    ? VERCEL_DOMAIN
-    : (typeof window !== "undefined" ? window.location.origin : VERCEL_DOMAIN);
-  const branchUrl = `${baseUrl}/public/timetable?branch=${encodeURIComponent(selectedBranch)}`;
+  const currentOrigin = typeof window !== "undefined" && window.location.origin
+    ? window.location.origin
+    : VERCEL_DOMAIN;
 
-  // Generate real ISO 18004 QR Matrix
-  const qrMatrix = useMemo(() => {
-    try {
-      return generateQRCodeMatrix(branchUrl);
-    } catch (e) {
-      console.warn("QR Generation note:", e);
-      return [];
+  const activeBaseUrl = useMemo(() => {
+    if (urlMode === "production") return VERCEL_DOMAIN;
+    if (urlMode === "custom" && customHost.trim()) {
+      const trimmed = customHost.trim();
+      return trimmed.startsWith("http://") || trimmed.startsWith("https://")
+        ? trimmed
+        : `http://${trimmed}`;
     }
+    return currentOrigin;
+  }, [urlMode, customHost, currentOrigin]);
+
+  const branchUrl = `${activeBaseUrl.replace(/\/+$/, '')}/public/timetable?branch=${encodeURIComponent(selectedBranch)}`;
+
+  // Generate ISO 18004 QR Matrix with High Error Correction (30%)
+  const qrMatrix = useMemo(() => {
+    return generateQRCodeMatrix(branchUrl, { errorCorrectionLevel: 'H' });
+  }, [branchUrl]);
+
+  // Generate high-resolution PNG Data URL for download & crisp rendering
+  useEffect(() => {
+    let isMounted = true;
+    generateQRCodeDataURL(branchUrl, {
+      errorCorrectionLevel: 'H',
+      width: 500,
+      margin: 2,
+      darkColor: '#047857',
+      lightColor: '#ffffff'
+    }).then(url => {
+      if (isMounted) setQrDataUrl(url);
+    });
+    return () => { isMounted = false; };
   }, [branchUrl]);
 
   if (!isOpen) return null;
@@ -41,47 +65,10 @@ export default function ShareTimetableModal({ isOpen, onClose }) {
   };
 
   const handleDownloadPNG = () => {
-    if (!qrMatrix || qrMatrix.length === 0) return;
-    const canvas = document.createElement("canvas");
-    const matrixSize = qrMatrix.length;
-    const cellSize = 16;
-    const margin = 32;
-    const totalSize = matrixSize * cellSize + margin * 2;
-
-    canvas.width = totalSize;
-    canvas.height = totalSize + 70;
-    const ctx = canvas.getContext("2d");
-
-    // White background
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw QR Modules
-    ctx.fillStyle = "#047857";
-    for (let r = 0; r < matrixSize; r++) {
-      for (let c = 0; c < matrixSize; c++) {
-        if (qrMatrix[r][c] === 1) {
-          const x = margin + c * cellSize;
-          const y = margin + r * cellSize;
-          ctx.fillRect(x, y, cellSize - 0.5, cellSize - 0.5);
-        }
-      }
-    }
-
-    // Draw Footer Label
-    ctx.fillStyle = "#0f172a";
-    ctx.font = "bold 20px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(`LNCT University • ${selectedBranch} Timetable`, totalSize / 2, totalSize + 36);
-
-    ctx.fillStyle = "#059669";
-    ctx.font = "14px sans-serif";
-    ctx.fillText("Scan with any mobile camera to view live schedule", totalSize / 2, totalSize + 58);
-
-    // Download trigger
+    if (!qrDataUrl) return;
     const link = document.createElement("a");
-    link.download = `Plannify_${selectedBranch}_Timetable_QR.png`;
-    link.href = canvas.toDataURL("image/png");
+    link.download = `Plannify_${selectedBranch}_Live_Timetable_QR.png`;
+    link.href = qrDataUrl;
     link.click();
   };
 
@@ -89,7 +76,9 @@ export default function ShareTimetableModal({ isOpen, onClose }) {
     window.open(`${branchUrl}&print=true`, "_blank");
   };
 
-  const matrixSize = qrMatrix.length || 21;
+  const matrixSize = qrMatrix.length || 33;
+  const padding = 2; // Quiet zone
+  const totalViewSize = matrixSize + padding * 2;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in no-print">
@@ -107,7 +96,7 @@ export default function ShareTimetableModal({ isOpen, onClose }) {
             </div>
             <div>
               <h3 className="text-base font-black text-white tracking-tight font-display">Student Branch QR Code</h3>
-              <p className="text-xs text-slate-400">Dynamic QR access for student branch schedules</p>
+              <p className="text-xs text-slate-400">Live, camera-scannable real-time schedule portal</p>
             </div>
           </div>
           <button
@@ -142,69 +131,115 @@ export default function ShareTimetableModal({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* ── Brand Scannable QR Code Placard ── */}
+        {/* ── Scannable QR Code Placard ── */}
         <div className="p-4 bg-slate-950 rounded-3xl border border-slate-800 flex flex-col items-center justify-center space-y-3">
-          <div className="p-3.5 bg-white rounded-2xl shadow-xl border border-slate-200 flex flex-col items-center relative">
-            {/* Real SVG Scannable QR Matrix */}
-            <svg
-              className="w-44 h-44"
-              viewBox={`0 0 ${matrixSize} ${matrixSize}`}
-              shapeRendering="crispEdges"
-            >
-              <rect width={matrixSize} height={matrixSize} fill="#ffffff" />
-              {qrMatrix.map((row, rIdx) =>
-                row.map((cell, cIdx) => {
-                  if (cell !== 1) return null;
-                  // Color finder patterns in brand emerald, inner data in dark emerald/slate
-                  const isFinder =
-                    (rIdx < 7 && cIdx < 7) ||
-                    (rIdx < 7 && cIdx >= matrixSize - 7) ||
-                    (rIdx >= matrixSize - 7 && cIdx < 7);
-                  return (
-                    <rect
-                      key={`${rIdx}-${cIdx}`}
-                      x={cIdx}
-                      y={rIdx}
-                      width={1}
-                      height={1}
-                      fill={isFinder ? "#047857" : "#064e3b"}
-                    />
-                  );
-                })
-              )}
-            </svg>
+          <div className="p-4 bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col items-center relative">
+            {/* Standard ISO 18004 SVG Scannable QR Matrix with Quiet Zone */}
+            {qrMatrix.length > 0 ? (
+              <svg
+                className="w-48 h-48"
+                viewBox={`0 0 ${totalViewSize} ${totalViewSize}`}
+                shapeRendering="crispEdges"
+              >
+                <rect width={totalViewSize} height={totalViewSize} fill="#ffffff" />
+                {qrMatrix.map((row, rIdx) =>
+                  row.map((cell, cIdx) => {
+                    if (cell !== 1) return null;
+                    const isFinder =
+                      (rIdx < 7 && cIdx < 7) ||
+                      (rIdx < 7 && cIdx >= matrixSize - 7) ||
+                      (rIdx >= matrixSize - 7 && cIdx < 7);
+                    return (
+                      <rect
+                        key={`${rIdx}-${cIdx}`}
+                        x={cIdx + padding}
+                        y={rIdx + padding}
+                        width={1}
+                        height={1}
+                        fill={isFinder ? "#047857" : "#064e3b"}
+                      />
+                    );
+                  })
+                )}
+              </svg>
+            ) : qrDataUrl ? (
+              <img src={qrDataUrl} alt="QR Code" className="w-48 h-48" />
+            ) : (
+              <div className="w-48 h-48 flex items-center justify-center text-slate-500 text-xs">
+                Generating QR...
+              </div>
+            )}
 
-            {/* Centered Brand Emblem Badge */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-xl shadow-md border-2 border-emerald-600 flex items-center justify-center pointer-events-none">
-              <span className="text-emerald-700 font-black text-xs font-display">P</span>
+            {/* Subtle Brand Badge (Small, non-intrusive) */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-lg shadow-md border-2 border-emerald-600 flex items-center justify-center pointer-events-none">
+              <span className="text-emerald-700 font-black text-[10px] font-display leading-none">P</span>
             </div>
 
-            <div className="mt-2 text-center">
+            <div className="mt-2.5 text-center">
               <span className="text-[11px] font-black uppercase text-slate-900 tracking-wider">
                 {selectedBranch} Master Timetable
               </span>
-              <p className="text-[9px] font-bold text-emerald-700">LNCT University • Live Sync</p>
+              <p className="text-[9px] font-bold text-emerald-700 flex items-center justify-center gap-1 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                LNCT University • Real-Time Sync
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Scan with any camera • Directed to Vercel Live Deployment</span>
+          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium text-center">
+            <span>📷 Scan with any phone camera to open live student portal</span>
           </div>
         </div>
 
-        {/* Public URL Bar with Vercel Production Link Indicator */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
-            <span>Live Vercel Destination:</span>
-            <button
-              type="button"
-              onClick={() => setUseProductionUrl(!useProductionUrl)}
-              className="text-emerald-400 hover:text-emerald-300 underline font-mono text-[10px]"
-            >
-              {useProductionUrl ? "Switch to Localhost" : "Switch to Vercel Prod"}
-            </button>
+        {/* QR Destination URL Mode Selector */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-300">
+            <span>Target Host / Destination:</span>
+            <div className="flex gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-[10px]">
+              <button
+                type="button"
+                onClick={() => setUrlMode("current")}
+                className={`px-2 py-0.5 rounded ${
+                  urlMode === "current" ? "bg-emerald-600 text-white font-bold" : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Use current origin (recommended for local/network testing)"
+              >
+                Local/Current
+              </button>
+              <button
+                type="button"
+                onClick={() => setUrlMode("production")}
+                className={`px-2 py-0.5 rounded ${
+                  urlMode === "production" ? "bg-emerald-600 text-white font-bold" : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Use Vercel production domain"
+              >
+                Vercel Prod
+              </button>
+              <button
+                type="button"
+                onClick={() => setUrlMode("custom")}
+                className={`px-2 py-0.5 rounded ${
+                  urlMode === "custom" ? "bg-emerald-600 text-white font-bold" : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="Type LAN IP or custom domain"
+              >
+                Custom IP
+              </button>
+            </div>
           </div>
+
+          {urlMode === "custom" && (
+            <input
+              type="text"
+              placeholder="e.g. 192.168.1.100:3000 or my-subdomain.ngrok-free.app"
+              value={customHost}
+              onChange={(e) => setCustomHost(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-emerald-300 font-mono focus:border-emerald-500 outline-none"
+            />
+          )}
+
+          {/* Public URL Bar */}
           <div className="flex items-center gap-2 bg-slate-950 p-2 rounded-2xl border border-slate-800 text-xs">
             <input
               type="text"
@@ -229,7 +264,7 @@ export default function ShareTimetableModal({ isOpen, onClose }) {
             type="button"
             onClick={handleDownloadPNG}
             className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 transition-all flex items-center gap-1.5 shadow-sm"
-            title="Download high-resolution scannable PNG image"
+            title="Download scannable high-res PNG image"
           >
             <svg className="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -243,7 +278,7 @@ export default function ShareTimetableModal({ isOpen, onClose }) {
             type="button"
             onClick={handlePrintPlacard}
             className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 transition-all flex items-center gap-1.5 shadow-sm"
-            title="Print classroom door signage placard"
+            title="Print classroom door placard"
           >
             <svg className="w-3.5 h-3.5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 6 2 18 2 18 9" />

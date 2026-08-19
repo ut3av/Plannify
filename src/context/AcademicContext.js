@@ -265,6 +265,7 @@ export function AcademicProvider({ children }) {
           subjects: stateToSave.subjects || [],
           rooms: stateToSave.rooms || [],
           time_slots: stateToSave.timeSlots || DEFAULT_TIME_SLOTS,
+          result: stateToSave.result || null,
           updated_at: new Date().toISOString(),
         };
 
@@ -283,6 +284,7 @@ export function AcademicProvider({ children }) {
               day: JSON.stringify(payload.subjects),
               room: JSON.stringify(payload.teachers),
               slot: new Date().toISOString(),
+              result: JSON.stringify(payload.result),
             });
           if (retryError && !isSilent) {
             console.warn("Supabase timetable_state save warning:", retryError);
@@ -337,7 +339,8 @@ export function AcademicProvider({ children }) {
       const formatted = formatResult(response.data);
       setResult(formatted);
       
-      // Sync to relational tables immediately after generation
+      // Sync to cloud & relational tables immediately after generation
+      saveToCloud(true, { teachers, sections, subjects, rooms, timeSlots, result: formatted });
       try {
         await syncRelationalData({ teachers, sections, subjects, rooms, timeSlots, result: formatted });
       } catch (syncErr) {
@@ -388,6 +391,7 @@ export function AcademicProvider({ children }) {
         });
 
         setResult(fallbackResult);
+        saveToCloud(true, { teachers, sections, subjects, rooms, timeSlots, result: fallbackResult });
         setRescheduleNote(successMessage || "Timetable generated successfully (Local engine active).");
       } else {
         setError(getErrorMessage(apiError));
@@ -395,7 +399,7 @@ export function AcademicProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [teachers, sections, subjects, rooms, timeSlots]);
+  }, [teachers, sections, subjects, rooms, timeSlots, saveToCloud]);
 
   const generateTimetable = useCallback(async () => {
     await generateFromPayload(payload);
@@ -430,9 +434,17 @@ export function AcademicProvider({ children }) {
       axios.post(`${API_BASE_URL}/analytics/seed-demo-history`).catch(() => null);
       axios.post(`${API_BASE_URL}/faculty/seed-lnct`).catch(() => null);
       await axios.post(`${API_BASE_URL}/generate`, demoPayload, { timeout: 20000 });
-      saveToCloud(true, demoData);
     } catch (err) {
       console.warn("Backend solver call failed, keeping local LNCT DEMO_RESULT fallback:", err);
+    } finally {
+      saveToCloud(true, {
+        teachers: demoData.teachers,
+        sections: demoData.sections,
+        subjects: demoData.subjects,
+        rooms: demoData.rooms,
+        timeSlots: demoData.timeSlots,
+        result: formattedDemo
+      });
     }
   }, [saveToCloud]);
 
@@ -477,6 +489,7 @@ export function AcademicProvider({ children }) {
             subjects: [],
             rooms: [],
             time_slots: defaultSlots,
+            result: null,
             updated_at: new Date().toISOString()
           });
 
@@ -523,7 +536,8 @@ export function AcademicProvider({ children }) {
         sections: activeStateRef.current.sections,
         subjects: activeStateRef.current.subjects,
         rooms: activeStateRef.current.rooms,
-        timeSlots: activeStateRef.current.timeSlots
+        timeSlots: activeStateRef.current.timeSlots,
+        result: activeStateRef.current.result
       });
       
       return updated;
@@ -537,28 +551,72 @@ export function AcademicProvider({ children }) {
       sections: activeStateRef.current.sections,
       subjects: activeStateRef.current.subjects,
       rooms: activeStateRef.current.rooms,
-      timeSlots: activeStateRef.current.timeSlots
+      timeSlots: activeStateRef.current.timeSlots,
+      result: activeStateRef.current.result
     });
   }, [saveToCloud]);
 
-  const assignProxy = useCallback((leaveAssignment, proxyTeacher) => {
+  const assignProxy = useCallback(async (leaveAssignment, proxyTeacherArg) => {
     if (!result || !result.assignments) return;
+    const proxyTeacher = proxyTeacherArg || leaveAssignment?.proxy_teacher || leaveAssignment?.proxyTeacher;
+    const targetSlots = Array.isArray(leaveAssignment?.slots)
+      ? leaveAssignment.slots
+      : (leaveAssignment?.slot ? [leaveAssignment.slot] : []);
+    const targetDay = leaveAssignment?.day;
+    const targetTeacher = leaveAssignment?.teacher;
+
     const updatedAssignments = result.assignments.map(a => {
-      if (a.day === leaveAssignment.day && 
-          a.slot === leaveAssignment.slot && 
-          a.section === leaveAssignment.section && 
-          a.subject === leaveAssignment.subject) {
-        return { ...a, teacher: proxyTeacher, isProxy: true, originalTeacher: a.teacher };
+      const matchesSlot = targetSlots.length === 0 || targetSlots.includes(a.slot);
+      const matchesDay = !targetDay || a.day === targetDay;
+      const matchesTeacher = !targetTeacher || a.teacher === targetTeacher || a.originalTeacher === targetTeacher || a.original_teacher === targetTeacher;
+      const matchesSection = !leaveAssignment?.section || a.section === leaveAssignment.section;
+      const matchesSubject = !leaveAssignment?.subject || a.subject === leaveAssignment.subject;
+
+      if (matchesDay && matchesSlot && matchesTeacher && (targetSlots.length > 0 || (matchesSection && matchesSubject))) {
+        return {
+          ...a,
+          teacher: proxyTeacher,
+          isProxy: true,
+          is_proxy: true,
+          originalTeacher: a.originalTeacher || a.teacher,
+          original_teacher: a.original_teacher || a.teacher,
+          proxy_teacher: proxyTeacher,
+          proxy_reason: leaveAssignment?.reason || "Faculty Leave Substitution"
+        };
       }
       return a;
     });
 
     const updatedResult = { ...result, assignments: updatedAssignments };
     setResult(updatedResult);
-    setRescheduleNote(`Proxy assigned successfully: ${proxyTeacher} will cover ${leaveAssignment.subject} (${leaveAssignment.section}) on ${leaveAssignment.day} at ${leaveAssignment.slot}`);
+    setRescheduleNote(`Proxy assigned successfully: ${proxyTeacher} covering for ${targetTeacher || 'faculty'}`);
     
-    syncRelationalData({ teachers, sections, subjects, rooms, timeSlots, result: updatedResult }).catch(() => null);
-  }, [result, teachers, sections, subjects, rooms, timeSlots]);
+    // Save to Cloud & Broadcast Real-Time
+    saveToCloud(true, {
+      teachers: activeStateRef.current.teachers,
+      sections: activeStateRef.current.sections,
+      subjects: activeStateRef.current.subjects,
+      rooms: activeStateRef.current.rooms,
+      timeSlots: activeStateRef.current.timeSlots,
+      result: updatedResult
+    });
+
+    // Record in substitution log
+    try {
+      if (supabase && targetTeacher && proxyTeacher) {
+        await supabase.from('substitution_log').insert({
+          original_teacher_name: targetTeacher,
+          proxy_teacher_name: proxyTeacher,
+          day: targetDay || 'Mon',
+          slot: targetSlots[0] || 'Period',
+          reason: leaveAssignment?.reason || 'Faculty Leave Substitution',
+          status: 'Confirmed'
+        });
+      }
+    } catch (e) {
+      console.warn("Substitution log record notice:", e);
+    }
+  }, [result, saveToCloud]);
 
   const rescheduleTimetable = useCallback(async (rescheduleData) => {
     setLoading(true);
@@ -573,6 +631,14 @@ export function AcademicProvider({ children }) {
         const formatted = formatResult(res.data);
         setResult(formatted);
         setRescheduleNote("Schedule rescheduled and optimized successfully.");
+        saveToCloud(true, {
+          teachers: activeStateRef.current.teachers,
+          sections: activeStateRef.current.sections,
+          subjects: activeStateRef.current.subjects,
+          rooms: activeStateRef.current.rooms,
+          timeSlots: activeStateRef.current.timeSlots,
+          result: formatted
+        });
       }
     } catch (err) {
       console.warn("Reschedule API offline, applying client swap:", err);
@@ -587,7 +653,16 @@ export function AcademicProvider({ children }) {
           }
           return a;
         });
-        setResult({ ...result, assignments: updated });
+        const updatedResult = { ...result, assignments: updated };
+        setResult(updatedResult);
+        saveToCloud(true, {
+          teachers: activeStateRef.current.teachers,
+          sections: activeStateRef.current.sections,
+          subjects: activeStateRef.current.subjects,
+          rooms: activeStateRef.current.rooms,
+          timeSlots: activeStateRef.current.timeSlots,
+          result: updatedResult
+        });
         setRescheduleNote("Slot swapped successfully.");
       } else {
         setError(getErrorMessage(err));
@@ -595,7 +670,7 @@ export function AcademicProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [result]);
+  }, [result, saveToCloud]);
 
   const handleLogout = useCallback(async () => {
     try {

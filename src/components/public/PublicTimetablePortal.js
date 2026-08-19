@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
+import { supabase } from '../../supabaseClient';
 import { DEMO_TIMETABLE_DATA, DEMO_RESULT, formatResult } from '../../data/demoTimetableData';
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
@@ -10,6 +11,38 @@ const BRANCH_MAP = {
   "MCA": { name: "MCA (Master of Computer Applications)", prefix: "MCA" },
   "AI-DA": { name: "AI & Data Analytics", prefix: "BAI" },
   "CSE": { name: "Computer Science & Engineering", prefix: "CSE" },
+};
+
+const DEFAULT_TIME_SLOTS = [
+  "09:00 AM - 09:45 AM",
+  "09:45 AM - 10:30 AM",
+  "10:30 AM - 11:20 AM",
+  "11:20 AM - 12:10 PM",
+  "01:00 PM - 01:50 PM",
+  "01:50 PM - 02:40 PM",
+  "02:40 PM - 03:30 PM",
+];
+
+const parseCloudJson = (value, fallback) => {
+  if (value === null || value === undefined || value === "") return fallback;
+  if (Array.isArray(value) || typeof value === "object") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
+
+const readCloudState = (data) => {
+  if (!data) return null;
+  return {
+    teachers: parseCloudJson(data.teachers ?? data.room, []),
+    sections: parseCloudJson(data.sections ?? data.email, []),
+    subjects: parseCloudJson(data.subjects ?? data.day, []),
+    rooms: parseCloudJson(data.rooms ?? data.subject, []),
+    timeSlots: parseCloudJson(data.time_slots ?? data.timeSlots ?? data.teacher_name, DEFAULT_TIME_SLOTS),
+    result: parseCloudJson(data.result, null),
+  };
 };
 
 export default function PublicTimetablePortal() {
@@ -26,6 +59,10 @@ export default function PublicTimetablePortal() {
   const [selectedSection, setSelectedSection] = useState(sectionParam);
   const [selectedDay, setSelectedDay] = useState(dayParam);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+  const [showRealtimeToast, setShowRealtimeToast] = useState(false);
+  const [realtimeMessage, setRealtimeMessage] = useState("");
 
   // Clock ticker for live period calculation
   useEffect(() => {
@@ -33,26 +70,110 @@ export default function PublicTimetablePortal() {
     return () => clearInterval(timer);
   }, []);
 
-  // Load timetable state from localStorage or demo dataset
-  useEffect(() => {
+  // Fetch initial timetable state from Supabase / localStorage / Demo Data
+  const loadInitialData = useCallback(async () => {
+    let loadedFromCloud = false;
+
+    // 1. Try Supabase cloud fetch first
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('timetable_state')
+          .select('*')
+          .eq('id', 'draft')
+          .single();
+
+        if (data && !error) {
+          const cloudState = readCloudState(data);
+          if (cloudState && (cloudState.result || (cloudState.teachers && cloudState.teachers.length > 0))) {
+            setTimetableState(cloudState);
+            setIsLiveConnected(true);
+            setLastSyncTime(new Date());
+            loadedFromCloud = true;
+          }
+        }
+      } catch (err) {
+        console.warn("Public portal Supabase fetch note:", err);
+      }
+    }
+
+    if (loadedFromCloud) return;
+
+    // 2. Fallback to localStorage
     try {
       const stored = localStorage.getItem("planify_timetable_state");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed && (parsed.result || parsed.assignments)) {
+        if (parsed && (parsed.result || parsed.assignments || parsed.teachers)) {
           setTimetableState(parsed);
+          setLastSyncTime(new Date());
           return;
         }
       }
     } catch (e) {
-      console.warn("Local timetable read notice:", e);
+      console.warn("Local storage read note:", e);
     }
-    // Fallback to formatted demo timetable
+
+    // 3. Fallback to Demo Timetable
     setTimetableState({
       ...DEMO_TIMETABLE_DATA,
       result: formatResult(DEMO_RESULT),
     });
+    setLastSyncTime(new Date());
   }, []);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
+
+  // Supabase Real-Time Live Sync Subscription
+  useEffect(() => {
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('public_live_timetable_stream')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'timetable_state', filter: 'id=eq.draft' },
+        (payload) => {
+          if (payload.new) {
+            const cloudState = readCloudState(payload.new);
+            if (cloudState) {
+              setTimetableState(cloudState);
+              setIsLiveConnected(true);
+              setLastSyncTime(new Date());
+              setRealtimeMessage("Schedule updated in real-time by administration!");
+              setShowRealtimeToast(true);
+              setTimeout(() => setShowRealtimeToast(false), 5000);
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'substitution_log' },
+        (payload) => {
+          if (payload.new) {
+            setRealtimeMessage(`Proxy Alert: ${payload.new.proxy_teacher_name || 'A proxy'} assigned for ${payload.new.original_teacher_name || 'faculty'}!`);
+            setShowRealtimeToast(true);
+            setTimeout(() => setShowRealtimeToast(false), 5000);
+            // Re-fetch master state to refresh proxy indicators
+            loadInitialData();
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsLiveConnected(true);
+        }
+      });
+
+    return () => {
+      try {
+        supabase.removeChannel(channel);
+      } catch (e) {}
+    };
+  }, [loadInitialData]);
 
   // Sync state to URL params for 1-click sharing
   useEffect(() => {
@@ -73,26 +194,20 @@ export default function PublicTimetablePortal() {
     }
   }, [autoPrint, timetableState]);
 
-  // Extract all sections and raw assignments
+  // Extract all sections, timeSlots, and raw assignments
   const { allSections, timeSlots, assignments } = useMemo(() => {
     if (!timetableState) {
-      return { allSections: [], timeSlots: [], assignments: [] };
+      return { allSections: [], timeSlots: DEFAULT_TIME_SLOTS, assignments: [] };
     }
 
-    const secs = timetableState.sections?.map(s => typeof s === 'string' ? s : s.name) || [
+    const secs = timetableState.sections?.map(s => typeof s === 'string' ? s : (s?.name || s?.section_name)) || [
       "Section A (BCA-III)", "Section B (BCA-III)", "Section C (BCA-III)",
       "Section D (BCA-III)", "Section E (BCA-III)", "Section F (BCA-III)"
     ];
 
-    const slots = timetableState.timeSlots || [
-      "09:00 AM - 09:45 AM",
-      "09:45 AM - 10:30 AM",
-      "10:30 AM - 11:20 AM",
-      "11:20 AM - 12:10 PM",
-      "01:00 PM - 01:50 PM",
-      "01:50 PM - 02:40 PM",
-      "02:40 PM - 03:30 PM",
-    ];
+    const slots = (Array.isArray(timetableState.timeSlots) && timetableState.timeSlots.length > 0)
+      ? timetableState.timeSlots
+      : (timetableState.result?.time_slots || DEFAULT_TIME_SLOTS);
 
     let assignList = [];
     if (timetableState.result?.assignments) {
@@ -112,11 +227,19 @@ export default function PublicTimetablePortal() {
   const branchSections = useMemo(() => {
     if (allSections.length === 0) return [];
     if (selectedBranch === "BCA") {
-      const filtered = allSections.filter(s => s.toUpperCase().includes("BCA"));
+      const filtered = allSections.filter(s => String(s).toUpperCase().includes("BCA"));
       return filtered.length > 0 ? filtered : allSections;
     }
     if (selectedBranch === "MCA") {
-      const filtered = allSections.filter(s => s.toUpperCase().includes("MCA"));
+      const filtered = allSections.filter(s => String(s).toUpperCase().includes("MCA"));
+      return filtered.length > 0 ? filtered : allSections;
+    }
+    if (selectedBranch === "AI-DA") {
+      const filtered = allSections.filter(s => String(s).toUpperCase().includes("AI") || String(s).toUpperCase().includes("DA"));
+      return filtered.length > 0 ? filtered : allSections;
+    }
+    if (selectedBranch === "CSE") {
+      const filtered = allSections.filter(s => String(s).toUpperCase().includes("CSE") || String(s).toUpperCase().includes("CS"));
       return filtered.length > 0 ? filtered : allSections;
     }
     return allSections;
@@ -164,17 +287,16 @@ export default function PublicTimetablePortal() {
 
     return assignments.filter((a) => {
       if (selectedSection && selectedSection !== "ALL") {
-        return (a.section || "").toLowerCase() === selectedSection.toLowerCase();
+        return (a.section || "").toLowerCase() === String(selectedSection).toLowerCase();
       }
-      // If ALL is selected, check if assignment belongs to branch sections
       if (branchSections.length > 0) {
-        return branchSections.some(sec => sec.toLowerCase() === (a.section || "").toLowerCase());
+        return branchSections.some(sec => String(sec).toLowerCase() === (a.section || "").toLowerCase());
       }
       return true;
     });
   }, [assignments, selectedSection, branchSections]);
 
-  // Build clean 2D dictionary: grid[day][slot] = [items] (deduplicated by code/subject)
+  // Build clean 2D dictionary: grid[day][slot] = [items]
   const displayTimetable = useMemo(() => {
     const grid = {};
     DAYS.forEach(d => {
@@ -189,7 +311,7 @@ export default function PublicTimetablePortal() {
       const s = item.slot;
       if (grid[d] && grid[d][s]) {
         const alreadyExists = grid[d][s].some(
-          existing => existing.code === item.code && existing.section === item.section
+          existing => existing.code === item.code && existing.section === item.section && existing.teacher === item.teacher
         );
         if (!alreadyExists) {
           grid[d][s].push(item);
@@ -209,6 +331,28 @@ export default function PublicTimetablePortal() {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+      {/* ── Real-Time Notification Toast ── */}
+      {showRealtimeToast && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-down max-w-sm bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-400 no-print">
+          <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+            <svg className="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </div>
+          <div className="text-xs">
+            <p className="font-bold">Live Schedule Synchronized</p>
+            <p className="opacity-90">{realtimeMessage}</p>
+          </div>
+          <button
+            onClick={() => setShowRealtimeToast(false)}
+            className="ml-auto text-white/80 hover:text-white text-xs font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* ── Top Bar / Header ── */}
       <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm no-print px-4 py-3 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -219,13 +363,25 @@ export default function PublicTimetablePortal() {
                 <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
                   LNCT Student Timetable Portal
                 </h1>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
-                  Live Sync
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase flex items-center gap-1 border ${
+                    isLiveConnected
+                      ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30"
+                      : "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30"
+                  }`}
+                  title={lastSyncTime ? `Last synced at ${lastSyncTime.toLocaleTimeString()}` : "Connecting..."}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${isLiveConnected ? "bg-emerald-600 dark:bg-emerald-400 animate-pulse" : "bg-amber-500"}`} />
+                  {isLiveConnected ? "Real-Time Live Sync" : "Syncing..."}
                 </span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                 {branchInfo.name} • Session 2026–2027
+                {lastSyncTime && (
+                  <span className="hidden sm:inline ml-2 opacity-75 font-mono text-[10px]">
+                    (Updated {lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -247,7 +403,7 @@ export default function PublicTimetablePortal() {
         </div>
       </header>
 
-      {/* ── Branch & Section Navigation Filter Bar (Interactive for Students) ── */}
+      {/* ── Branch & Section Navigation Filter Bar ── */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 no-print shadow-sm">
         <div className="max-w-7xl mx-auto space-y-3">
           {/* Branch Pills */}
@@ -421,12 +577,15 @@ export default function PublicTimetablePortal() {
                         ) : (
                           <div className="space-y-1.5">
                             {cellItems.map((item, itemIdx) => {
-                              const isLab = !!item.is_lab;
+                              const isLab = !!item.is_lab || !!item.isLab;
+                              const isProxy = !!item.is_proxy || !!item.isProxy;
                               return (
                                 <div
                                   key={itemIdx}
                                   className={`p-2.5 rounded-xl border transition-all text-xs space-y-1 ${
-                                    isLab
+                                    isProxy
+                                      ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700/60 text-amber-950 dark:text-amber-100"
+                                      : isLab
                                       ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-100"
                                       : "bg-indigo-50/70 dark:bg-slate-800/90 border-indigo-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                                   }`}
@@ -434,17 +593,24 @@ export default function PublicTimetablePortal() {
                                   {/* Subject Code & Type */}
                                   <div className="flex items-center justify-between gap-1 font-black">
                                     <span className="tracking-tight text-indigo-950 dark:text-indigo-300 text-[11px]">
-                                      {item.code || item.subject}
+                                      {item.code ? `[${item.code}]` : item.subject}
                                     </span>
-                                    <span
-                                      className={`px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase ${
-                                        isLab
-                                          ? "bg-emerald-200 dark:bg-emerald-800 text-emerald-950 dark:text-emerald-200"
-                                          : "bg-indigo-200 dark:bg-indigo-900/60 text-indigo-950 dark:text-indigo-200"
-                                      }`}
-                                    >
-                                      {isLab ? "Lab" : "Lecture"}
-                                    </span>
+                                    <div className="flex gap-1 items-center">
+                                      {isProxy && (
+                                        <span className="px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase bg-amber-200 dark:bg-amber-800 text-amber-950 dark:text-amber-200 border border-amber-400/50">
+                                          Proxy
+                                        </span>
+                                      )}
+                                      <span
+                                        className={`px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase ${
+                                          isLab
+                                            ? "bg-emerald-200 dark:bg-emerald-800 text-emerald-950 dark:text-emerald-200"
+                                            : "bg-indigo-200 dark:bg-indigo-900/60 text-indigo-950 dark:text-indigo-200"
+                                        }`}
+                                      >
+                                        {isLab ? "Lab" : "Lecture"}
+                                      </span>
+                                    </div>
                                   </div>
 
                                   {/* Full Subject Title */}
@@ -454,14 +620,23 @@ export default function PublicTimetablePortal() {
 
                                   {/* Teacher & Venue Tags */}
                                   <div className="pt-1 border-t border-slate-200/80 dark:border-slate-700/60 text-[10px] space-y-0.5">
-                                    <div className="flex items-center gap-1 font-bold text-emerald-800 dark:text-emerald-400">
-                                      <span>👤</span>
-                                      <span className="truncate">{item.teacher}</span>
+                                    <div className="flex items-center gap-1 font-bold">
+                                      {isProxy ? (
+                                        <div className="text-amber-800 dark:text-amber-300 truncate">
+                                          <span className="line-through opacity-60 mr-1 text-[9px]">{item.original_teacher || item.originalTeacher}</span>
+                                          <span>↳ {item.teacher} (Proxy)</span>
+                                        </div>
+                                      ) : (
+                                        <div className="text-emerald-800 dark:text-emerald-400 truncate flex items-center gap-1">
+                                          <span>👤</span>
+                                          <span className="truncate">{item.teacher}</span>
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 font-medium">
                                       <span className="flex items-center gap-1">
                                         <span>📍</span>
-                                        <span>{item.room || "Assigned Hall"}</span>
+                                        <span>{item.room || "Assigned Room"}</span>
                                       </span>
                                       {selectedSection === "ALL" && item.section && (
                                         <span className="font-mono text-[9px] px-1 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
