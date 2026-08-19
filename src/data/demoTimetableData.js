@@ -2671,11 +2671,27 @@ export function buildApiPayload(data) {
     };
   });
 
+  const formattedSections = (data.sections || []).map(s => {
+    if (typeof s === "string") {
+      return { name: s, room: "", lab_room: "", lab_rooms: [], preferred_faculty: [] };
+    }
+    const labs = Array.isArray(s?.lab_rooms) && s.lab_rooms.length > 0
+      ? s.lab_rooms
+      : (s?.lab_room ? [s.lab_room] : []);
+    return {
+      name: s?.name || "Section",
+      room: s?.room || "",
+      lab_room: labs[0] || s?.lab_room || "",
+      lab_rooms: labs,
+      preferred_faculty: Array.isArray(s?.preferred_faculty) ? s.preferred_faculty : []
+    };
+  });
+
   return {
     teachers: formattedTeachers,
     subjects: data.subjects,
     rooms: data.rooms,
-    sections: data.sections,
+    sections: formattedSections,
     time_slots: data.timeSlots,
   };
 }

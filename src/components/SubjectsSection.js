@@ -54,6 +54,29 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [isSectionOpen, setIsSectionOpen] = useState(false);
 
+  const { preferredTeachers, otherTeachers } = useMemo(() => {
+    const prefSet = new Set();
+    selectedSections.forEach(secName => {
+      const secObj = sections.find(s => (s.name || s) === secName);
+      if (secObj && Array.isArray(secObj.preferred_faculty)) {
+        secObj.preferred_faculty.forEach(f => prefSet.add(f));
+      }
+    });
+
+    const pref = [];
+    const other = [];
+    teachers.forEach(t => {
+      const tName = typeof t === 'string' ? t : t.name;
+      if (prefSet.has(tName)) {
+        pref.push(typeof t === 'string' ? { name: t } : t);
+      } else {
+        other.push(typeof t === 'string' ? { name: t } : t);
+      }
+    });
+
+    return { preferredTeachers: pref, otherTeachers: other };
+  }, [sections, selectedSections, teachers]);
+
   const addSubject = (e) => {
     e && e.preventDefault();
     const trimmedCode = code.trim();
@@ -265,11 +288,22 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
               onChange={(e) => setTeacher(e.target.value)}
               required
             >
-              {teachers.map((t) => (
-                <option key={t.name} value={t.name} className="bg-slate-900 text-white">
-                  {t.name}
-                </option>
-              ))}
+              {preferredTeachers.length > 0 && (
+                <optgroup label="⭐ Section Preferred Faculty">
+                  {preferredTeachers.map((t) => (
+                    <option key={`pref-${t.name}`} value={t.name} className="bg-slate-900 text-emerald-300 font-bold">
+                      ⭐ {t.name} (Preferred)
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              <optgroup label={preferredTeachers.length > 0 ? "Other Faculty Members" : "All Faculty Directory"}>
+                {otherTeachers.map((t) => (
+                  <option key={`all-${t.name}`} value={t.name} className="bg-slate-900 text-white">
+                    {t.name}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </div>
 

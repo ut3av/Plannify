@@ -49,6 +49,8 @@ class SectionInput(BaseModel):
     name: str
     room: Optional[str] = None
     lab_room: Optional[str] = None
+    lab_rooms: List[str] = []
+    preferred_faculty: List[str] = []
 
 
 class GenerateRequest(BaseModel):
@@ -102,15 +104,24 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
         for s in request.subjects
         if clean_name(s.name) and clean_name(s.teacher)
     ]
-    sections = [
-        SectionInput(
-            name=clean_name(sec.name),
-            room=clean_name(sec.room) if sec.room else None,
-            lab_room=clean_name(sec.lab_room) if sec.lab_room else None,
+    sections = []
+    for sec in request.sections:
+        if not clean_name(sec.name):
+            continue
+        cleaned_lab_rooms = [clean_name(lr) for lr in sec.lab_rooms if clean_name(lr)]
+        if not cleaned_lab_rooms and sec.lab_room and clean_name(sec.lab_room):
+            cleaned_lab_rooms = [clean_name(sec.lab_room)]
+        cleaned_preferred_faculty = [clean_name(pf) for pf in sec.preferred_faculty if clean_name(pf)]
+        
+        sections.append(
+            SectionInput(
+                name=clean_name(sec.name),
+                room=clean_name(sec.room) if sec.room else None,
+                lab_room=cleaned_lab_rooms[0] if cleaned_lab_rooms else (clean_name(sec.lab_room) if sec.lab_room else None),
+                lab_rooms=cleaned_lab_rooms,
+                preferred_faculty=cleaned_preferred_faculty,
+            )
         )
-        for sec in request.sections
-        if clean_name(sec.name)
-    ]
 
     facts = [
         f"Configured: {len(teachers)} teachers, {len(subjects)} subjects, {len(rooms)} rooms, {len(slots)} time slots, {len(sections)} sections.",
@@ -158,15 +169,18 @@ def solve_timetable(request: GenerateRequest) -> dict:
 
     # 1. Each required occurrence of a subject must be placed exactly once.
     for subject_idx, subject in enumerate(request.subjects):
-        target_room_idx = -1
+        allowed_room_indices = []
         if subject.room and subject.room in rooms:
-            target_room_idx = rooms.index(subject.room)
+            allowed_room_indices = [rooms.index(subject.room)]
         else:
             section_obj = next((s for s in request.sections if s.name == subject.section), None)
             if section_obj:
-                target_room = section_obj.lab_room if subject.is_lab else section_obj.room
-                if target_room and target_room in rooms:
-                    target_room_idx = rooms.index(target_room)
+                if subject.is_lab:
+                    target_labs = section_obj.lab_rooms if section_obj.lab_rooms else ([section_obj.lab_room] if section_obj.lab_room else [])
+                    allowed_room_indices = [rooms.index(lr) for lr in target_labs if lr in rooms]
+                else:
+                    if section_obj.room and section_obj.room in rooms:
+                        allowed_room_indices = [rooms.index(section_obj.room)]
 
         for occurrence in range(subject.required_slots):
             model.AddExactlyOne(
@@ -175,12 +189,12 @@ def solve_timetable(request: GenerateRequest) -> dict:
                 for slot_idx in range(len(slots))
                 for room_idx in range(room_count)
             )
-            # Enforce fixed room if configured
-            if target_room_idx != -1:
+            # Enforce allowed room set if configured
+            if allowed_room_indices:
                 for day_idx in range(len(DAYS)):
                     for slot_idx in range(len(slots)):
                         for room_idx in range(room_count):
-                            if room_idx != target_room_idx:
+                            if room_idx not in allowed_room_indices:
                                 model.Add(x[(subject_idx, occurrence, day_idx, slot_idx, room_idx)] == 0)
 
         # Lab subjects: Continuous 2-period practical blocks

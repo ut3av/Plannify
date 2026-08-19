@@ -363,11 +363,14 @@ export function AcademicProvider({ children }) {
           const subSections = sub.sections && sub.sections.length > 0 ? sub.sections : (nextPayload.sections || []).map(s => s.name || s);
           subSections.forEach(secName => {
             const secObj = (nextPayload.sections || []).find(s => (s.name || s) === secName);
-            const room = sub.is_lab ? (secObj?.lab_room || "Lab Room No. 006") : (secObj?.room || "308/MCA");
+            const secLabs = secObj?.lab_rooms && secObj.lab_rooms.length > 0
+              ? secObj.lab_rooms
+              : (secObj?.lab_room ? [secObj.lab_room] : ["Lab Room No. 006"]);
             const req = Math.min(sub.required_slots || 2, 4);
             for (let r = 0; r < req; r++) {
               const day = days[(sIdx + r) % days.length];
               const slot = slots[(slotOffset + r) % slots.length];
+              const room = sub.is_lab ? secLabs[r % secLabs.length] : (secObj?.room || "308/MCA");
               clientAssignments.push({
                 day,
                 slot,
