@@ -9,10 +9,12 @@ import BrandLogo from "./components/common/BrandLogo";
 import GooeyLoader from "./components/common/GooeyLoader";
 import AppShell from "./components/shell/AppShell";
 import NotFoundPage from "./components/common/NotFoundPage";
+import NetworkStatusWatcher from "./components/common/NetworkStatusWatcher";
 
 // Dynamic Section / View Imports (React.lazy)
 const LandingPage = lazy(() => import("./components/landing/LandingPage"));
 const LoginPage = lazy(() => import("./components/LoginPage"));
+const NoInternetPage = lazy(() => import("./components/common/NoInternetPage"));
 const TeacherDashboard = lazy(() => import("./components/TeacherDashboard"));
 const InstitutionalDashboard = lazy(() => import("./components/dashboard/InstitutionalDashboard"));
 const TimetableGrid = lazy(() => import("./components/TimetableGrid"));
@@ -641,6 +643,8 @@ function AdminLayout() {
               />
             }
           />
+          {/* Offline Diagnostics & No Internet Route */}
+          <Route path="/offline" element={<NoInternetPage />} />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/reports" element={<ReportsCenter />} />
           
@@ -698,10 +702,12 @@ function AppContent() {
   if (!user) {
     return (
       <Suspense fallback={<PageLoadingFallback />}>
+        <NetworkStatusWatcher />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/home" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/offline" element={<NoInternetPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
@@ -712,6 +718,7 @@ function AppContent() {
   if (userRole === "Faculty" || userRole === "Teacher" || userRole === "teacher" || user.role === "teacher") {
     return (
       <Suspense fallback={<PageLoadingFallback />}>
+        <NetworkStatusWatcher />
         <Routes>
           <Route
             path="/portal"
@@ -749,6 +756,7 @@ function AppContent() {
           <Route path="/attendance" element={<Navigate to="/portal" replace />} />
           <Route path="/leave" element={<Navigate to="/portal" replace />} />
           <Route path="/reports" element={<Navigate to="/portal" replace />} />
+          <Route path="/offline" element={<NoInternetPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
@@ -756,7 +764,12 @@ function AppContent() {
   }
 
   // Admin / Dean portal
-  return <AdminLayout />;
+  return (
+    <>
+      <NetworkStatusWatcher />
+      <AdminLayout />
+    </>
+  );
 }
 
 export default function App() {
