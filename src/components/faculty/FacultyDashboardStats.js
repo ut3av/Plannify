@@ -9,6 +9,15 @@ export default function FacultyDashboardStats() {
 
   useEffect(() => {
     fetchStats();
+    const handleSync = () => fetchStats();
+    window.addEventListener("planify_attendance_updated", handleSync);
+    window.addEventListener("planify_leave_updated", handleSync);
+    window.addEventListener("planify_substitution_updated", handleSync);
+    return () => {
+      window.removeEventListener("planify_attendance_updated", handleSync);
+      window.removeEventListener("planify_leave_updated", handleSync);
+      window.removeEventListener("planify_substitution_updated", handleSync);
+    };
   }, []);
 
   const fetchStats = async () => {

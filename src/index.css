@@ -609,8 +609,14 @@ input:-webkit-autofill:active {
 .light .text-indigo-300, .warm-white .text-indigo-300     { color: #6366F1 !important; }
 .light .text-amber-400, .warm-white .text-amber-400       { color: #D97706 !important; }
 .light .text-amber-300, .warm-white .text-amber-300       { color: #B45309 !important; }
-.light .text-emerald-400, .warm-white .text-emerald-400   { color: #16A34A !important; }
-.light .text-emerald-300, .warm-white .text-emerald-300   { color: #15803D !important; }
+.light .text-emerald-400, .warm-white .text-emerald-400   { color: #15803D !important; }
+.light .text-emerald-300, .warm-white .text-emerald-300   { color: #166534 !important; }
+.light .text-emerald-200, .warm-white .text-emerald-200   { color: #065F46 !important; }
+.light .text-emerald-100, .warm-white .text-emerald-100   { color: #064E3B !important; }
+.light .text-green-400, .warm-white .text-green-400       { color: #15803D !important; }
+.light .text-green-300, .warm-white .text-green-300       { color: #166534 !important; }
+.light .text-green-200, .warm-white .text-green-200       { color: #065F46 !important; }
+.light .text-green-100, .warm-white .text-green-100       { color: #064E3B !important; }
 .light .text-rose-400, .warm-white .text-rose-400         { color: #E11D48 !important; }
 .light .text-rose-300, .warm-white .text-rose-300         { color: #BE123C !important; }
 .light .text-teal-400, .warm-white .text-teal-400         { color: #0D9488 !important; }

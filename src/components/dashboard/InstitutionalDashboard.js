@@ -20,6 +20,20 @@ export default function InstitutionalDashboard({
     fetchDashboardData();
   }, [teachersCount, sectionsCount, subjectsCount, roomsCount]);
 
+  useEffect(() => {
+    const handleSync = () => {
+      fetchDashboardData();
+    };
+    window.addEventListener("planify_attendance_updated", handleSync);
+    window.addEventListener("planify_leave_updated", handleSync);
+    window.addEventListener("planify_substitution_updated", handleSync);
+    return () => {
+      window.removeEventListener("planify_attendance_updated", handleSync);
+      window.removeEventListener("planify_leave_updated", handleSync);
+      window.removeEventListener("planify_substitution_updated", handleSync);
+    };
+  }, []);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
@@ -36,12 +50,12 @@ export default function InstitutionalDashboard({
     }
   };
 
-  const activeFaculty = stats?.total_faculty !== undefined ? stats.total_faculty : (teachersCount || 0);
-  const attendanceRate = (activeFaculty > 0 && stats?.attendance_rate !== undefined) ? stats.attendance_rate : 94;
-  const pendingLeaves = stats?.pending_leaves || 0;
-  const onLeaveToday = stats?.on_leave_today || 0;
-  const substitutionsToday = stats?.substitutions_today || 0;
-  const timetableScore = hasResult ? 100 : (sectionsCount > 0 ? 92 : 0);
+  const activeFaculty = teachersCount === 0 ? 0 : (stats?.total_faculty !== undefined ? stats.total_faculty : (teachersCount || 0));
+  const attendanceRate = activeFaculty > 0 ? (stats?.attendance_rate !== undefined ? stats.attendance_rate : 0) : 0;
+  const pendingLeaves = activeFaculty > 0 ? (stats?.pending_leaves || 0) : 0;
+  const onLeaveToday = activeFaculty > 0 ? (stats?.on_leave_today || 0) : 0;
+  const substitutionsToday = activeFaculty > 0 ? (stats?.substitutions_today || 0) : 0;
+  const timetableScore = hasResult ? 100 : (sectionsCount > 0 && activeFaculty > 0 ? 92 : 0);
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-900 dark:text-slate-100">
@@ -190,13 +204,13 @@ export default function InstitutionalDashboard({
             <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Attendance</p>
             <span className="text-[10px] text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
           </div>
-          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+          <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">
             <AnimatedCounter target={attendanceRate} suffix="%" duration={1200} />
           </div>
           <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
-            <div className="h-full bar-fill-anim bg-emerald-500" style={{ width: `${attendanceRate}%` }} />
+            <div className="h-full bar-fill-anim bg-emerald-600 dark:bg-emerald-500" style={{ width: `${attendanceRate}%` }} />
           </div>
-          <p className="text-[10px] text-emerald-600/80 dark:text-emerald-500/80 mt-1">Today's Rate</p>
+          <p className="text-[10px] text-emerald-700/90 dark:text-emerald-400/90 font-bold mt-1">Today's Rate</p>
         </div>
 
         {/* Card 6: On Leave */}

@@ -475,12 +475,12 @@ function AdminLayout() {
       {/* Global Alerts */}
       <ErrorAlert error={error} />
       {rescheduleNote && (
-        <div className="animate-slide-down flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm px-5 py-4 text-sm text-emerald-200 mb-4">
-          <svg className="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div className="animate-slide-down flex items-start gap-3 rounded-xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 backdrop-blur-sm px-5 py-4 text-sm text-emerald-900 dark:text-emerald-200 font-semibold mb-4 shadow-sm">
+          <svg className="w-4 h-4 text-emerald-700 dark:text-emerald-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
-          <span>{rescheduleNote}</span>
+          <span className="text-emerald-900 dark:text-emerald-200">{rescheduleNote}</span>
         </div>
       )}
 
