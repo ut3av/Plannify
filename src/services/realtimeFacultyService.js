@@ -157,6 +157,62 @@ export function clearAllFacultyCaches() {
   }
 }
 
+export function seedDemoFacultyData() {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const demoTeachers = [
+      { id: "EMP-LNCT-001", teacher_name: "Prof Ripusoodan Sharma", department: "Computer Applications", designation: "Professor", status: "present", in_time: "08:52 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-002", teacher_name: "Prof Anshu Gangwar", department: "Computer Applications", designation: "Professor", status: "present", in_time: "08:55 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-003", teacher_name: "Dr Satish Manwani", department: "Computer Applications", designation: "Associate Professor", status: "present", in_time: "08:58 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-004", teacher_name: "Prof Pragya Shastri", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "09:02 AM", punch_status: "Late (+2m)" },
+      { id: "EMP-LNCT-005", teacher_name: "Prof Mohit Kubade", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "08:48 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-006", teacher_name: "Dr Sonal Sharma", department: "Computer Applications", designation: "Professor", status: "on_leave", in_time: null, punch_status: "Approved CL" },
+      { id: "EMP-LNCT-007", teacher_name: "Mr. Aniket Satpute", department: "AI & DA", designation: "Assistant Professor", status: "present", in_time: "08:50 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-008", teacher_name: "Prof Jagruti Durugkar", department: "AI & DA", designation: "Assistant Professor", status: "present", in_time: "08:54 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-009", teacher_name: "Mr Kaiwalya Zankar", department: "Computer Science", designation: "Lecturer", status: "present", in_time: "08:56 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-010", teacher_name: "Ms. Swarupa Waghmare", department: "Information Tech", designation: "Lecturer", status: "present", in_time: "08:51 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-011", teacher_name: "Prof Dipanshu Jha", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "08:57 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-012", teacher_name: "Dr Alka Gulati", department: "Computer Science", designation: "Associate Professor", status: "present", in_time: "08:49 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-013", teacher_name: "Prof Neha Swanakar", department: "Information Tech", designation: "Assistant Professor", status: "present", in_time: "09:00 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-014", teacher_name: "Dr Swagatika Lenka", department: "Computer Applications", designation: "Associate Professor", status: "present", in_time: "08:53 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-015", teacher_name: "Mr Jitendra Maind", department: "AI & DA", designation: "Assistant Professor", status: "present", in_time: "08:59 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-016", teacher_name: "Prof Pramod Kumar Saket", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "08:45 AM", punch_status: "On Time" },
+      { id: "EMP-LNCT-017", teacher_name: "Prof Atul Verma", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "08:50 AM", punch_status: "On Time" },
+    ];
+
+    const attendanceRecords = demoTeachers.map(t => ({
+      id: `att-${t.id}-${today}`,
+      faculty_id: t.id,
+      teacher_name: t.teacher_name,
+      department: t.department,
+      date: today,
+      status: t.status,
+      in_time: t.in_time,
+      punch_status: t.punch_status
+    }));
+
+    saveStoredAttendance(attendanceRecords);
+
+    const demoLeaves = [{
+      id: "leave-demo-001",
+      faculty_id: "EMP-LNCT-006",
+      teacher_name: "Dr Sonal Sharma",
+      leave_type: "CL",
+      from_date: today,
+      to_date: today,
+      days_count: 1,
+      reason: "Academic Conference & Research Symposium presentation",
+      status: "approved",
+      substitute_id: "EMP-LNCT-001",
+      substitute_name: "Prof Ripusoodan Sharma",
+      applied_at: new Date().toISOString()
+    }];
+    saveStoredLeaves(demoLeaves);
+  } catch (e) {
+    console.warn("Could not seed demo faculty caches:", e);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // Real-Time Subscriptions Manager
 // ─────────────────────────────────────────────────────────────

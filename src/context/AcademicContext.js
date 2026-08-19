@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { syncRelationalData } from '../services/supabaseService';
-import { clearAllFacultyCaches } from '../services/realtimeFacultyService';
+import { clearAllFacultyCaches, seedDemoFacultyData } from '../services/realtimeFacultyService';
 import { API_BASE_URL } from '../apiConfig';
 import { DEMO_TIMETABLE_DATA, DEMO_RESULT, buildApiPayload, formatResult } from '../data/demoTimetableData';
 
@@ -411,6 +411,7 @@ export function AcademicProvider({ children }) {
     };
 
     setRescheduleNote("Academic demonstration dataset loaded (30+ courses, faculty profiles, and venues configured).");
+    seedDemoFacultyData();
 
     try {
       const demoPayload = buildApiPayload(demoData);
