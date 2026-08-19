@@ -137,18 +137,13 @@ export default function LandingPage({ onExploreDemo }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
           {/* Brand Logo */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <BrandLogo size="md" isWarm={false} />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-display font-black text-xl tracking-tight text-slate-900 dark:text-white">
-                  Plannify<span className="text-indigo-600 dark:text-indigo-400">.exe</span>
-                </span>
-                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
-                  Academic OS
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 -mt-0.5 hidden sm:block">Intelligent University Scheduling Platform</p>
+          <div className="flex items-center gap-3.5 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <BrandLogo size="lg" isWarm={false} />
+            <div className="hidden sm:flex flex-col justify-center pl-3 border-l border-slate-200 dark:border-slate-800">
+              <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 w-max">
+                Academic OS
+              </span>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Intelligent University Scheduling Platform</p>
             </div>
           </div>
 

@@ -82,36 +82,39 @@ export default function BrandLogo({
   showIcon = true,
   onlyIcon = false,
   className = "",
-  textColor = ""
+  textColor = "",
+  exeColor = "",
+  showExtension = true,
+  variant = "text", // "text" | "badge"
 }) {
   const sizeConfig = {
     xs: {
-      iconSize: 18,
+      iconSize: 16,
       textSize: "text-xs font-black",
       badgeSize: "text-[8px] px-1 py-0.2",
       gap: "gap-1.5"
     },
     sm: {
-      iconSize: 22,
+      iconSize: 20,
       textSize: "text-sm font-black",
       badgeSize: "text-[9px] px-1.5 py-0.5",
       gap: "gap-2"
     },
     md: {
-      iconSize: 28,
+      iconSize: 26,
       textSize: "text-lg font-black",
       badgeSize: "text-[10px] px-2 py-0.5",
       gap: "gap-2.5"
     },
     lg: {
-      iconSize: 36,
-      textSize: "text-2xl font-black",
+      iconSize: 34,
+      textSize: "text-2xl sm:text-3xl font-black",
       badgeSize: "text-xs px-2.5 py-1",
       gap: "gap-3"
     },
     xl: {
-      iconSize: 46,
-      textSize: "text-3xl font-black",
+      iconSize: 44,
+      textSize: "text-3xl sm:text-4xl font-black",
       badgeSize: "text-sm px-3 py-1",
       gap: "gap-3.5"
     }
@@ -123,7 +126,21 @@ export default function BrandLogo({
     return <PlannifyIconMark size={config.iconSize} isWarm={isWarm} className={className} />;
   }
 
-  const computedTextColor = textColor || (isWarm ? "text-[#1F140E]" : "text-white");
+  // Base brand text color (Plannify)
+  const computedTextColor = textColor || (
+    isWarm
+      ? "text-[#1F140E] dark:text-[#FAF8F3]"
+      : "text-slate-900 dark:text-white"
+  );
+
+  // Accent extension color (.exe) - Purple accent in light and dark mode
+  const computedExeColor = exeColor || (
+    textColor === "text-white"
+      ? "text-purple-300 drop-shadow-[0_0_8px_rgba(192,132,252,0.4)]"
+      : isWarm
+      ? "text-amber-600 dark:text-amber-400"
+      : "text-purple-600 dark:text-purple-400"
+  );
 
   return (
     <span className={`inline-flex items-center ${config.gap} select-none shrink-0 align-middle ${className}`}>
@@ -131,26 +148,37 @@ export default function BrandLogo({
         <PlannifyIconMark size={config.iconSize} isWarm={isWarm} />
       )}
 
-      <span className="inline-flex items-center gap-1.5">
-        {/* Brand Name Typography */}
+      <span className="inline-flex items-baseline leading-none">
+        {/* Brand Name Typography (Playfair Display Serif) */}
         <span
-          className={`${config.textSize} ${computedTextColor} tracking-tight font-display transition-colors`}
-          style={{ letterSpacing: "-0.03em" }}
+          className={`${config.textSize} ${computedTextColor} font-brand tracking-tight transition-colors`}
+          style={{ letterSpacing: "-0.02em" }}
         >
           Plannify
         </span>
 
-        {/* Brand Extension Pill Badge (.exe) */}
-        <span
-          className={`inline-flex items-center justify-center font-mono font-black tracking-tight text-white rounded-lg shadow-sm transition-all duration-300 ${
-            isWarm
-              ? "bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 shadow-amber-600/30"
-              : "bg-gradient-to-r from-[#6366F1] via-[#8B5CF6] to-[#EC4899] shadow-indigo-500/30"
-          } ${config.badgeSize}`}
-          style={{ lineHeight: 1 }}
-        >
-          .exe
-        </span>
+        {/* Brand Extension (.exe) */}
+        {showExtension && (
+          variant === "badge" ? (
+            <span
+              className={`ml-1.5 inline-flex items-center justify-center font-mono font-black tracking-tight text-white rounded-lg shadow-sm transition-all duration-300 ${
+                isWarm
+                  ? "bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 shadow-amber-600/30"
+                  : "bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 shadow-purple-500/30"
+              } ${config.badgeSize}`}
+              style={{ lineHeight: 1 }}
+            >
+              .exe
+            </span>
+          ) : (
+            <span
+              className={`${config.textSize} ${computedExeColor} font-brand tracking-tight transition-colors`}
+              style={{ letterSpacing: "-0.02em" }}
+            >
+              .exe
+            </span>
+          )
+        )}
       </span>
     </span>
   );

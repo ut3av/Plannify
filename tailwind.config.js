@@ -5,6 +5,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
+        brand: ["'Playfair Display'", "Georgia", "serif"],
         display: ["'Plus Jakarta Sans'", "Inter", "system-ui", "-apple-system", "sans-serif"],
         sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
         mono: ["'JetBrains Mono'", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],

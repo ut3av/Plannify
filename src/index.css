@@ -95,6 +95,11 @@
     letter-spacing: -0.02em;
   }
 
+  .font-brand, [data-brand] {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.015em;
+  }
+
   .font-mono, [data-mono] {
     font-family: 'JetBrains Mono', monospace;
     font-feature-settings: "tnum" 1;
