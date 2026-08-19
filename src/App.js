@@ -486,6 +486,10 @@ function AdminLayout() {
       <Suspense fallback={<ModuleLoadingFallback />}>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/home" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
           <Route
             path="/dashboard"
             element={
@@ -495,13 +499,14 @@ function AdminLayout() {
                 subjectsCount={subjects.length}
                 roomsCount={rooms.length}
                 hasResult={!!result}
-                onNavigate={(page) => navigate(page === "timetable" ? "/timetable" : `/${page}`)}
+                onNavigate={(page) => navigate(page === "timetable" ? "/timetable" : (page.startsWith("/") ? page : `/${page}`))}
               />
             }
           />
           <Route path="/timetable" element={<TimetableWorkspaceRoute />} />
           <Route path="/faculty" element={<FacultyDirectoryRoute />} />
           <Route path="/faculty/:facultyId" element={<FacultyProfileRoute />} />
+          <Route path="/faculty-directory" element={<Navigate to="/faculty" replace />} />
           <Route
             path="/attendance"
             element={
@@ -514,6 +519,8 @@ function AdminLayout() {
           <Route path="/leave" element={<LeaveManagement isAdmin={true} />} />
           <Route path="/substitutions" element={<SubstitutionPanel />} />
           <Route path="/analytics" element={<FacultyAnalyticsModule />} />
+          
+          {/* Academic Setup Routes & Shorthands */}
           <Route
             path="/academic/subjects"
             element={
@@ -529,6 +536,8 @@ function AdminLayout() {
               />
             }
           />
+          <Route path="/subjects" element={<Navigate to="/academic/subjects" replace />} />
+          
           <Route
             path="/academic/sections"
             element={
@@ -541,10 +550,12 @@ function AdminLayout() {
                   setSections(updated);
                   saveToCloud(true, { sections: updated });
                 }}
-                onNavigate={(p) => navigate(p === "timetable" ? "/timetable" : `/${p}`)}
+                onNavigate={(p) => navigate(p === "timetable" ? "/timetable" : (p.startsWith("/") ? p : `/${p}`))}
               />
             }
           />
+          <Route path="/sections" element={<Navigate to="/academic/sections" replace />} />
+          
           <Route
             path="/academic/rooms"
             element={
@@ -559,6 +570,8 @@ function AdminLayout() {
               />
             }
           />
+          <Route path="/rooms" element={<Navigate to="/academic/rooms" replace />} />
+          
           <Route
             path="/academic/slots"
             element={
@@ -571,6 +584,9 @@ function AdminLayout() {
               />
             }
           />
+          <Route path="/slots" element={<Navigate to="/academic/slots" replace />} />
+          
+          {/* Operations Routes & Shorthands */}
           <Route
             path="/operations/reschedule"
             element={
@@ -588,6 +604,8 @@ function AdminLayout() {
               />
             }
           />
+          <Route path="/reschedule" element={<Navigate to="/operations/reschedule" replace />} />
+          
           <Route
             path="/operations/history"
             element={
@@ -600,8 +618,29 @@ function AdminLayout() {
               />
             }
           />
+          <Route path="/history" element={<Navigate to="/operations/history" replace />} />
+          
           <Route path="/operations/integrations" element={<IntegrationsSection />} />
+          <Route path="/integrations" element={<Navigate to="/operations/integrations" replace />} />
+          
           <Route path="/operations/settings" element={<SystemSettings userRole={userRole} />} />
+          <Route path="/settings" element={<Navigate to="/operations/settings" replace />} />
+          
+          {/* Faculty / Portal View for Admin */}
+          <Route
+            path="/portal"
+            element={
+              <TeacherDashboard
+                user={user}
+                result={result}
+                teachers={teachers}
+                onLogout={handleLogout}
+                theme={theme}
+                onToggleTheme={toggleTheme}
+                onSwitchToAdmin={() => setUserRole("Admin")}
+              />
+            }
+          />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/reports" element={<ReportsCenter />} />
           
@@ -647,7 +686,13 @@ function AdminLayout() {
 // ── Root Application Router Component ──
 
 function AppContent() {
+  const navigate = useNavigate();
   const { user, userRole, setUserRole, handleLogout, theme, toggleTheme, teachers, result } = useAcademic();
+
+  const handleSwitchToAdmin = () => {
+    setUserRole("Admin");
+    navigate("/dashboard");
+  };
 
   // If user is not logged in, render the landing page as root and login route for auth
   if (!user) {
@@ -678,11 +723,33 @@ function AppContent() {
                 onLogout={handleLogout}
                 theme={theme}
                 onToggleTheme={toggleTheme}
-                onSwitchToAdmin={() => setUserRole("Admin")}
+                onSwitchToAdmin={handleSwitchToAdmin}
               />
             }
           />
-          <Route path="*" element={<Navigate to="/portal" replace />} />
+          <Route
+            path="/portal/:tab"
+            element={
+              <TeacherDashboard
+                user={user}
+                result={result}
+                teachers={teachers}
+                onLogout={handleLogout}
+                theme={theme}
+                onToggleTheme={toggleTheme}
+                onSwitchToAdmin={handleSwitchToAdmin}
+              />
+            }
+          />
+          <Route path="/" element={<Navigate to="/portal" replace />} />
+          <Route path="/home" element={<Navigate to="/portal" replace />} />
+          <Route path="/login" element={<Navigate to="/portal" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/portal" replace />} />
+          <Route path="/timetable" element={<Navigate to="/portal" replace />} />
+          <Route path="/attendance" element={<Navigate to="/portal" replace />} />
+          <Route path="/leave" element={<Navigate to="/portal" replace />} />
+          <Route path="/reports" element={<Navigate to="/portal" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     );

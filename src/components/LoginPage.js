@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { supabase } from "../supabaseClient";
 import { API_BASE_URL } from "../apiConfig";
 import BrandLogo from "./common/BrandLogo";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [portalRole, setPortalRole] = useState("teacher"); // "admin" | "teacher"
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -270,6 +272,14 @@ export default function LoginPage() {
               console.warn("Cloud state sync for signing-in faculty:", cloudErr);
             }
           }
+        }
+
+        // Navigate cleanly to appropriate portal
+        const targetRole = signInData?.user?.user_metadata?.role || portalRole;
+        if (targetRole === "teacher" || targetRole === "Faculty" || targetRole === "Teacher") {
+          navigate("/portal", { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
         }
       }
     } catch (e) {
