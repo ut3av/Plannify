@@ -153,6 +153,10 @@ export default function IntegrationsSection() {
       const csvText = `Teacher Name,${name}\nEmail,${email}\nPhone,${phone}\nDepartment,School of Computer Applications\nInstitution,LNCT University\n\nDay,Slot,Subject,Section,Room,Status\n` +
         myClasses.map(c => `"${c.day}","${c.slot}","${c.subject}","${c.section}","${c.room}","${c.isProxy || c.is_proxy ? 'Proxy Assigned' : 'Regular'}"`).join("\n");
 
+      const whatsappFormattedText = `*📚 LNCT UNIVERSITY - ACADEMIC TIMETABLE*\n*Faculty:* ${name}\n*Session:* 2026-27\n\n*Weekly Assigned Lectures (${myClasses.length}):*\n${myClasses.map(c => `🗓️ *${c.day}* (${c.slot})\n📖 ${c.subject}\n📍 Room: ${c.room} | Sec: ${c.section}${c.isProxy || c.is_proxy ? ' ⚠️ *(Proxy Assigned)*' : ''}`).join('\n\n') || 'No lectures scheduled this week.'}\n\n🔗 Live Portal: https://plannify-b6bd.onrender.com/portal`;
+
+      const cleanPhone = (phone || "+919876543210").replace(/[^0-9+]/g, '');
+
       return {
         name,
         teacher_name: name,
@@ -160,8 +164,12 @@ export default function IntegrationsSection() {
         email,
         to_email: email,
         recipient_email: email,
-        phone,
-        to_phone: phone,
+        phone: cleanPhone,
+        to_phone: cleanPhone,
+        recipient_phone: cleanPhone,
+        whatsapp_phone: cleanPhone,
+        whatsapp_message: whatsappFormattedText,
+        whatsapp_text: whatsappFormattedText,
         filename: `Timetable_${name.replace(/ /g, "_")}.csv`,
         csv_content: csvText,
         file_content: csvText,
