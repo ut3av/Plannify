@@ -219,19 +219,60 @@ export default function LoginPage() {
         });
         if (signInError) throw signInError;
 
-        // Only set default role if user didn't already have one in metadata
-        if (signInData?.user && !signInData.user.user_metadata?.role) {
-          await supabase.auth.updateUser({
-            data: { role: portalRole, name: name || email.split('@')[0] }
-          });
-        }
-
-        // Auto-sync signed-in teacher into cloud timetable state if role is teacher
+        // Auto-enrich user metadata if missing name or role
         if (signInData?.user) {
-          const effectiveRole = signInData.user.user_metadata?.role || portalRole;
-          if (effectiveRole === "teacher") {
+          const userMeta = signInData.user.user_metadata || {};
+          let resolvedName = userMeta.name || userMeta.teacher_name || userMeta.full_name || name;
+          let resolvedDept = userMeta.department || userMeta.department_name || department;
+          let resolvedDesig = userMeta.designation || designation;
+          let resolvedEmpId = userMeta.employee_id || employeeId;
+          let resolvedPhone = userMeta.phone || phone;
+
+          // If metadata is sparse, cross-reference registered faculty_profiles in database
+          if (!resolvedName || !userMeta.department || !userMeta.employee_id) {
             try {
-              const teacherName = signInData.user.user_metadata?.name || name || email.split('@')[0];
+              const { data: dbProfile } = await supabase
+                .from('faculty_profiles')
+                .select('teacher_name, department, designation, employee_id, phone')
+                .eq('email', email)
+                .maybeSingle();
+
+              if (dbProfile) {
+                if (!resolvedName && dbProfile.teacher_name) resolvedName = dbProfile.teacher_name;
+                if (!resolvedDept && dbProfile.department) resolvedDept = dbProfile.department;
+                if (!resolvedDesig && dbProfile.designation) resolvedDesig = dbProfile.designation;
+                if (!resolvedEmpId && dbProfile.employee_id) resolvedEmpId = dbProfile.employee_id;
+                if (!resolvedPhone && dbProfile.phone) resolvedPhone = dbProfile.phone;
+              }
+            } catch (pErr) {
+              // Ignore fallback
+            }
+          }
+
+          if (!resolvedName) {
+            resolvedName = email.split('@')[0];
+          }
+
+          const effectiveRole = userMeta.role || portalRole;
+
+          // Update Supabase user metadata if any key field was missing
+          if (!userMeta.role || !userMeta.name || !userMeta.employee_id) {
+            await supabase.auth.updateUser({
+              data: {
+                role: effectiveRole,
+                name: resolvedName,
+                department: resolvedDept || "Computer Applications",
+                designation: resolvedDesig || "Assistant Professor",
+                employee_id: resolvedEmpId || `EMP-LNCT-${Math.abs(resolvedName.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
+                phone: resolvedPhone || "+91-9876543210",
+              }
+            }).catch(() => null);
+          }
+
+          // Auto-sync signed-in teacher into cloud timetable state if role is teacher
+          if (effectiveRole === "teacher" || effectiveRole === "Faculty" || effectiveRole === "Teacher") {
+            try {
+              const teacherName = resolvedName;
               const { data: cloudData } = await supabase
                 .from('timetable_state')
                 .select('*')
@@ -253,11 +294,11 @@ export default function LoginPage() {
               if (!tList.some(t => (t.name || t)?.trim().toLowerCase() === teacherName.trim().toLowerCase())) {
                 tList.push({
                   name: teacherName,
-                  department: signInData.user.user_metadata?.department || "Computer Applications",
-                  phone: signInData.user.user_metadata?.phone || "+91-9876543210",
-                  email: signInData.user.email,
-                  employee_id: signInData.user.user_metadata?.employee_id || `EMP-LNCT-${Math.abs(teacherName.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
-                  designation: signInData.user.user_metadata?.designation || "Assistant Professor",
+                  department: resolvedDept || "Computer Applications",
+                  phone: resolvedPhone || "+91-9876543210",
+                  email: signInData.user.email || email,
+                  employee_id: resolvedEmpId || `EMP-LNCT-${Math.abs(teacherName.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
+                  designation: resolvedDesig || "Assistant Professor",
                   free_periods: 1
                 });
                 await supabase

@@ -502,24 +502,17 @@ export async function getLeaveApplications({ facultyId = null, status = null } =
       return item.faculty_profiles.teacher_name.trim();
     }
 
-    // 3. Match against facultyList by faculty_id or user_id
+    // 3. Match against facultyList by faculty_id or user_id or email
     if (item.faculty_id && facultyList.length > 0) {
       const match = facultyList.find(
-        (f) => f.id === item.faculty_id || f.user_id === item.faculty_id
+        (f) => f.id === item.faculty_id || f.user_id === item.faculty_id || (item.email && f.email === item.email)
       );
       if (match?.teacher_name) return match.teacher_name;
       if (match?.name) return match.name;
     }
 
-    // 4. If faculty_id is the default fallback, pick the first known faculty profile
-    if (
-      (!item.faculty_id || item.faculty_id === "00000000-0000-0000-0000-000000000001") &&
-      facultyList.length > 0
-    ) {
-      return facultyList[0].teacher_name || facultyList[0].name || "Prof Ripusoodan Sharma";
-    }
-
-    return "Prof Ripusoodan Sharma";
+    // 4. Return item.faculty_name or generic label
+    return item.faculty_name || "Faculty Member";
   };
 
   // 1. Fetch from Local Storage cache first
@@ -636,15 +629,15 @@ export async function submitLeaveApplication(formData) {
       const match = cachedFacultyProfiles.find(
         (f) => f.id === formData.faculty_id || f.user_id === formData.faculty_id
       );
-      facultyName = match?.teacher_name || match?.name || cachedFacultyProfiles[0].teacher_name || "Prof Ripusoodan Sharma";
+      facultyName = match?.teacher_name || match?.name || "Faculty Member";
     } else {
-      facultyName = "Prof Ripusoodan Sharma";
+      facultyName = "Faculty Member";
     }
   }
 
   let facultyId = formData.faculty_id;
   if (!facultyId || facultyId === "00000000-0000-0000-0000-000000000001") {
-    const match = cachedFacultyProfiles.find(
+    const match = (cachedFacultyProfiles || []).find(
       (f) => f.teacher_name?.toLowerCase() === facultyName.toLowerCase()
     );
     facultyId = match?.id || "00000000-0000-0000-0000-000000000001";

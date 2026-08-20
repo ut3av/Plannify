@@ -125,12 +125,29 @@ export function AcademicProvider({ children }) {
 
   // Check active Supabase session
   useEffect(() => {
+    const normalizeUser = (rawUser) => {
+      if (!rawUser) return null;
+      const meta = rawUser.user_metadata || {};
+      const normalizedName = meta.name || meta.teacher_name || meta.full_name || rawUser.name || (rawUser.email ? rawUser.email.split('@')[0] : 'Faculty Member');
+      return {
+        ...rawUser,
+        name: normalizedName,
+        teacher_name: normalizedName,
+        role: meta.role || (rawUser.email?.includes('admin') ? 'Admin' : 'teacher'),
+        department: meta.department || meta.department_name || "Computer Applications",
+        designation: meta.designation || "Assistant Professor",
+        employee_id: meta.employee_id || `EMP-LNCT-${Math.abs(normalizedName.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
+        phone: meta.phone || "+91-9876543210"
+      };
+    };
+
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          setUser(session.user);
-          const role = session.user.user_metadata?.role || "Admin";
+          const normalized = normalizeUser(session.user);
+          setUser(normalized);
+          const role = session.user.user_metadata?.role || normalized.role || "Admin";
           setUserRole(role);
         }
       } catch (err) {
@@ -141,8 +158,9 @@ export function AcademicProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser(session.user);
-        const role = session.user.user_metadata?.role || "Admin";
+        const normalized = normalizeUser(session.user);
+        setUser(normalized);
+        const role = session.user.user_metadata?.role || normalized.role || "Admin";
         setUserRole(role);
       } else {
         setUser(null);

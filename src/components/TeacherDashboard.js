@@ -92,11 +92,12 @@ export default function TeacherDashboard({
       if (name) {
         map.set(name.trim().toLowerCase(), {
           id: f.id,
+          user_id: f.user_id,
           name: name.trim(),
           email: f.email || `${name.trim().toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
           phone: f.phone || "+91-9876543210",
           employee_id: f.employee_id || `EMP-LNCT-${Math.abs(name.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
-          department: f.department_name || "Computer Applications",
+          department: f.department_name || f.department || "Computer Applications",
           designation: f.designation || "Assistant Professor",
           status: f.status || "active",
           hasAccount: true,
@@ -110,30 +111,33 @@ export default function TeacherDashboard({
         const name = typeof t === "string" ? t : t?.name;
         if (name && !map.has(name.trim().toLowerCase())) {
           map.set(name.trim().toLowerCase(), {
-            id: typeof t === "object" ? t?.id : undefined,
+            id: typeof t === "object" ? (t?.id || t?.faculty_id) : undefined,
+            user_id: typeof t === "object" ? t?.user_id : undefined,
             name: name.trim(),
             email: (typeof t === "object" && t?.email) || `${name.trim().toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
             phone: (typeof t === "object" && t?.phone) || "+91-9876543210",
             employee_id: (typeof t === "object" && t?.employee_id) || `EMP-LNCT-${Math.abs(name.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
-            department: (typeof t === "object" && t?.department) || "Computer Applications",
+            department: (typeof t === "object" && (t?.department || t?.department_name)) || "Computer Applications",
             designation: (typeof t === "object" && t?.designation) || "Faculty Member",
-            status: "active",
+            status: (typeof t === "object" && t?.status) || "active",
             hasAccount: true,
           });
         }
       });
     }
 
-    // 3. Ensure current user is in list if not already
-    if (user?.name && !map.has(user.name.trim().toLowerCase())) {
-      map.set(user.name.trim().toLowerCase(), {
+    // 3. Ensure current authenticated user is included in list
+    const effectiveUserName = user?.user_metadata?.name || user?.user_metadata?.teacher_name || user?.user_metadata?.full_name || user?.name || (user?.email ? user.email.split('@')[0] : null);
+    if (effectiveUserName && !map.has(effectiveUserName.trim().toLowerCase())) {
+      map.set(effectiveUserName.trim().toLowerCase(), {
         id: user.id || user.faculty_id,
-        name: user.name.trim(),
+        user_id: user.id,
+        name: effectiveUserName.trim(),
         email: user.email,
-        phone: user.user_metadata?.phone || "+91-9876543210",
-        employee_id: user.user_metadata?.employee_id || "EMP-LNCT-1001",
-        department: user.user_metadata?.department || "Computer Applications",
-        designation: user.user_metadata?.designation || "Assistant Professor",
+        phone: user.user_metadata?.phone || user.phone || "+91-9876543210",
+        employee_id: user.user_metadata?.employee_id || user.employee_id || `EMP-LNCT-${Math.abs(effectiveUserName.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
+        department: user.user_metadata?.department || user.department || "Computer Applications",
+        designation: user.user_metadata?.designation || user.designation || "Assistant Professor",
         status: "active",
         hasAccount: true,
       });
@@ -142,36 +146,59 @@ export default function TeacherDashboard({
     return Array.from(map.values());
   }, [backendFaculty, teachers, user]);
 
-  // Selected teacher state (defaults to currently logged in / selected user)
+  // Selected teacher state (defaults to currently logged in faculty member)
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   // Sync selectedTeacher when user changes or teachers load
   useEffect(() => {
-    if (user?.name) {
-      const match = allTeachersList.find(
-        t => t.name.toLowerCase() === user.name.trim().toLowerCase()
-      );
-      if (match) {
-        setSelectedTeacher(match);
-      } else {
-        setSelectedTeacher({
+    if (!user) {
+      if (allTeachersList.length > 0) {
+        setSelectedTeacher((prev) => prev || allTeachersList[0]);
+      }
+      return;
+    }
+
+    const userName = user.user_metadata?.name || user.user_metadata?.teacher_name || user.user_metadata?.full_name || user.name || (user.email ? user.email.split('@')[0] : null);
+    const userEmail = user.email?.toLowerCase().trim();
+    const userEmpId = user.user_metadata?.employee_id?.toLowerCase().trim();
+
+    // Priority matching: 1. user_id/id, 2. email, 3. name, 4. employee_id
+    const match = allTeachersList.find((t) => 
+      (t.user_id && t.user_id === user.id) ||
+      (t.id && t.id === user.id) ||
+      (userEmail && t.email && t.email.toLowerCase().trim() === userEmail) ||
+      (userName && t.name && t.name.toLowerCase().trim() === userName.toLowerCase().trim()) ||
+      (userEmpId && t.employee_id && t.employee_id.toLowerCase().trim() === userEmpId)
+    );
+
+    if (match) {
+      setSelectedTeacher((prev) => {
+        // If user manually switched to another profile in the dropdown, preserve their switch
+        if (prev && prev.name !== match.name && allTeachersList.some((t) => t.name === prev.name)) {
+          return prev;
+        }
+        return match;
+      });
+    } else {
+      setSelectedTeacher((prev) => {
+        if (prev && allTeachersList.some((t) => t.name === prev.name)) return prev;
+        return {
           id: user.id || user.faculty_id,
-          name: user.name,
+          user_id: user.id,
+          name: userName || "Faculty Member",
           email: user.email,
           department: user.user_metadata?.department || user.department || "Computer Applications",
           designation: user.user_metadata?.designation || user.designation || "Assistant Professor",
-          employee_id: user.user_metadata?.employee_id || user.employee_id || "EMP-LNCT-1001",
+          employee_id: user.user_metadata?.employee_id || user.employee_id || `EMP-LNCT-${Math.abs((userName || "faculty").split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
           phone: user.user_metadata?.phone || user.phone || "+91-9876543210",
           status: "active",
           hasAccount: true,
-        });
-      }
-    } else if (allTeachersList.length > 0) {
-      setSelectedTeacher(prev => prev || allTeachersList[0]);
+        };
+      });
     }
   }, [user, allTeachersList]);
 
-  const teacherName = selectedTeacher?.name || user?.name || user?.email?.split('@')[0] || "Faculty Member";
+  const teacherName = selectedTeacher?.name || user?.user_metadata?.name || user?.user_metadata?.teacher_name || user?.name || user?.email?.split('@')[0] || "Faculty Member";
 
   const handleSelectTeacher = (teacher) => {
     setSelectedTeacher(teacher);
@@ -192,12 +219,16 @@ export default function TeacherDashboard({
   const schedule = useMemo(() => {
     if (!result || !result.timetable) return null;
     const s = {};
+    const effectiveName = teacherName.trim().toLowerCase();
     for (const day of result.days || []) {
       s[day] = {};
       for (const slot of result.time_slots || []) {
         const assignments = result.timetable[day]?.[slot] || [];
         const myAssignment = assignments.find(
-          a => a.teacher?.trim().toLowerCase() === teacherName.trim().toLowerCase()
+          a => (a.teacher && a.teacher.trim().toLowerCase() === effectiveName) ||
+               (a.original_teacher && a.original_teacher.trim().toLowerCase() === effectiveName) ||
+               (a.originalTeacher && a.originalTeacher.trim().toLowerCase() === effectiveName) ||
+               (a.proxy_teacher && a.proxy_teacher.trim().toLowerCase() === effectiveName)
         );
         s[day][slot] = myAssignment || null;
       }

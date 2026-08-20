@@ -230,23 +230,27 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
 
   const currentFacultyMember = useMemo(() => {
     const targetId = applyForm.faculty_id || facultyId;
+    const userEmail = user?.email?.toLowerCase().trim();
+    const userName = user?.user_metadata?.name || user?.user_metadata?.teacher_name || user?.user_metadata?.full_name || user?.name;
+    const userEmpId = user?.user_metadata?.employee_id?.toLowerCase().trim();
+
     return faculty.find((f) => 
-      f.id === targetId || 
-      f.user_id === targetId ||
-      (propFacultyName && f.teacher_name?.toLowerCase() === propFacultyName.toLowerCase()) ||
-      (user?.name && f.teacher_name?.toLowerCase() === user.name.toLowerCase())
+      (targetId && (f.id === targetId || f.user_id === targetId)) || 
+      (userEmail && f.email && f.email.toLowerCase().trim() === userEmail) ||
+      (propFacultyName && f.teacher_name?.toLowerCase().trim() === propFacultyName.toLowerCase().trim()) ||
+      (userName && f.teacher_name?.toLowerCase().trim() === userName.toLowerCase().trim()) ||
+      (userEmpId && f.employee_id && f.employee_id.toLowerCase().trim() === userEmpId)
     );
   }, [faculty, applyForm.faculty_id, facultyId, propFacultyName, user]);
 
   const activeFacultyName = useMemo(() => {
+    const userName = user?.user_metadata?.name || user?.user_metadata?.teacher_name || user?.user_metadata?.full_name || user?.name || (user?.email ? user.email.split('@')[0] : null);
     return (
       propFacultyName ||
       currentFacultyMember?.teacher_name ||
       currentFacultyMember?.name ||
-      user?.user_metadata?.full_name ||
-      user?.user_metadata?.name ||
-      user?.name ||
-      (faculty.length > 0 ? faculty[0].teacher_name : "Prof Ripusoodan Sharma")
+      userName ||
+      (faculty.length > 0 ? (faculty[0].teacher_name || faculty[0].name) : "Faculty Member")
     );
   }, [propFacultyName, currentFacultyMember, user, faculty]);
 
