@@ -128,20 +128,34 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # ─────────────────────────────────────────────────────────────
-# Make.com Automation Webhook Helper
+# Make.com Automation Webhook Helper & Dynamic Configuration
 # ─────────────────────────────────────────────────────────────
 
-def notify_make(event: str, data: dict) -> dict:
-    webhook_url = os.getenv("MAKE_WEBHOOK_URL", "").strip()
-    if not webhook_url:
+DYNAMIC_MAKE_WEBHOOK_URL = ""
+
+def get_make_webhook_url() -> str:
+    global DYNAMIC_MAKE_WEBHOOK_URL
+    if DYNAMIC_MAKE_WEBHOOK_URL:
+        return DYNAMIC_MAKE_WEBHOOK_URL
+    url = os.getenv("MAKE_WEBHOOK_URL", "").strip()
+    if not url:
         load_dotenv(override=True)
-        webhook_url = os.getenv("MAKE_WEBHOOK_URL", "").strip()
+        url = os.getenv("MAKE_WEBHOOK_URL", "").strip()
+    return url
+
+def set_make_webhook_url(url: str):
+    global DYNAMIC_MAKE_WEBHOOK_URL
+    DYNAMIC_MAKE_WEBHOOK_URL = (url or "").strip()
+
+
+def notify_make(event: str, data: dict, webhook_override: Optional[str] = None) -> dict:
+    webhook_url = (webhook_override or "").strip() or get_make_webhook_url()
 
     if not webhook_url:
         return {
             "enabled": False,
             "delivered": False,
-            "message": "Set MAKE_WEBHOOK_URL in backend/.env to enable Make automation workflows.",
+            "message": "Make.com Webhook URL is not configured. Please enter your Make.com Webhook URL in the Automation Center.",
         }
 
     payload = {
@@ -152,11 +166,43 @@ def notify_make(event: str, data: dict) -> dict:
     }
 
     try:
-        response = requests.post(webhook_url, json=payload, timeout=12)
-        response.raise_for_status()
-        return {"enabled": True, "delivered": True, "status_code": response.status_code}
+        response = requests.post(webhook_url, json=payload, timeout=15)
+        is_success = 200 <= response.status_code < 300
+        
+        # Log to Supabase / automation log if available
+        try:
+            sb = get_supabase()
+            if sb:
+                sb.table("automation_logs").insert({
+                    "event_type": event.upper(),
+                    "teacher_name": data.get("teachers", [{}])[0].get("name", "All Faculty") if isinstance(data.get("teachers"), list) and data.get("teachers") else "System Trigger",
+                    "channel": "Make Webhook",
+                    "status": "Success" if is_success else f"HTTP {response.status_code}",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }).execute()
+        except Exception:
+            pass
+
+        if not is_success:
+            return {
+                "enabled": True,
+                "delivered": False,
+                "status_code": response.status_code,
+                "message": f"Make.com webhook returned HTTP {response.status_code}: {response.text[:200]}"
+            }
+
+        return {
+            "enabled": True,
+            "delivered": True,
+            "status_code": response.status_code,
+            "message": "Make.com automation webhook delivered successfully."
+        }
     except requests.RequestException as exc:
-        return {"enabled": True, "delivered": False, "message": f"Make delivery failed: {str(exc)}"}
+        return {
+            "enabled": True,
+            "delivered": False,
+            "message": f"Make delivery network error: {str(exc)}"
+        }
 
 
 # ─────────────────────────────────────────────────────────────
@@ -348,10 +394,34 @@ def export_teacher_excel(request: TeacherExcelRequest):
     }
 
 
+class MakeConfigInput(BaseModel):
+    webhook_url: str
+
+@app.get("/make/config")
+def get_make_config():
+    current_url = get_make_webhook_url()
+    return {
+        "webhook_url": current_url,
+        "is_configured": bool(current_url and current_url.startswith("http")),
+    }
+
+@app.post("/make/config")
+def update_make_config(config: MakeConfigInput):
+    url = (config.webhook_url or "").strip()
+    set_make_webhook_url(url)
+    return {
+        "status": "success",
+        "message": "Make.com Webhook URL saved successfully.",
+        "webhook_url": url,
+        "is_configured": bool(url and url.startswith("http")),
+    }
+
+
 class BulkEmailRequest(BaseModel):
     timetable_data: Optional[dict] = None
     teachers: Optional[List[dict]] = None
     time_slots: Optional[List[str]] = None
+    webhook_url: Optional[str] = None
 
 
 @app.post("/make/email-all")
@@ -360,6 +430,7 @@ async def trigger_bulk_emails(request: Optional[BulkEmailRequest] = None):
     active_tt = None
     teachers_pool = []
     slots_pool = DEFAULT_SLOTS
+    webhook_override = request.webhook_url if request else None
 
     if request and request.timetable_data:
         active_tt = request.timetable_data
@@ -425,17 +496,18 @@ async def trigger_bulk_emails(request: Optional[BulkEmailRequest] = None):
             "teachers": teachers_data,
             "requested_at": datetime.now(timezone.utc).isoformat(),
         },
+        webhook_override=webhook_override
     )
 
     if not result.get("delivered"):
         raise HTTPException(
-            status_code=500,
-            detail=result.get("message") or "Failed to deliver webhook payload to Make.com. Make sure MAKE_WEBHOOK_URL is added to Render Environment."
+            status_code=400 if not result.get("enabled") else 502,
+            detail=result.get("message") or "Make.com delivery failed. Check your Webhook URL in the Automation Center."
         )
 
     return {
         "status": "triggered",
-        "message": f"Bulk email workflow initiated for {len(teachers_data)} teachers.",
+        "message": f"Bulk email workflow initiated successfully for {len(teachers_data)} teachers.",
         "make_response": result,
     }
 
@@ -443,12 +515,14 @@ async def trigger_bulk_emails(request: Optional[BulkEmailRequest] = None):
 class MakeTestRequest(BaseModel):
     event: Optional[str] = "manual_test"
     payload: Optional[Dict[str, Any]] = None
+    webhook_url: Optional[str] = None
 
 
 @app.post("/make/test")
 def test_make_webhook(request: MakeTestRequest):
     event = request.event or "manual_test"
     custom_msg = (request.payload or {}).get("message", "Ping from Plannify.exe Academic Operations")
+    webhook_override = request.webhook_url or (request.payload or {}).get("webhook_url")
     
     # Rich sample schema payload to allow Make.com to auto-detect all data structures
     test_data = {
@@ -459,39 +533,39 @@ def test_make_webhook(request: MakeTestRequest):
         "teacher_count": 1,
         "teachers": [
             {
-                "name": "Dr. Sharma",
-                "email": "sharma@example.edu",
+                "name": "Dr. Arvind Kumar",
+                "email": "arvind.kumar@lnctu.ac.in",
                 "phone": "+919876543210",
-                "filename": "Timetable_Dr_Sharma.xlsx",
+                "filename": "Timetable_Dr_Arvind_Kumar.xlsx",
                 "excel_base64": "UEsDBBQAAAAIAAA...",
                 "is_proxy_alert": False,
             }
         ],
         "proxy_alert": {
-            "original_teacher": "Prof. Verma",
-            "proxy_teacher": "Dr. Sharma",
+            "original_teacher": "Prof. Rajesh Sharma",
+            "proxy_teacher": "Dr. Arvind Kumar",
             "proxy_phone": "+919876543210",
-            "proxy_email": "sharma@example.edu",
+            "proxy_email": "arvind.kumar@lnctu.ac.in",
             "day": "Monday",
-            "slot": "09:00 - 10:00 AM",
-            "room": "Room 302",
-            "subject": "CS301 Data Structures",
-            "section": "CSE-A",
-            "reason": "Medical Leave"
+            "slot": "09:00 AM - 09:45 AM",
+            "room": "Room 308/MCA",
+            "subject": "CS301 Data Structures & Algorithms",
+            "section": "MCA-I",
+            "reason": "Faculty Medical Leave"
         }
     }
 
-    result = notify_make(event, test_data)
+    result = notify_make(event, test_data, webhook_override=webhook_override)
 
     if not result.get("delivered"):
         raise HTTPException(
-            status_code=500,
-            detail=result.get("message", "Failed to deliver webhook ping to Make.com. Verify MAKE_WEBHOOK_URL.")
+            status_code=400 if not result.get("enabled") else 502,
+            detail=result.get("message", "Failed to deliver webhook ping to Make.com. Verify your Webhook URL.")
         )
 
     return {
         "status": "success",
-        "message": "Make Automation Instance Verified & Online! Webhook delivered successfully.",
+        "message": "Make.com Automation Webhook Verified & Online! Test payload delivered successfully (HTTP 200).",
         "make_response": result,
     }
 

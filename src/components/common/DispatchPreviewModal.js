@@ -22,8 +22,14 @@ export default function DispatchPreviewModal({
   const handleDispatch = async () => {
     setIsSending(true);
     try {
+      let customUrl = "";
+      try {
+        customUrl = localStorage.getItem("planify_make_webhook_url") || "";
+      } catch {}
+
       await axios.post(`${API_BASE_URL}/make/test`, {
         event: "TEACHER_SCHEDULE_DISPATCH",
+        webhook_url: customUrl || undefined,
         payload: {
           teacher_name: teacherName,
           email: teacherEmail,
@@ -31,6 +37,7 @@ export default function DispatchPreviewModal({
           channel,
           classes_count: teacherClasses.length,
           timestamp: new Date().toISOString(),
+          webhook_url: customUrl || undefined,
         }
       }).catch(() => null);
 

@@ -950,15 +950,47 @@ function saveStoredSubstitutions(records) {
 export async function getSubstitutionLogs() {
   const map = new Map();
 
+  const normalizeSub = (s) => {
+    if (!s) return null;
+    const origName = s.original_faculty_name || s.original_teacher_name || s.original_faculty || s.originalTeacher || s.teacher || "Faculty Member";
+    const subName = s.substitute_faculty_name || s.proxy_teacher_name || s.proxy_teacher || s.proxyTeacher || s.substitute_name || "Substitute Teacher";
+    const rawDate = s.date || s.created_at?.split("T")[0] || new Date().toISOString().split("T")[0];
+    const dayName = s.day || (rawDate ? new Date(rawDate).toLocaleDateString("en-US", { weekday: "short" }) : "Mon");
+
+    return {
+      id: s.id || `sub_${origName}_${rawDate}_${s.slot || 'All'}`,
+      leave_application_id: s.leave_application_id || null,
+      original_faculty_id: s.original_faculty_id || s.faculty_id,
+      original_faculty_name: origName,
+      substitute_faculty_id: s.substitute_faculty_id || s.proxy_id,
+      substitute_faculty_name: subName,
+      date: rawDate,
+      day: dayName,
+      slot: s.slot || "09:00 AM - 09:45 AM",
+      subject: s.subject || "Subject Lecture",
+      section: s.section || "Section A",
+      room: s.room || "Room 308/MCA",
+      reason: s.reason || "Faculty Leave Substitution",
+      status: s.status || "Confirmed",
+      created_at: s.created_at || new Date().toISOString(),
+    };
+  };
+
   // 1. From local storage
   const localList = getStoredSubstitutions();
-  localList.forEach((s) => map.set(s.id || `${s.original_faculty_id}-${s.date}-${s.slot}`, s));
+  localList.forEach((s) => {
+    const norm = normalizeSub(s);
+    if (norm) map.set(norm.id, norm);
+  });
 
   // 2. Try Backend API
   try {
     const res = await axios.get(`${API}/substitution/history`, { timeout: 3000 });
     if (res.data && Array.isArray(res.data)) {
-      res.data.forEach((s) => map.set(s.id || `${s.original_faculty_id}-${s.date}-${s.slot}`, s));
+      res.data.forEach((s) => {
+        const norm = normalizeSub(s);
+        if (norm) map.set(norm.id, norm);
+      });
     }
   } catch (e) {
     // Fallback to Supabase
@@ -972,7 +1004,10 @@ export async function getSubstitutionLogs() {
       .order("created_at", { ascending: false });
 
     if (!error && Array.isArray(data)) {
-      data.forEach((s) => map.set(s.id || `${s.original_faculty_id}-${s.date}-${s.slot}`, s));
+      data.forEach((s) => {
+        const norm = normalizeSub(s);
+        if (norm) map.set(norm.id, norm);
+      });
     }
   } catch (e) {
     console.warn("Supabase substitution log fetch notice:", e);
@@ -981,25 +1016,83 @@ export async function getSubstitutionLogs() {
   return Array.from(map.values());
 }
 
+export function seedDemoSubstitutions() {
+  const today = new Date().toISOString().split("T")[0];
+  const demoSubs = [
+    {
+      id: "sub-demo-001",
+      original_faculty_name: "Prof. Rajesh Sharma",
+      substitute_faculty_name: "Dr. Arvind Kumar",
+      date: today,
+      day: "Mon",
+      slot: "09:00 AM - 09:45 AM",
+      subject: "CS301 Data Structures & Algorithms",
+      section: "MCA-I (A)",
+      room: "Room 308/MCA",
+      reason: "University Academic Committee Meeting",
+      status: "Confirmed",
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: "sub-demo-002",
+      original_faculty_name: "Prof. Mohit Kubade",
+      substitute_faculty_name: "Dr. Meenakshi Pathak",
+      date: today,
+      day: "Tue",
+      slot: "11:20 AM - 12:10 PM",
+      subject: "CS402 Database Management Systems",
+      section: "BCA-II (B)",
+      room: "Lab Room No. 006",
+      reason: "Faculty Medical Leave",
+      status: "Confirmed",
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: "sub-demo-003",
+      original_faculty_name: "Dr. Arvind Kumar",
+      substitute_faculty_name: "Prof. Rajesh Sharma",
+      date: today,
+      day: "Wed",
+      slot: "01:50 PM - 02:40 PM",
+      subject: "CS503 Operating Systems & Architecture",
+      section: "MCA-II",
+      room: "Room 305/LNCT",
+      reason: "AICTE Workshop Attendance",
+      status: "Completed",
+      created_at: new Date(Date.now() - 172800000).toISOString(),
+    }
+  ];
+
+  saveStoredSubstitutions(demoSubs);
+  return demoSubs;
+}
+
 export async function assignSubstitution(data) {
   const subId = generateUUID();
+  const rawDate = data.date || new Date().toISOString().split("T")[0];
+  const dayName = data.day || new Date(rawDate).toLocaleDateString("en-US", { weekday: "short" });
+
   const subRecord = {
     id: subId,
     leave_application_id: data.leave_application_id || null,
     original_faculty_id: data.original_faculty_id,
+    original_faculty_name: data.original_faculty_name || data.original_teacher_name || "Faculty Member",
     substitute_faculty_id: data.substitute_faculty_id,
-    date: data.date,
+    substitute_faculty_name: data.substitute_faculty_name || data.proxy_teacher_name || "Substitute Teacher",
+    date: rawDate,
+    day: dayName,
     slot: data.slot || "All Day",
     subject: data.subject || "",
     section: data.section || "",
     room: data.room || "",
-    status: "assigned",
+    reason: data.reason || "Faculty Leave Substitution",
+    status: "Confirmed",
     created_at: new Date().toISOString(),
   };
 
   // 1. Save to local storage
   const current = getStoredSubstitutions();
-  saveStoredSubstitutions([subRecord, ...current]);
+  saveStoredSubstitutions([subRecord, ...current.filter(c => c.id !== subId)]);
 
   // 2. Try Backend API
   try {
@@ -1010,7 +1103,14 @@ export async function assignSubstitution(data) {
 
   // 3. Try Supabase
   try {
-    await supabase.from("substitution_log").insert([subRecord]);
+    await supabase.from("substitution_log").insert([{
+      original_teacher_name: subRecord.original_faculty_name,
+      proxy_teacher_name: subRecord.substitute_faculty_name,
+      day: subRecord.day,
+      slot: subRecord.slot,
+      reason: subRecord.reason,
+      status: subRecord.status,
+    }]);
   } catch (e) {
     console.warn("Supabase substitution insert notice:", e);
   }
