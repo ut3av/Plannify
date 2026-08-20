@@ -138,12 +138,25 @@ export default function IntegrationsSection() {
       const phone = (typeof t === "object" && t.phone) ? t.phone : "+91-9876543210";
       const myClasses = assignments.filter(a => a.teacher === name || a.proxy_teacher === name);
 
+      const scheduleLines = myClasses.map(c => 
+        `• ${c.day} (${c.slot}): ${c.subject} [Section: ${c.section}, Room: ${c.room}]${c.isProxy || c.is_proxy ? ' (Proxy Assigned)' : ''}`
+      ).join("\n");
+
       return {
         name,
+        teacher_name: name,
+        recipient_name: name,
         email,
+        to_email: email,
+        recipient_email: email,
         phone,
+        to_phone: phone,
         filename: `Timetable_${name.replace(/ /g, "_")}.xlsx`,
         total_assigned_periods: myClasses.length,
+        classes_count: myClasses.length,
+        schedule_text: scheduleLines || "No lectures scheduled this week.",
+        email_subject: `Official Weekly Timetable - ${name} (LNCT University)`,
+        email_body: `Dear ${name},\n\nYour weekly academic timetable has been published for Session 2026-27:\n\n${scheduleLines || "No classes scheduled."}\n\nRegards,\nDean of Academic Affairs\nLNCT University`,
         schedule_summary: myClasses.map(c => ({
           day: c.day,
           slot: c.slot,
@@ -156,7 +169,7 @@ export default function IntegrationsSection() {
       };
     });
 
-    return {
+    const basePayload = {
       event: "bulk_email_trigger",
       service: "plannify-core",
       action: "distribute_timetables",
@@ -166,6 +179,11 @@ export default function IntegrationsSection() {
       department: "School of Computer Applications",
       teacher_count: teachersData.length,
       teachers: teachersData,
+    };
+
+    return {
+      ...basePayload,
+      data: basePayload, // nested data key for Make.com scenarios that access data.teachers
     };
   };
 
@@ -183,33 +201,52 @@ export default function IntegrationsSection() {
       return;
     }
 
+    const testTeacher = {
+      name: "Dr. Arvind Kumar",
+      teacher_name: "Dr. Arvind Kumar",
+      recipient_name: "Dr. Arvind Kumar",
+      email: "arvind.kumar@lnctu.ac.in",
+      to_email: "arvind.kumar@lnctu.ac.in",
+      recipient_email: "arvind.kumar@lnctu.ac.in",
+      phone: "+91-9876543210",
+      to_phone: "+91-9876543210",
+      filename: "Timetable_Dr_Arvind_Kumar.xlsx",
+      total_assigned_periods: 4,
+      classes_count: 4,
+      schedule_text: "• Mon (09:00 AM - 09:45 AM): CS301 Data Structures [MCA-I, Room 308]\n• Tue (11:20 AM - 12:10 PM): CS302 Database Systems [MCA-I, Lab 6]",
+      email_subject: "Official Weekly Timetable - Dr. Arvind Kumar (LNCT University)",
+      email_body: "Dear Dr. Arvind Kumar,\n\nYour weekly academic timetable has been published.\n\n• Mon: CS301 Data Structures (Room 308)\n• Tue: CS302 Database Systems (Lab 6)\n\nRegards,\nLNCT University",
+      is_proxy_alert: false,
+    };
+
+    const proxyAlertData = {
+      original_teacher: "Prof. Rajesh Sharma",
+      proxy_teacher: "Dr. Arvind Kumar",
+      proxy_phone: "+91-9876543210",
+      proxy_email: "arvind.kumar@lnctu.ac.in",
+      day: "Monday",
+      slot: "09:00 AM - 09:45 AM",
+      room: "Room 308/MCA",
+      subject: "CS301 Data Structures & Algorithms",
+      section: "MCA-I",
+      reason: "Faculty Medical Leave",
+      whatsapp_message: "LNCT Alert: You have been assigned as Proxy for Prof. Rajesh Sharma on Mon 09:00 AM in Room 308 (CS301 MCA-I).",
+    };
+
     const testPayload = {
-      event: "manual_test",
+      event: "bulk_email_trigger",
       service: "plannify-core",
-      action: "manual_webhook_test",
+      action: "distribute_timetables",
       timestamp: new Date().toISOString(),
       message: "Ping from Plannify.exe Academic Operations Center",
       teacher_count: 1,
-      teachers: [
-        {
-          name: "Dr. Arvind Kumar",
-          email: "arvind.kumar@lnctu.ac.in",
-          phone: "+91-9876543210",
-          filename: "Timetable_Dr_Arvind_Kumar.xlsx",
-          is_proxy_alert: false,
-        }
-      ],
-      proxy_alert: {
-        original_teacher: "Prof. Rajesh Sharma",
-        proxy_teacher: "Dr. Arvind Kumar",
-        proxy_phone: "+91-9876543210",
-        proxy_email: "arvind.kumar@lnctu.ac.in",
-        day: "Monday",
-        slot: "09:00 AM - 09:45 AM",
-        room: "Room 308/MCA",
-        subject: "CS301 Data Structures & Algorithms",
-        section: "MCA-I",
-        reason: "Faculty Medical Leave"
+      teachers: [testTeacher],
+      proxy_alert: proxyAlertData,
+      data: {
+        event: "bulk_email_trigger",
+        teacher_count: 1,
+        teachers: [testTeacher],
+        proxy_alert: proxyAlertData,
       }
     };
 
