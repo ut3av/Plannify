@@ -150,6 +150,9 @@ export default function IntegrationsSection() {
         `• ${c.day} (${c.slot}): ${c.subject} [Section: ${c.section}, Room: ${c.room}]${c.isProxy || c.is_proxy ? ' (Proxy Assigned)' : ''}`
       ).join("\n");
 
+      const csvText = `Teacher Name,${name}\nEmail,${email}\nPhone,${phone}\nDepartment,School of Computer Applications\nInstitution,LNCT University\n\nDay,Slot,Subject,Section,Room,Status\n` +
+        myClasses.map(c => `"${c.day}","${c.slot}","${c.subject}","${c.section}","${c.room}","${c.isProxy || c.is_proxy ? 'Proxy Assigned' : 'Regular'}"`).join("\n");
+
       return {
         name,
         teacher_name: name,
@@ -160,6 +163,10 @@ export default function IntegrationsSection() {
         phone,
         to_phone: phone,
         filename: `Timetable_${name.replace(/ /g, "_")}.csv`,
+        csv_content: csvText,
+        file_content: csvText,
+        excel_base64: typeof window !== "undefined" && window.btoa ? window.btoa(unescape(encodeURIComponent(csvText))) : "VGltZXRhYmxl",
+        attachment_data: typeof window !== "undefined" && window.btoa ? window.btoa(unescape(encodeURIComponent(csvText))) : "VGltZXRhYmxl",
         total_assigned_periods: myClasses.length,
         classes_count: myClasses.length,
         schedule_text: scheduleLines || "No lectures scheduled this week.",
