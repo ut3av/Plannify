@@ -13,6 +13,13 @@ export default function IntegrationsSection() {
       return "";
     }
   });
+  const [testEmailOverride, setTestEmailOverride] = useState(() => {
+    try {
+      return localStorage.getItem("planify_test_recipient_email") || "";
+    } catch {
+      return "";
+    }
+  });
   const [savingUrl, setSavingUrl] = useState(false);
   const [testingWebhook, setTestingWebhook] = useState(false);
   const [distributing, setDistributing] = useState(false);
@@ -32,7 +39,7 @@ export default function IntegrationsSection() {
           setWebhookUrl(res.data.webhook_url);
           try {
             localStorage.setItem("planify_make_webhook_url", res.data.webhook_url);
-          } catch {}
+          } catch { }
         }
       } catch (e) {
         // Fallback to localStorage
@@ -134,7 +141,8 @@ export default function IntegrationsSection() {
 
     const teachersData = teachersPool.map(t => {
       const name = typeof t === "string" ? t : t.name || t.teacher_name || "Faculty Member";
-      const email = (typeof t === "object" && t.email) ? t.email : `${name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@lnctu.ac.in`;
+      const customEmail = (typeof t === "object" && t.email) ? t.email : `${name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@lnctu.ac.in`;
+      const email = (testEmailOverride && testEmailOverride.trim()) ? testEmailOverride.trim() : customEmail;
       const phone = (typeof t === "object" && t.phone) ? t.phone : "+91-9876543210";
       const myClasses = assignments.filter(a => a.teacher === name || a.proxy_teacher === name);
 
@@ -151,7 +159,7 @@ export default function IntegrationsSection() {
         recipient_email: email,
         phone,
         to_phone: phone,
-        filename: `Timetable_${name.replace(/ /g, "_")}.xlsx`,
+        filename: `Timetable_${name.replace(/ /g, "_")}.csv`,
         total_assigned_periods: myClasses.length,
         classes_count: myClasses.length,
         schedule_text: scheduleLines || "No lectures scheduled this week.",
@@ -201,16 +209,20 @@ export default function IntegrationsSection() {
       return;
     }
 
+    const testRecipientEmail = (testEmailOverride && testEmailOverride.trim())
+      ? testEmailOverride.trim()
+      : "arvind.kumar@lnctu.ac.in";
+
     const testTeacher = {
       name: "Dr. Arvind Kumar",
       teacher_name: "Dr. Arvind Kumar",
       recipient_name: "Dr. Arvind Kumar",
-      email: "arvind.kumar@lnctu.ac.in",
-      to_email: "arvind.kumar@lnctu.ac.in",
-      recipient_email: "arvind.kumar@lnctu.ac.in",
+      email: testRecipientEmail,
+      to_email: testRecipientEmail,
+      recipient_email: testRecipientEmail,
       phone: "+91-9876543210",
       to_phone: "+91-9876543210",
-      filename: "Timetable_Dr_Arvind_Kumar.xlsx",
+      filename: "Timetable_Dr_Arvind_Kumar.csv",
       total_assigned_periods: 4,
       classes_count: 4,
       schedule_text: "• Mon (09:00 AM - 09:45 AM): CS301 Data Structures [MCA-I, Room 308]\n• Tue (11:20 AM - 12:10 PM): CS302 Database Systems [MCA-I, Lab 6]",
@@ -392,11 +404,10 @@ export default function IntegrationsSection() {
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                   Automation & Broadcast Center
                 </h1>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                  isConfigured
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${isConfigured
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/30"
                     : "bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/30"
-                }`}>
+                  }`}>
                   {isConfigured ? "● Make.com Ready" : "○ Setup Required"}
                 </span>
               </div>
@@ -413,7 +424,7 @@ export default function IntegrationsSection() {
             onClick={() => setShowGuideModal(true)}
             className="btn-secondary text-xs py-2 px-3 font-bold flex items-center gap-1.5"
           >
-            <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
             Setup Guide
           </button>
           <button
@@ -422,7 +433,7 @@ export default function IntegrationsSection() {
             className="btn-secondary text-xs py-2 px-3 font-bold flex items-center gap-1.5"
             title="Ping Make.com webhook with a test payload"
           >
-            <svg className="w-3.5 h-3.5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <svg className="w-3.5 h-3.5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
             {testingWebhook ? "Testing..." : "⚡ Test Webhook"}
           </button>
           <button
@@ -430,7 +441,7 @@ export default function IntegrationsSection() {
             disabled={distributing}
             className="btn-gradient text-xs py-2.5 px-4 font-bold flex items-center gap-2 shadow-lg shadow-amber-500/20"
           >
-            <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
             {distributing ? "Distributing..." : "Broadcast Timetables to Faculty"}
           </button>
         </div>
@@ -455,35 +466,73 @@ export default function IntegrationsSection() {
             className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition-colors shrink-0"
             title="Copy current timetable JSON payload to paste directly into Make.com data structures"
           >
-            <svg className="w-3.5 h-3.5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <svg className="w-3.5 h-3.5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
             {copiedPayload ? "Copied Payload!" : "📋 Copy Make.com Payload"}
           </button>
         </div>
 
         <form onSubmit={handleSaveWebhookUrl} className="space-y-3">
-          <div className="flex flex-col sm:flex-row items-stretch gap-2">
-            <div className="relative flex-1">
-              <input
-                type="url"
-                required
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                placeholder="https://hook.eu1.make.com/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-              />
-              {isConfigured && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 text-xs font-bold flex items-center gap-1">
-                  ✓ Configured
-                </span>
-              )}
+          <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row items-stretch gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="url"
+                  required
+                  value={webhookUrl}
+                  onChange={(e) => setWebhookUrl(e.target.value)}
+                  placeholder="https://hook.eu1.make.com/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                />
+                {isConfigured && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 text-xs font-bold flex items-center gap-1">
+                    ✓ Configured
+                  </span>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={savingUrl}
+                className="btn-primary text-xs py-2.5 px-5 font-bold shrink-0"
+              >
+                {savingUrl ? "Saving..." : "Save Webhook URL"}
+              </button>
             </div>
-            <button
-              type="submit"
-              disabled={savingUrl}
-              className="btn-primary text-xs py-2.5 px-5 font-bold shrink-0"
-            >
-              {savingUrl ? "Saving..." : "Save Webhook URL"}
-            </button>
+
+            {/* Optional Test Recipient Email Override */}
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <span>📬 Recipient Email Override (Optional for Testing)</span>
+                </label>
+                {testEmailOverride && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTestEmailOverride("");
+                      try { localStorage.removeItem("planify_test_recipient_email"); } catch {}
+                    }}
+                    className="text-[10px] text-amber-500 hover:underline font-bold"
+                  >
+                    Reset to Faculty Emails
+                  </button>
+                )}
+              </div>
+              <input
+                type="email"
+                placeholder="Leave blank to send to individual faculty emails, or enter your email to test (e.g. your-email@gmail.com)"
+                value={testEmailOverride}
+                onChange={(e) => {
+                  setTestEmailOverride(e.target.value);
+                  try { localStorage.setItem("planify_test_recipient_email", e.target.value); } catch {}
+                }}
+                className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500/40"
+              />
+              <p className="text-[10px] text-slate-400">
+                {testEmailOverride 
+                  ? `⚡ Test Mode Active: All generated emails will be dispatched to ${testEmailOverride}`
+                  : "Normal Mode: Each email is dispatched directly to that teacher's institutional address."}
+              </p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
             <p>
@@ -498,12 +547,11 @@ export default function IntegrationsSection() {
 
       {/* Alert Notices */}
       {testResult && (
-        <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 animate-slide-down ${
-          testResult.success
+        <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 animate-slide-down ${testResult.success
             ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
             : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300"
-        }`}>
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+          }`}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
           <div className="space-y-1">
             <p>{testResult.message || testResult.error}</p>
             {testResult.success && (
@@ -516,12 +564,11 @@ export default function IntegrationsSection() {
       )}
 
       {distributeStatus && (
-        <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 animate-slide-down ${
-          distributeStatus.success
+        <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-3 animate-slide-down ${distributeStatus.success
             ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
             : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300"
-        }`}>
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+          }`}>
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
           <div className="space-y-1">
             <p>{distributeStatus.message || distributeStatus.error}</p>
             {distributeStatus.success && (
@@ -568,7 +615,7 @@ export default function IntegrationsSection() {
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-              <svg className="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <svg className="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
               Automation Audit & Delivery Logs
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Real-time webhook triggers, email dispatches, and substitution broadcasts.</p>
@@ -578,7 +625,7 @@ export default function IntegrationsSection() {
             disabled={logsLoading}
             className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-colors"
           >
-            <svg className="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <svg className="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>
             {logsLoading ? "Refreshing..." : "Refresh Logs"}
           </button>
         </div>
