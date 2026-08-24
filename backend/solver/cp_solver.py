@@ -8,6 +8,14 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from ortools.sat.python import cp_model
 
+try:
+    from services.timetable_validator import TimetableValidator
+except ImportError:
+    try:
+        from ..services.timetable_validator import TimetableValidator
+    except ImportError:
+        from backend.services.timetable_validator import TimetableValidator
+
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 DEFAULT_SLOTS = [
     "09:00 AM - 09:45 AM",
@@ -59,6 +67,7 @@ class GenerateRequest(BaseModel):
     rooms: List[str]
     sections: List[SectionInput] = []
     time_slots: List[str] = DEFAULT_SLOTS
+    unavailability: Optional[Dict[str, List[Tuple[str, str]]]] = None
 
 
 class RescheduleRequest(BaseModel):
@@ -136,7 +145,14 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
     if not subjects:
         scheduler_error(400, "At least one subject is required.", ["Add course subjects to schedule."], facts)
 
-    return GenerateRequest(teachers=teachers, subjects=subjects, rooms=rooms, sections=sections, time_slots=slots)
+    return GenerateRequest(
+        teachers=teachers,
+        subjects=subjects,
+        rooms=rooms,
+        sections=sections,
+        time_slots=slots,
+        unavailability=request.unavailability,
+    )
 
 
 def build_empty_grid(slots: List[str]) -> Dict[str, Dict[str, List[dict]]]:
@@ -278,7 +294,14 @@ def solve_timetable(request: GenerateRequest) -> dict:
                         model.AddAtMostOne(occurrences_in_this_slot)
 
     # 6. Dynamic rescheduling: Block unavailable teacher/day/slot combinations
-    for teacher_name, blocked_times in UNAVAILABILITY.items():
+    merged_unavailability: Dict[str, List[Tuple[str, str]]] = defaultdict(list)
+    for t_name, blocked in UNAVAILABILITY.items():
+        merged_unavailability[t_name].extend(blocked)
+    if request.unavailability:
+        for t_name, blocked in request.unavailability.items():
+            merged_unavailability[t_name].extend(blocked)
+
+    for teacher_name, blocked_times in merged_unavailability.items():
         subject_indexes = [idx for idx, subject in enumerate(request.subjects) if subject.teacher == teacher_name]
         for day, slot in blocked_times:
             if day not in DAYS or slot not in slots:
@@ -378,12 +401,12 @@ def solve_timetable(request: GenerateRequest) -> dict:
     model.Minimize(sum(penalties))
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 8
+    solver.parameters.max_time_in_seconds = 10
     solver.parameters.num_search_workers = 8
     status = solver.Solve(model)
 
-    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        error_msg = "No feasible timetable could be found with the current constraints."
+    if status == cp_model.INFEASIBLE:
+        error_msg = "No feasible timetable exists for the supplied constraints. Mathematical solver confirmed infeasibility."
         scheduler_error(
             422,
             error_msg,
@@ -391,7 +414,27 @@ def solve_timetable(request: GenerateRequest) -> dict:
                 "Add more classrooms or time slots in Academic Setup.",
                 "Ensure teacher total required classes don't exceed their weekly workload limits.",
                 "Check laboratory requirements: practical labs require 2 consecutive periods.",
-                "Lower free period restrictions if faculty workload is tightly constrained."
+                "Lower free period restrictions or verify teacher availability."
+            ]
+        )
+    elif status == cp_model.UNKNOWN or status == cp_model.MODEL_INVALID:
+        error_msg = "Timetable generation could not be completed (solver status: UNKNOWN or MODEL_INVALID). No timetable was saved."
+        scheduler_error(
+            422,
+            error_msg,
+            [
+                "Verify course requirements and slot counts.",
+                "Ensure at least one valid room and time slot are provided."
+            ]
+        )
+    elif status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        error_msg = "Timetable generation could not be completed within the solver time limit. No timetable was saved."
+        scheduler_error(
+            422,
+            error_msg,
+            [
+                "Simplify input constraints or increase solver timeout limit.",
+                "Reduce overlapping lab requirements across same sections."
             ]
         )
 
@@ -436,14 +479,38 @@ def solve_timetable(request: GenerateRequest) -> dict:
             "ugc_compliant": assigned_periods <= max_cap,
         }
 
+    # Level 2 Independent Deterministic Validation
+    validator = TimetableValidator(
+        days=DAYS,
+        slots=slots,
+        teachers=[t.model_dump() for t in teachers],
+        subjects=[s.model_dump() for s in request.subjects],
+        rooms=rooms,
+        sections=[s.model_dump() for s in request.sections],
+        unavailability=merged_unavailability,
+        ugc_max_weekly_hours=UGC_MAX_WEEKLY_PERIODS_DEFAULT,
+    )
+    validation_report = validator.validate(assignments)
+
+    if not validation_report["valid"]:
+        error_msg = "Generated timetable failed independent Level-2 deterministic validation."
+        scheduler_error(
+            422,
+            error_msg,
+            [f"{err['code']}: {err['message']}" for err in validation_report["errors"][:5]],
+            facts=[f"Total validation errors: {len(validation_report['errors'])}"]
+        )
+
     return {
         "status": "success",
+        "solver_status": "OPTIMAL" if status == cp_model.OPTIMAL else "FEASIBLE",
         "timetable": timetable,
         "assignments": assignments,
         "days": DAYS,
         "time_slots": slots,
         "rooms": rooms,
         "workload_audit": workload_summary,
+        "validation": validation_report,
         "generated_by": "Google OR-Tools CP-SAT (UGC Compliant Engine)",
     }
 

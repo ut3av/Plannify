@@ -9,7 +9,7 @@ DB_FILE = Path(__file__).parent / "timetables.db"
 
 
 def get_connection():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=30.0)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -168,11 +168,272 @@ def init_db():
             default_types
         )
 
+    # Relational Timetables table (Lifecycle & Versioning)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS timetables_v2 (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            academic_term TEXT DEFAULT '2026-27',
+            version INTEGER DEFAULT 1,
+            status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'validating', 'valid', 'pending_approval', 'published', 'archived')),
+            validation_report TEXT,
+            published_by TEXT,
+            published_at TEXT,
+            change_note TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Relational Timetable Assignments table with Level-3 UNIQUE constraints
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS timetable_assignments (
+            id TEXT PRIMARY KEY,
+            timetable_id TEXT NOT NULL,
+            day TEXT NOT NULL,
+            slot TEXT NOT NULL,
+            teacher_name TEXT NOT NULL,
+            faculty_id TEXT,
+            subject_name TEXT NOT NULL,
+            subject_code TEXT,
+            section_name TEXT NOT NULL,
+            room_name TEXT NOT NULL,
+            is_lab INTEGER DEFAULT 0,
+            is_proxy INTEGER DEFAULT 0,
+            original_teacher_name TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (timetable_id) REFERENCES timetables_v2(id) ON DELETE CASCADE,
+            CONSTRAINT uq_teacher_slot UNIQUE (timetable_id, day, slot, teacher_name),
+            CONSTRAINT uq_room_slot UNIQUE (timetable_id, day, slot, room_name),
+            CONSTRAINT uq_section_slot UNIQUE (timetable_id, day, slot, section_name)
+        )
+    """)
+
     conn.commit()
     conn.close()
 
 
 # ── Timetables Helper ──────────────────────────────────────────
+
+def save_timetable_relational(
+    name: str,
+    assignments: List[Dict[str, Any]],
+    validation_report: Dict[str, Any],
+    status: str = "draft",
+    academic_term: str = "2026-27",
+    change_note: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Transactionally persists a relational timetable and all its assignments.
+    Enforces atomic rollback if any uniqueness constraint fails.
+    """
+    timetable_id = str(uuid.uuid4())
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        # 1. Determine version for term
+        cursor.execute(
+            "SELECT COALESCE(MAX(version), 0) + 1 FROM timetables_v2 WHERE academic_term = ?",
+            (academic_term,)
+        )
+        next_version = cursor.fetchone()[0]
+
+        # 2. Insert Timetable metadata
+        cursor.execute(
+            """
+            INSERT INTO timetables_v2 (
+                id, name, academic_term, version, status, validation_report, change_note
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                timetable_id,
+                name,
+                academic_term,
+                next_version,
+                status,
+                json.dumps(validation_report, ensure_ascii=False),
+                change_note or "Automated generation via OR-Tools & Deterministic Validator",
+            ),
+        )
+
+        # 3. Insert individual assignments with Level-3 Unique constraint guarantees
+        for a in assignments:
+            assign_id = str(uuid.uuid4())
+            cursor.execute(
+                """
+                INSERT INTO timetable_assignments (
+                    id, timetable_id, day, slot, teacher_name, faculty_id,
+                    subject_name, subject_code, section_name, room_name,
+                    is_lab, is_proxy, original_teacher_name
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    assign_id,
+                    timetable_id,
+                    a.get("day", ""),
+                    a.get("slot", ""),
+                    a.get("teacher", ""),
+                    a.get("faculty_id"),
+                    a.get("subject", ""),
+                    a.get("code", ""),
+                    a.get("section", ""),
+                    a.get("room", ""),
+                    1 if a.get("is_lab") else 0,
+                    1 if a.get("is_proxy") else 0,
+                    a.get("original_teacher"),
+                ),
+            )
+
+        # 4. Also store backward-compatible snapshot in legacy timetables table
+        legacy_data = {
+            "timetable_id": timetable_id,
+            "assignments": assignments,
+            "validation": validation_report,
+            "version": next_version,
+            "status": status,
+        }
+        cursor.execute(
+            "INSERT INTO timetables (name, data) VALUES (?, ?)",
+            (f"{name} (v{next_version})", json.dumps(legacy_data)),
+        )
+
+        conn.commit()
+        return {
+            "success": True,
+            "timetable_id": timetable_id,
+            "version": next_version,
+            "status": status,
+            "total_assignments": len(assignments),
+        }
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
+
+
+def get_timetable_relational(timetable_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieves a relational timetable and its full assignments list."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM timetables_v2 WHERE id = ?", (timetable_id,))
+    tt_row = cursor.fetchone()
+    if not tt_row:
+        conn.close()
+        return None
+
+    cursor.execute(
+        """
+        SELECT day, slot, teacher_name as teacher, faculty_id,
+               subject_name as subject, subject_code as code,
+               section_name as section, room_name as room,
+               is_lab, is_proxy, original_teacher_name as original_teacher
+        FROM timetable_assignments
+        WHERE timetable_id = ?
+        ORDER BY day, slot
+        """,
+        (timetable_id,)
+    )
+    assign_rows = cursor.fetchall()
+    conn.close()
+
+    assignments = []
+    for r in assign_rows:
+        assignments.append({
+            "day": r["day"],
+            "slot": r["slot"],
+            "teacher": r["teacher"],
+            "faculty_id": r["faculty_id"],
+            "subject": r["subject"],
+            "code": r["code"],
+            "section": r["section"],
+            "room": r["room"],
+            "is_lab": bool(r["is_lab"]),
+            "is_proxy": bool(r["is_proxy"]),
+            "original_teacher": r["original_teacher"],
+        })
+
+    validation_json = None
+    if tt_row["validation_report"]:
+        try:
+            validation_json = json.loads(tt_row["validation_report"])
+        except Exception:
+            pass
+
+    return {
+        "id": tt_row["id"],
+        "name": tt_row["name"],
+        "academic_term": tt_row["academic_term"],
+        "version": tt_row["version"],
+        "status": tt_row["status"],
+        "validation_report": validation_json,
+        "published_by": tt_row["published_by"],
+        "published_at": tt_row["published_at"],
+        "change_note": tt_row["change_note"],
+        "created_at": tt_row["created_at"],
+        "assignments": assignments,
+    }
+
+
+def publish_timetable_relational(
+    timetable_id: str,
+    published_by: str = "Admin",
+    change_note: Optional[str] = None
+) -> Dict[str, Any]:
+    """Publishes a validated timetable version."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Check current status
+        cursor.execute("SELECT status FROM timetables_v2 WHERE id = ?", (timetable_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise ValueError(f"Timetable '{timetable_id}' not found.")
+
+        # Archive any previous published timetables for the same term
+        now_iso = datetime.now(timezone.utc).isoformat()
+        cursor.execute(
+            """
+            UPDATE timetables_v2
+            SET status = 'archived', updated_at = ?
+            WHERE status = 'published'
+            """,
+            (now_iso,)
+        )
+
+        # Set target timetable to published
+        cursor.execute(
+            """
+            UPDATE timetables_v2
+            SET status = 'published', published_by = ?, published_at = ?, change_note = COALESCE(?, change_note), updated_at = ?
+            WHERE id = ?
+            """,
+            (published_by, now_iso, change_note, now_iso, timetable_id)
+        )
+        conn.commit()
+        return {"success": True, "timetable_id": timetable_id, "status": "published", "published_at": now_iso}
+    finally:
+        conn.close()
+
+
+def list_timetable_versions() -> List[Dict[str, Any]]:
+    """Lists all timetable versions with their lifecycle status."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, name, academic_term, version, status, published_by, published_at, change_note, created_at
+        FROM timetables_v2
+        ORDER BY version DESC, created_at DESC
+        """
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
 
 def save_timetable_to_db(name: str, timetable_data: dict) -> int:
     conn = get_connection()

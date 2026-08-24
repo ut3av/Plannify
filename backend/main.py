@@ -50,7 +50,18 @@ from leave_routes import router as leave_router
 from attendance_routes import router as attendance_router
 from substitution_routes import router as substitution_router
 from analytics_routes import router as analytics_router
-from db import init_db, save_timetable_to_db, get_timetables_from_db, get_timetable_by_id, delete_timetable_from_db
+from services.timetable_validator import TimetableValidator
+from db import (
+    init_db,
+    save_timetable_to_db,
+    get_timetables_from_db,
+    get_timetable_by_id,
+    delete_timetable_from_db,
+    save_timetable_relational,
+    get_timetable_relational,
+    publish_timetable_relational,
+    list_timetable_versions,
+)
 
 # Load environment configuration
 load_dotenv()
@@ -224,17 +235,140 @@ def health_check():
     return {"status": "ok"}
 
 
+class TimetableValidateRequest(BaseModel):
+    assignments: List[Dict[str, Any]]
+    teachers: Optional[List[Dict[str, Any]]] = None
+    subjects: Optional[List[Dict[str, Any]]] = None
+    rooms: Optional[List[Any]] = None
+    sections: Optional[List[Dict[str, Any]]] = None
+    days: Optional[List[str]] = None
+    time_slots: Optional[List[str]] = None
+    unavailability: Optional[Dict[str, List[Tuple[str, str]]]] = None
+
+
+class PublishTimetableRequest(BaseModel):
+    published_by: Optional[str] = "Admin"
+    change_note: Optional[str] = None
+
+
 @app.post("/generate")
 def generate_timetable_endpoint(request: GenerateRequest):
     global LAST_REQUEST, UNAVAILABILITY, LAST_TIMETABLE
     LAST_REQUEST = validate_request(request)
     UNAVAILABILITY = defaultdict(list)
-    LAST_TIMETABLE = solve_timetable(LAST_REQUEST)
-    LAST_TIMETABLE["make_delivery"] = notify_make(
+    result = solve_timetable(LAST_REQUEST)
+
+    # 1. Level-2 Independent Deterministic Validation check
+    validation = result.get("validation", {})
+    if not validation.get("valid", False):
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Generated timetable failed institutional constraint validation.",
+                "status": "VALIDATION_FAILED",
+                "validation": validation,
+            }
+        )
+
+    # 2. Level-3 Database-level Transactional Persistence as Draft
+    try:
+        save_res = save_timetable_relational(
+            name=f"Academic Schedule {datetime.now().strftime('%b %d, %Y')}",
+            assignments=result.get("assignments", []),
+            validation_report=validation,
+            status="draft",
+            academic_term="2026-27",
+            change_note="Automated generation via OR-Tools CP-SAT with Level-2/3 validation",
+        )
+        result["timetable_id"] = save_res.get("timetable_id")
+        result["version"] = save_res.get("version")
+        result["status"] = "draft"
+    except Exception as db_err:
+        logger.error(f"Failed to persist timetable draft transactionally: {db_err}")
+        # Level 3 safety net: If database rejects with collision, raise 422
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": f"Database-level constraint protection rejected assignment: {str(db_err)}",
+                "status": "DATABASE_CONSTRAINT_FAILED",
+            }
+        )
+
+    LAST_TIMETABLE = result
+    result["make_delivery"] = notify_make(
         "timetable.generated",
-        {"request": LAST_REQUEST.model_dump(), "result": LAST_TIMETABLE},
+        {"request": LAST_REQUEST.model_dump(), "result": result},
     )
-    return LAST_TIMETABLE
+    return result
+
+
+@app.post("/timetable/validate")
+def validate_timetable_endpoint(request: TimetableValidateRequest):
+    """
+    Independent Level-2 Deterministic Validator API endpoint.
+    Audits any schedule (generated, manual, imported) against all 18 institutional rules.
+    """
+    validator = TimetableValidator(
+        days=request.days,
+        slots=request.time_slots,
+        teachers=request.teachers,
+        subjects=request.subjects,
+        rooms=request.rooms,
+        sections=request.sections,
+        unavailability=request.unavailability,
+    )
+    report = validator.validate(request.assignments)
+    return report
+
+
+@app.get("/timetable/versions")
+def list_timetable_versions_endpoint():
+    """Lists all saved timetable versions and their lifecycle statuses."""
+    return list_timetable_versions()
+
+
+@app.get("/timetable/{timetable_id}")
+def get_timetable_relational_endpoint(timetable_id: str):
+    """Fetches a normalized relational timetable with its full assignment records."""
+    tt = get_timetable_relational(timetable_id)
+    if not tt:
+        raise HTTPException(status_code=404, detail=f"Timetable '{timetable_id}' not found.")
+    return tt
+
+
+@app.post("/timetable/{timetable_id}/publish")
+def publish_timetable_endpoint(timetable_id: str, request: PublishTimetableRequest = PublishTimetableRequest()):
+    """
+    Publishes a validated timetable version.
+    Re-validates all assignments before atomic transition to published.
+    """
+    tt = get_timetable_relational(timetable_id)
+    if not tt:
+        raise HTTPException(status_code=404, detail=f"Timetable '{timetable_id}' not found.")
+
+    assignments = tt.get("assignments", [])
+    validator = TimetableValidator()
+    report = validator.validate(assignments)
+    if not report["valid"]:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Cannot publish an invalid timetable. Hard constraints failed.",
+                "status": "VALIDATION_FAILED",
+                "validation": report,
+            }
+        )
+
+    publish_res = publish_timetable_relational(
+        timetable_id=timetable_id,
+        published_by=request.published_by or "Admin",
+        change_note=request.change_note or "Official institutional publication",
+    )
+    return {
+        "status": "success",
+        "message": f"Timetable v{tt.get('version', 1)} published successfully.",
+        **publish_res,
+    }
 
 
 @app.post("/reschedule")
