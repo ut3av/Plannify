@@ -40,3 +40,7 @@ backend/*.db
 .env.test.local
 .env.production.local
 backend/.env
+
+# graphify
+graphify-out/
+.graphify*
