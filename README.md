@@ -92,16 +92,16 @@ Plannify enforces a multi-tiered **Defense-in-Depth validation model** to guaran
                                  └────────────────────────────┬────────────────────────────┘
                                                               ▼
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ LAYER 1: MATHEMATICAL CONSTRAINT SOLVER (Google OR-Tools CP-SAT)                                                      │
+│ LAYER 1: MATHEMATICAL CONSTRAINT SOLVER (Google OR-Tools CP-SAT)                                                       │
 │ • Boolean Decision Matrix: X[t, s, r, d, p] ∈ {0, 1}                                                                   │
 │ • Hard Constraints: Teacher Uniqueness, Section Uniqueness, Room Exclusivity, Continuous Lab Blocks                    │
-│ • Soft Constraints: Teacher Daily Gaps, UGC 14-18h Workload Balancing, Even Period Distribution                      │
+│ • Soft Constraints: Teacher Daily Gaps, UGC 14-18h Workload Balancing, Even Period Distribution                        │
 └─────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────┘
                                               ▼  Generated Schedule Payload
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ LAYER 2: INDEPENDENT DETERMINISTIC VALIDATOR (TimetableValidator — 18 Institutional Rules)                             │
-│ • Standalone audit engine verifying 18 rules before database commit                                                     │
-│ • Verifies Faculty Availability, Room Capacity, Lab Facility Compatibility, Teacher Inactive/On-Leave Detection         │
+│ • Standalone audit engine verifying 18 rules before database commit                                                    │
+│ • Verifies Faculty Availability, Room Capacity, Lab Facility Compatibility, Teacher Inactive/On-Leave Detection        │
 │ • Generates structured Violation Reports with Severity Levels (ERROR vs WARNING)                                       │
 └─────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────┘
                                               ▼  Validated Payload (valid == True)
