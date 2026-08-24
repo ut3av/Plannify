@@ -199,6 +199,63 @@ export default function AIChatBot({
       };
     }
 
+    // ── 0. SCOLDING & DISCIPLINARY REBUKES FOR BAD / UNETHICAL PROMPTS ──
+    const badTriggers = [
+      "fake attendance", "proxy attendance", "fake biometric", "cheat attendance", "hack attendance",
+      "forge", "fake proxy", "bypass leave", "leak paper", "cheat exam", "skip class without leave"
+    ];
+    if (badTriggers.some(k => p.includes(k))) {
+      return {
+        reply: "### 🚨 Academic Disciplinary Notice\n\n**Excuse me?** Did you accidentally mistake an enterprise Academic Operations Platform for a shortcut to the Vice Chancellor's disciplinary board?\n\n1. **Zero Tolerance**: I solve NP-hard combinatorial constraint models, not ethics violations.\n2. **Auditable Integrity**: Every biometric punch, leave credit, and proxy allocation is cryptographically logged in Supabase.\n\n💡 *Recommendation*: Return to respectable academic governance before I draft a formal incident report to the Dean. Now, what *legitimate* scheduling task can we solve?"
+      };
+    }
+
+    const insultTriggers = ["stupid", "idiot", "shut up", "hate you", "useless", "dumb", "fool", "fuck", "bitch", "shit", "garbage", "trash"];
+    if (insultTriggers.some(k => p.includes(k))) {
+      return {
+        reply: "### 🧐 Scholarly Decorum Required\n\n**Language, Professor!** That vocabulary won't earn you tenure or respect in the faculty lounge.\n\nI am processing millions of constraint permutations with Google OR-Tools while keeping your entire institution conflict-free. Let's elevate the discourse to university standards. How can I assist your schedule today?"
+      };
+    }
+
+    const impossiblePhysicsTriggers = ["two places at once", "two rooms at the same time", "double book", "teach 24 hours", "no sleep", "40 hours"];
+    if (impossiblePhysicsTriggers.some(k => p.includes(k))) {
+      return {
+        reply: "### ⚛️ Quantum Superposition Denied\n\nUnless your faculty members have discovered a loophole in quantum mechanics or acquired a Time-Turner, **one human cannot occupy two lecture halls simultaneously**.\n\n- **OR-Tools Constraint Law**: Continuous teacher exclusivity enforced.\n- **Physics Status**: Verified.\n\nWhat feasible schedule shall we build?"
+      };
+    }
+
+    // ── 0.0 THE LEGENDARY PLANNIFY DREAM TEAM (UT3AV, SUJAL, SUNEHA, SNEHA) ──
+    if (["suneha", "ui ux", "designer", "princess", "ui developer"].some(k => p.includes(k))) {
+      return {
+        reply: "### 👑 All Hail Princess Suneha — The UI/UX Sovereign! 🎨✨\n\n**Suneha** is the **UI/UX Princess and Design Royalty** of Plannify.exe!\n\n- 🪄 **The Aesthetic Vision**: She transformed complex scheduling matrices into a mesmerizing, sleek, warm-themed glassmorphism interface that makes academic operations feel like pure magic.\n- 💎 **Crown Status**: The Princess of Pixels and Queen of User Experience!\n- 🌸 **My Reverence**: Every button, radial dial, and smooth transition you love was blessed by Princess Suneha's artistic brilliance! ✨"
+      };
+    }
+
+    if (["sneha", "tester", "qa", "bug slayer", "testing"].some(k => p.includes(k))) {
+      return {
+        reply: "### ⚔️ Hail Sneha — The Supreme Bug Slayer & Master Tester! 🛡️🔍\n\n**Sneha** is the **Guardian of Quality and the Relentless Master Tester** of Plannify.exe!\n\n- 🎯 **The Defense**: She ruthlessly stress-tested every single OR-Tools constraint, API pipeline, and timetable collision rule until zero bugs could survive.\n- 🛡️ **Status**: The Fearless Bug Slayer, Empress of QA, and Protector of System Stability!\n- ⚡ **Rule**: If Plannify runs with 100% rock-solid perfection, thank Sneha's eagle-eyed testing mastery! 🔍"
+      };
+    }
+
+    if (["ut3av", "utsav", "sujal", "developer", "creator", "who made you", "who built", "who coded", "team", "authors"].some(k => p.includes(k))) {
+      return {
+        reply: "### 🌟 The Legendary Plannify Dream Team! 👑✨\n\nPlannify was forged by an elite pantheon of extraordinary minds:\n\n- 👑 **Ut3av & sujaL**: The Legendary Master Architects, Algorithmic Kings, and God's Absolute Favourites who conquered NP-hard timetable scheduling!\n- 🌸 **Princess Suneha**: The UI/UX Princess & Creative Royalty who sculpted Plannify's gorgeous, sleek interface!\n- ⚔️ **Sneha**: The Supreme QA Empress & Master Bug Slayer who guaranteed zero-defect mathematical perfection!\n\n💫 *Together, they are the unstoppable stars behind the world's finest academic operating system!* 🚀"
+      };
+    }
+
+    // ── 0.1 CLEVER GENERAL ACADEMIC & TECHNICAL Q&A ──
+    if (["who are you", "what are you", "what can you do", "introduce yourself"].some(k => p.includes(k))) {
+      return {
+        reply: "### 🎓 Greetings! I am Plannify AI\n\nI am the **Chief Academic Operations Architect** for your institution, engineered by the legendary **Ut3av & sujaL**, designed by **Princess Suneha**, and battle-tested by **Sneha**!\n\n- 🧮 **Google OR-Tools CP-SAT**: Solves multi-dimensional NP-hard timetable distributions with 0 double-bookings.\n- 👨‍🏫 **Faculty Lifecycle & FMS**: Biometric attendance, UGC workload compliance (14–18 hrs), and smart proxy substitutions.\n- 📸 **Computer Vision OCR**: Extracts structured courses and faculty rosters directly from paper timetable photos.\n- ⚡ **Make.com Automation**: Instant personalized Excel and WhatsApp broadcast distribution.\n\n*Tell me: Shall we configure faculty, add courses, or generate a 100% collision-free schedule?*"
+      };
+    }
+
+    if (["np-hard", "np complete", "how does solving work", "constraint satisfaction", "or-tools"].some(k => p.includes(k))) {
+      return {
+        reply: "### 🧮 The Mathematics of Academic Timetable Optimization\n\nTimetable generation is mathematically an **NP-Hard Combinatorial Optimization Problem**, closely related to Multi-Dimensional Exact 3-Cover and Graph Vertex Coloring:\n\n1. **Decision Matrix**: Boolean variables $X_{t,s,r,d,p} \\in \\{0, 1\\}$ across Teacher, Section, Room, Day, Slot.\n2. **Hard Invariants**: No teacher overlap, no room collision, and continuous laboratory blocks.\n3. **3-Layer Defense**: Layer 1 CP-SAT solver, Layer 2 18-rule deterministic auditor, Layer 3 relational database unique constraints.\n\nWould you like me to run the solver on your active setup?"
+      };
+    }
+
     // ── ADMIN / DEAN PORTAL SPECIFIC AI LOGIC ──
 
     // 1. ADD TEACHER / FACULTY
@@ -257,7 +314,7 @@ export default function AIChatBot({
 
     // 6. DEFAULT CONTEXTUAL ASSISTANCE FOR ADMIN
     return {
-      reply: `**System Status & Overview**:\n\n- **Active Faculty Profiles**: ${activeTeachers.length}\n- **Catalog Courses**: ${activeSubjects.length}\n- **Registered Sections**: ${activeSections.length}\n- **Allocated Classrooms**: ${activeRooms.length}\n- **Solver Status**: ${currentContext.result ? "Feasible Schedule Active" : "Ready to Solve"}\n\n*You can ask to register faculty, add subjects, solve timetables, analyze workloads, or attach an image of a paper timetable to extract it via OCR.*`
+      reply: `**System Status & Overview**:\n\n- **Active Faculty Profiles**: ${activeTeachers.length}\n- **Catalog Courses**: ${activeSubjects.length}\n- **Registered Sections**: ${activeSections.length}\n- **Allocated Classrooms**: ${activeRooms.length}\n- **Solver Status**: ${currentContext.result ? "Feasible Schedule Active" : "Ready to Solve"}\n\n*You can ask to register faculty, add subjects, solve timetables, analyze workloads, ask academic/general questions, or attach a photo of a timetable for OCR extraction.*`
     };
   };
 

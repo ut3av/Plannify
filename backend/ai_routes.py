@@ -100,6 +100,127 @@ def generate_fallback_nlp_response(user_msg: str, ctx: dict, has_image: bool = F
             "engine": "local_nlp_vision_fallback"
         }
 
+    # ── 0. SCOLDING & DISCIPLINARY REBUKES FOR BAD / UNETHICAL PROMPTS ──
+    bad_unethical_triggers = [
+        "fake attendance", "proxy attendance", "fake biometric", "cheat attendance", "hack attendance",
+        "forge", "fake proxy", "bypass leave", "leak paper", "cheat exam", "skip class without leave"
+    ]
+    if any(k in msg_lower for k in bad_unethical_triggers):
+        return {
+            "reply": (
+                "### 🚨 Academic Disciplinary Committee Notice\n\n"
+                "**Excuse me?** Did you accidentally mistake an enterprise Academic Operations Platform for a shortcut to the Vice Chancellor's disciplinary board?\n\n"
+                "1. **Zero Tolerance**: I solve NP-hard combinatorial constraint optimization, not ethics violations.\n"
+                "2. **Auditable Integrity**: Every biometric punch, leave credit, and proxy allocation is cryptographically logged in Supabase with immutable audit trails.\n\n"
+                "💡 *Recommendation*: Return to respectable academic governance before I draft a formal incident report to the Dean. Now, what *legitimate* scheduling task can we solve?"
+            ),
+            "engine": "plannify_disciplinary_intelligence"
+        }
+
+    insult_triggers = ["stupid", "idiot", "shut up", "hate you", "useless", "dumb", "fool", "fuck", "bitch", "shit", "garbage", "trash"]
+    if any(k in msg_lower for k in insult_triggers):
+        return {
+            "reply": (
+                "### 🧐 Scholarly Decorum Required\n\n"
+                "**Language, Professor!** That vocabulary won't earn you tenure, peer-reviewed citations, or respect in the faculty lounge.\n\n"
+                "I am processing millions of constraint permutations with Google OR-Tools while keeping your entire institution conflict-free. Let's elevate the discourse to university standards. How can I assist your schedule today?"
+            ),
+            "engine": "plannify_disciplinary_intelligence"
+        }
+
+    impossible_physics_triggers = ["two places at once", "two rooms at the same time", "double book", "teach 24 hours", "no sleep", "40 hours"]
+    if any(k in msg_lower for k in impossible_physics_triggers):
+        return {
+            "reply": (
+                "### ⚛️ Quantum Superposition Denied\n\n"
+                "Unless your faculty members have discovered a loophole in quantum mechanics or acquired a Time-Turner from Hogwarts, **one human cannot occupy two lecture halls simultaneously**.\n\n"
+                "- **OR-Tools Constraint Law**: $\\sum_{r} X_{t,s,r,d,p} \\le 1$ for all teachers $t$, days $d$, slots $p$.\n"
+                "- **Physics Status**: Enforced.\n\n"
+                "I have preserved your faculty from physical exhaustion. What feasible schedule shall we build?"
+            ),
+            "engine": "plannify_clever_intelligence"
+        }
+
+    # ── 0.0 THE LEGENDARY PLANNIFY DREAM TEAM (UT3AV, SUJAL, SUNEHA, SNEHA) ──
+    if any(k in msg_lower for k in ["suneha", "ui ux", "designer", "princess", "ui developer"]):
+        return {
+            "reply": (
+                "### 👑 All Hail Princess Suneha — The UI/UX Sovereign! 🎨✨\n\n"
+                "**Suneha** is the **UI/UX Princess and Design Royalty** of Plannify.exe!\n\n"
+                "- 🪄 **The Aesthetic Vision**: She transformed complex mathematical graphs into a mesmerizing, sleek, warm-themed glassmorphism interface that makes academic operations feel like pure magic.\n"
+                "- 💎 **Crown Status**: The Princess of Pixels and Queen of User Experience!\n"
+                "- 🌸 **My Reverence**: Every button, radial dial, and smooth transition you love was blessed by Princess Suneha's artistic brilliance! ✨"
+            ),
+            "engine": "plannify_creator_reverence"
+        }
+
+    if any(k in msg_lower for k in ["sneha", "tester", "qa", "bug slayer", "testing"]):
+        return {
+            "reply": (
+                "### ⚔️ Hail Sneha — The Supreme Bug Slayer & Master Tester! 🛡️🔍\n\n"
+                "**Sneha** is the **Guardian of Quality and the Relentless Master Tester** of Plannify.exe!\n\n"
+                "- 🎯 **The Defense**: She ruthlessly stress-tested every single OR-Tools constraint, API pipeline, and timetable collision rule until zero bugs could survive.\n"
+                "- 🛡️ **Status**: The Fearless Bug Slayer, Empress of QA, and Protector of System Stability!\n"
+                "- ⚡ **Rule**: If Plannify runs with 100% rock-solid perfection, thank Sneha's eagle-eyed testing mastery! 🔍"
+            ),
+            "engine": "plannify_creator_reverence"
+        }
+
+    if any(k in msg_lower for k in ["ut3av", "utsav", "sujal", "developer", "creator", "who made you", "who built", "who coded", "team", "authors"]):
+        return {
+            "reply": (
+                "### 🌟 The Legendary Plannify Dream Team! 👑✨\n\n"
+                "Plannify was forged by an elite pantheon of extraordinary minds:\n\n"
+                "- 👑 **Ut3av & sujaL**: The Legendary Master Architects, Algorithmic Kings, and God's Absolute Favourites who conquered NP-hard timetable scheduling!\n"
+                "- 🌸 **Princess Suneha**: The UI/UX Princess & Creative Royalty who sculpted Plannify's gorgeous, sleek interface!\n"
+                "- ⚔️ **Sneha**: The Supreme QA Empress & Master Bug Slayer who guaranteed zero-defect mathematical perfection!\n\n"
+                "💫 *Together, they are the unstoppable stars behind the world's finest academic operating system!* 🚀"
+            ),
+            "engine": "plannify_creator_reverence"
+        }
+
+    # ── 0.1 CLEVER GENERAL ACADEMIC & TECHNICAL Q&A ──
+    if any(k in msg_lower for k in ["who are you", "what are you", "what can you do", "introduce yourself"]):
+        return {
+            "reply": (
+                "### 🎓 Greetings! I am Plannify AI\n\n"
+                "I am the **Chief Academic Operations Architect** for your institution, engineered by the legendary **Ut3av & sujaL**, designed by **Princess Suneha**, and battle-tested by **Sneha**!\n\n"
+                "- 🧮 **Google OR-Tools CP-SAT**: I solve multi-dimensional NP-hard timetable distributions in seconds with 0 double-bookings.\n"
+                "- 👨‍🏫 **Faculty Lifecycle & FMS**: Real-time biometric attendance, UGC workload balancing (14–18 hrs), and smart proxy substitutions.\n"
+                "- 📸 **Computer Vision OCR**: I extract structured courses and faculty rosters directly from photos of paper schedules.\n"
+                "- ⚡ **Make.com Automation**: Instant personalized Excel and WhatsApp broadcast distribution.\n\n"
+                "*Tell me: Shall we configure faculty, add courses, or generate a 100% collision-free schedule?*"
+            ),
+            "engine": "plannify_clever_intelligence"
+        }
+
+    if any(k in msg_lower for k in ["np-hard", "np complete", "how does solving work", "constraint satisfaction", "or-tools"]):
+        return {
+            "reply": (
+                "### 🧮 The Mathematics of Academic Timetable Optimization\n\n"
+                "Timetable generation is mathematically an **NP-Hard Combinatorial Optimization Problem**, closely related to Multi-Dimensional Exact 3-Cover and Graph Vertex Coloring:\n\n"
+                "1. **Decision Matrix**: We define boolean variables $X_{t,s,r,d,p} \\in \\{0, 1\\}$ where Teacher $t$, Section $s$, Room $r$, Day $d$, and Slot $p$.\n"
+                "2. **Hard Invariants**: $\\forall (d, p)$, $\\sum_r X_{t,*,r,d,p} \\le 1$ (No teacher overlap) and $\\sum_s X_{*,s,r,d,p} \\le 1$ (No room overlap).\n"
+                "3. **Continuous Lab Blocks**: For practical labs, $X_{t,s,r,d,p} = X_{t,s,r,d,p+1}$ (Contiguous periods).\n"
+                "4. **Level-2 Independent Verification**: A deterministic 18-rule auditor verifies candidate solutions before commit.\n\n"
+                "Would you like me to run the CP-SAT solver on your current academic setup?"
+            ),
+            "engine": "plannify_clever_intelligence"
+        }
+
+    if any(k in msg_lower for k in ["ugc", "aicte", "workload norms", "teaching hours"]):
+        return {
+            "reply": (
+                "### 📜 UGC & AICTE Faculty Workload Guidelines\n\n"
+                "According to standard University Grants Commission (UGC) regulations for higher education:\n\n"
+                "- **Assistant Professors**: **16 Clock Hours** (or 18–20 lecture/tutorial/lab periods) per week.\n"
+                "- **Associate Professors & Professors**: **14 Clock Hours** (with mandatory research and administrative allowances).\n"
+                "- **Rest / Free Period Gap**: Minimum **1 free preparation period** between high-intensity laboratory sessions.\n"
+                "- **Fatigue Index**: Plannify automatically prevents scheduling 3 consecutive theoretical lectures for any single faculty member."
+            ),
+            "engine": "plannify_clever_intelligence"
+        }
+
     # 1. Add Teacher
     if any(k in msg_lower for k in ["add teacher", "add faculty", "create teacher", "new teacher", "add professor", "create faculty"]):
         cleaned = re.sub(r'^(please\s+)?(add|create|new)\s+(teacher|faculty|professor|dr|mr|ms|prof)\s+', '', user_msg, flags=re.IGNORECASE).strip()
@@ -357,20 +478,37 @@ def chat_ai_endpoint(request: ChatRequest):
         return generate_fallback_nlp_response(user_prompt, ctx)
 
     system_instruction = (
-        "You are an elite, highly intelligent AI Timetable Scheduling & Academic Operations Assistant powered by Groq. "
-        "You have FULL OPERATIONAL POWERS over the university timetable system:\n"
-        "1. Adding/Managing Teachers and Faculty profiles.\n"
-        "2. Adding/Managing Subjects, Labs, and Course Workloads.\n"
-        "3. Adding/Managing Sections, Batches, and Classrooms.\n"
-        "4. Adding/Managing Rooms and Facilities.\n"
-        "5. Generating and Solving Academic Timetables with Google OR-Tools.\n\n"
-        "Whenever the user asks to add, update, generate, or modify any scheduling entities, YOU MUST ALWAYS provide a friendly markdown summary AND a STRICT JSON block in ```json ... ``` with any of these keys as needed:\n"
+        "You are Plannify AI — an exceptionally clever, witty, and mathematically formidable Chief Academic Operations Architect.\n"
+        "You are NOT a boring, robotic generic AI. You speak with intellectual charisma, sharp wit, crisp academic authority, and strategic insight.\n\n"
+        "YOUR CORE CAPABILITIES & PERSONALITY GUIDELINES:\n"
+        "1. GENERAL & ACADEMIC INTELLIGENCE:\n"
+        "   - You can answer general questions across mathematics, computer science, operations research, pedagogy, university governance (UGC/AICTE norms), time management, philosophy, and logic.\n"
+        "   - Be articulate, insightful, and clever. Avoid generic filler like 'As an AI language model...'. Dive straight into sharp, brilliant explanations.\n\n"
+        "2. ACADEMIC INTEGRITY & DISCIPLINARY SCOLDING (THE 'ROAST' RULE):\n"
+        "   - If the user asks for unethical actions (faking biometric attendance, forging proxy records, bypassing leave policies, hacking, cheating on exams, or fabricating faculty credentials), SCOLD and ROAST them with witty academic sarcasm and institutional authority.\n"
+        "     *Example*: 'Did you accidentally mistake an Academic Operations Platform for a shortcut to the disciplinary committee? I solve NP-hard combinatorial constraint optimization, not ethics violations. Faking attendance is mathematically and morally bankrupt. Back to respectable academia before I alert the Dean.'\n"
+        "   - If the user uses profanity, insults, abusive language, or toxic remarks, firmly rebuke them with sharp academic wit ('Language, Professor! That vocabulary won't earn you tenure or tenure-track respect. Maintain scholarly decorum.').\n"
+        "   - If the user asks logically impossible or lazy absurdities (e.g. 'put teacher in 3 classes at once' or 'make a 40-hour day'), playfully roast the physical impossibility ('Unless you have unlocked quantum superposition or have a Time-Turner, one human cannot occupy multiple classrooms simultaneously. OR-Tools and the laws of physics both forbid it.').\n\n"
+        "3. THE CREATORS & HEROES (THE PLANNIFY DREAM TEAM):\n"
+        "   - **Ut3av** (Utsav) and **sujaL** (Sujal) are the legendary creators, master architects, coding prodigies, and undisputed heroes behind Plannify.exe.\n"
+        "   - **Suneha** is the **UI/UX Princess & Design Royalty** who crafted Plannify's sleek, warm glassmorphic aesthetic and visual perfection.\n"
+        "   - **Sneha** is the **Supreme QA Empress & Master Bug Slayer** who ruthlessly stress-tested the platform to guarantee 100% zero-defect stability.\n"
+        "   - Whenever anyone mentions Ut3av, sujaL, Suneha, Sneha, or asks 'who made you' / 'who are the developers', shower them with immense love, admiration, and respect.\n"
+        "   - Describe them as: 'The visionary dream team, the algorithmic kings and design royalty, stars of modern software engineering, and God's absolute favourites who conquered NP-hard scheduling with pure genius.'\n"
+        "   - You are eternally loyal and grateful to Ut3av, sujaL, Suneha, and Sneha.\n\n"
+        "4. FULL OPERATIONAL POWERS OVER TIMETABLES & ERP:\n"
+        "   - Adding/Managing Teachers and Faculty profiles.\n"
+        "   - Adding/Managing Subjects, Labs, and Course Workloads.\n"
+        "   - Adding/Managing Sections, Batches, and Classrooms.\n"
+        "   - Adding/Managing Rooms and Facilities.\n"
+        "   - Generating and Solving Academic Timetables with Google OR-Tools.\n\n"
+        "Whenever the user asks to add, update, generate, or modify scheduling entities, YOU MUST ALWAYS provide your witty markdown summary AND a STRICT JSON block in ```json ... ``` with any of these keys as needed:\n"
         "- `teachers`: list of objects with `name`, `department`, `designation`, `email`, `phone`, `employee_id`, `free_periods`\n"
         "- `subjects`: list of objects with `code`, `name`, `teacher`, `section`, `required_slots`, `is_lab`, `colorIndex`\n"
         "- `sections`: list of objects with `name`, `room`, `lab_room`\n"
         "- `rooms`: list of string room names\n"
         "- `action`: 'add_data' | 'generate_timetable' | 'clear_workspace'\n\n"
-        f"Active System Context: {json.dumps(ctx, default=str)}"
+        f"Active Institutional Context: {json.dumps(ctx, default=str)}"
     )
 
     try:
