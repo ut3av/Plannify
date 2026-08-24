@@ -404,21 +404,20 @@ export default function AIChatBot({
         <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2 group animate-fade-in">
           <button
             onClick={() => setIsOpen(true)}
-            className="flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white font-bold shadow-2xl hover:shadow-indigo-500/40 hover:scale-105 transition-all duration-300 border border-indigo-400/40 relative overflow-hidden"
+            className="flex items-center gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#502ce8] via-[#5c2ee8] to-[#7924e9] text-white font-bold shadow-[0_10px_30px_rgba(92,46,232,0.4)] hover:shadow-[0_14px_36px_rgba(92,46,232,0.55)] hover:scale-105 transition-all duration-300 border border-white/20 relative overflow-hidden select-none"
             title={isTeacherView ? "Open Teaching & Performance Co-Pilot" : "Open AI Timetable Co-Pilot"}
           >
-            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="w-7 h-7 rounded-lg bg-indigo-950/80 border border-indigo-400/40 flex items-center justify-center p-1 shadow-inner shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-[#1d1b38]/90 border border-white/10 flex items-center justify-center p-1 shadow-inner shrink-0">
               <BrandLogo onlyIcon size="xs" isWarm={false} />
             </div>
-            <div className="text-left">
-              <div className="flex items-center gap-1.5 leading-none">
-                <span className="text-xs font-black tracking-wide uppercase font-display">
-                  {isTeacherView ? "Faculty AI" : "Plannify AI"}
+            <div className="text-left pr-1">
+              <div className="flex items-center gap-2 leading-none">
+                <span className="text-[13px] font-black tracking-wider uppercase font-display text-white drop-shadow-sm">
+                  {isTeacherView ? "Faculty AI" : "PLANNIFY AI"}
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#2dd4bf] shadow-[0_0_8px_#2dd4bf]" />
               </div>
-              <p className="text-[10px] text-indigo-100/80 font-medium">
+              <p className="text-[11px] text-purple-200/90 font-medium mt-0.5">
                 {isTeacherView ? "Teaching Assistant" : "Assistant Active"}
               </p>
             </div>
@@ -438,7 +437,7 @@ export default function AIChatBot({
           {/* Rich Header Bar */}
           <div className="px-5 py-4 bg-slate-50 dark:bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center p-1.5 shadow-inner shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-[#1d1b38] border border-indigo-500/30 flex items-center justify-center p-1.5 shadow-md shrink-0">
                 <BrandLogo onlyIcon size="sm" isWarm={false} />
               </div>
               <div>

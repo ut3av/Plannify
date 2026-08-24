@@ -1,11 +1,11 @@
 import React from 'react';
 
 /**
- * Pixel-perfect Plannify Icon Mark SVG
+ * Pixel-perfect Plannify Icon Mark SVG (matching reference gradient mark)
  */
 export function PlannifyIconMark({ size = 28, isWarm = false, className = "" }) {
-  const gradientId = isWarm ? "plannify_warm_grad" : "plannify_indigo_grad";
-  const glowId = isWarm ? "plannify_warm_glow" : "plannify_indigo_glow";
+  const gradientId = isWarm ? "plannify_warm_grad" : "plannify_purple_grad";
+  const innerGradId = isWarm ? "plannify_warm_inner" : "plannify_purple_inner";
 
   return (
     <svg
@@ -14,63 +14,83 @@ export function PlannifyIconMark({ size = 28, isWarm = false, className = "" }) 
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`shrink-0 drop-shadow-md select-none ${className}`}
+      className={`shrink-0 drop-shadow-sm select-none ${className}`}
       style={{ overflow: 'visible' }}
     >
       <defs>
-        <linearGradient id={gradientId} x1="10%" y1="10%" x2="90%" y2="90%">
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
           {isWarm ? (
             <>
-              <stop offset="0%" stopColor="#D97706" />
-              <stop offset="50%" stopColor="#EA580C" />
-              <stop offset="100%" stopColor="#F59E0B" />
+              <stop offset="0%" stopColor="#EA580C" />
+              <stop offset="50%" stopColor="#F59E0B" />
+              <stop offset="100%" stopColor="#FBBF24" />
             </>
           ) : (
             <>
-              <stop offset="0%" stopColor="#6366F1" />
-              <stop offset="50%" stopColor="#8B5CF6" />
+              <stop offset="0%" stopColor="#4F46E5" />
+              <stop offset="40%" stopColor="#7C3AED" />
+              <stop offset="80%" stopColor="#9333EA" />
               <stop offset="100%" stopColor="#A855F7" />
             </>
           )}
         </linearGradient>
 
-        <linearGradient id={glowId} x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id={innerGradId} x1="0%" y1="0%" x2="100%" y2="100%">
           {isWarm ? (
             <>
-              <stop offset="0%" stopColor="#B45309" />
-              <stop offset="100%" stopColor="#D97706" />
+              <stop offset="0%" stopColor="#C2410C" />
+              <stop offset="100%" stopColor="#EA580C" />
             </>
           ) : (
             <>
-              <stop offset="0%" stopColor="#4F46E5" />
-              <stop offset="100%" stopColor="#9333EA" />
+              <stop offset="0%" stopColor="#4338CA" />
+              <stop offset="100%" stopColor="#6D28D9" />
             </>
           )}
         </linearGradient>
+
+        <filter id="plannify_glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={isWarm ? "#EA580C" : "#7C3AED"} floodOpacity="0.25" />
+        </filter>
       </defs>
 
-      {/* Orbit Petal Wing */}
+      {/* Main Smooth Rounded 'p' / Loop Ring */}
       <path
-        d="M74 34 C84 48, 81 65, 68 76 C53 89, 29 84, 18 71 C8 58, 12 38, 26 26 C41 13, 63 18, 74 34 Z"
+        d="M 50,14 
+           C 70,14 86,30 86,50 
+           C 86,70 70,86 50,86 
+           C 30,86 16,71 16,51 
+           L 16,84 
+           C 16,87.5 13,90 9.5,90 
+           C 6,90 3,87.5 3,84 
+           L 3,50 
+           C 3,24 24,14 50,14 Z"
         fill={`url(#${gradientId})`}
+        filter="url(#plannify_glow)"
       />
 
-      {/* Stylized P Stem Accent */}
+      {/* Left Tail Highlight Stem */}
       <path
-        d="M26 42 L26 80 C26 83, 23 86, 20 86 C17 86, 14 83, 14 80 L14 42 Z"
-        fill={`url(#${glowId})`}
-        opacity="0.85"
+        d="M 16,48 L 16,84 C 16,88 12.5,90 9.5,90 C 6.5,90 3,88 3,84 L 3,48 C 3,36 10,24 24,18 C 17,26 16,37 16,48 Z"
+        fill={`url(#${innerGradId})`}
+        opacity="0.9"
       />
 
-      {/* Inner Crisp Focal Core */}
-      <circle cx="48" cy="53" r="16.5" fill="#FFFFFF" />
+      {/* Pure White Circular Hole / Center Focal Core */}
+      <circle cx="50" cy="50" r="18" fill="#FFFFFF" />
 
-      {/* Orbiting Satellite Particle */}
+      {/* Top-Right Glowing Orbit Particle Dot */}
       <circle
-        cx="77"
-        cy="19"
-        r="7.5"
+        cx="88"
+        cy="12"
+        r="8"
         fill={isWarm ? "#FBBF24" : "#C084FC"}
+      />
+      <circle
+        cx="88"
+        cy="12"
+        r="4"
+        fill={isWarm ? "#FEF3C7" : "#E9D5FF"}
       />
     </svg>
   );
@@ -89,31 +109,31 @@ export default function BrandLogo({
 }) {
   const sizeConfig = {
     xs: {
-      iconSize: 16,
-      textSize: "text-xs font-black",
+      iconSize: 18,
+      textSize: "text-sm font-black",
       badgeSize: "text-[8px] px-1 py-0.2",
-      gap: "gap-1.5"
+      gap: "gap-2"
     },
     sm: {
-      iconSize: 20,
-      textSize: "text-sm font-black",
+      iconSize: 22,
+      textSize: "text-base font-black",
       badgeSize: "text-[9px] px-1.5 py-0.5",
       gap: "gap-2"
     },
     md: {
-      iconSize: 26,
-      textSize: "text-lg font-black",
+      iconSize: 28,
+      textSize: "text-xl font-black",
       badgeSize: "text-[10px] px-2 py-0.5",
       gap: "gap-2.5"
     },
     lg: {
-      iconSize: 34,
+      iconSize: 36,
       textSize: "text-2xl sm:text-3xl font-black",
       badgeSize: "text-xs px-2.5 py-1",
       gap: "gap-3"
     },
     xl: {
-      iconSize: 44,
+      iconSize: 46,
       textSize: "text-3xl sm:text-4xl font-black",
       badgeSize: "text-sm px-3 py-1",
       gap: "gap-3.5"
@@ -126,20 +146,20 @@ export default function BrandLogo({
     return <PlannifyIconMark size={config.iconSize} isWarm={isWarm} className={className} />;
   }
 
-  // Base brand text color (Plannify)
+  // Base brand text color (Plannify) - Deep dark / Navy-black in light mode, crisp white in dark
   const computedTextColor = textColor || (
     isWarm
       ? "text-[#1F140E] dark:text-[#FAF8F3]"
-      : "text-slate-900 dark:text-white"
+      : "text-[#111827] dark:text-white"
   );
 
-  // Accent extension color (.exe) - Purple accent in light and dark mode
+  // Accent extension color (.exe) - Vibrant Purple/Violet gradient or solid
   const computedExeColor = exeColor || (
     textColor === "text-white"
       ? "text-purple-300 drop-shadow-[0_0_8px_rgba(192,132,252,0.4)]"
       : isWarm
       ? "text-amber-600 dark:text-amber-400"
-      : "text-purple-600 dark:text-purple-400"
+      : "text-[#8B5CF6] dark:text-[#A78BFA]"
   );
 
   return (
@@ -149,10 +169,10 @@ export default function BrandLogo({
       )}
 
       <span className="inline-flex items-baseline leading-none">
-        {/* Brand Name Typography (Playfair Display Serif) */}
+        {/* Brand Name Typography (Bold Serif matching 1st image) */}
         <span
-          className={`${config.textSize} ${computedTextColor} font-brand tracking-tight transition-colors`}
-          style={{ letterSpacing: "-0.02em" }}
+          className={`${config.textSize} ${computedTextColor} font-brand tracking-tight transition-colors font-black`}
+          style={{ letterSpacing: "-0.03em" }}
         >
           Plannify
         </span>
@@ -172,8 +192,8 @@ export default function BrandLogo({
             </span>
           ) : (
             <span
-              className={`${config.textSize} ${computedExeColor} font-brand tracking-tight transition-colors`}
-              style={{ letterSpacing: "-0.02em" }}
+              className={`${config.textSize} ${computedExeColor} font-brand tracking-tight transition-colors font-black`}
+              style={{ letterSpacing: "-0.03em" }}
             >
               .exe
             </span>
@@ -183,3 +203,4 @@ export default function BrandLogo({
     </span>
   );
 }
+
