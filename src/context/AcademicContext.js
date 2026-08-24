@@ -2,9 +2,9 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { syncRelationalData } from '../services/supabaseService';
-import { clearAllFacultyCaches, seedDemoFacultyData, syncFacultyFromTimetable, getFacultyWorkloadAnalytics } from '../services/realtimeFacultyService';
+import { clearAllFacultyCaches, syncFacultyFromTimetable, getFacultyWorkloadAnalytics } from '../services/realtimeFacultyService';
 import { API_BASE_URL } from '../apiConfig';
-import { DEMO_TIMETABLE_DATA, DEMO_RESULT, buildApiPayload, formatResult } from '../data/demoTimetableData';
+import { buildApiPayload, formatResult } from '../utils/timetableFormatter';
 
 const AcademicContext = createContext(null);
 
@@ -393,50 +393,7 @@ export function AcademicProvider({ children }) {
     await generateFromPayload(payload);
   }, [generateFromPayload, payload]);
 
-  const generateDemoTimetable = useCallback(async () => {
-    const demoData = JSON.parse(JSON.stringify(DEMO_TIMETABLE_DATA));
-
-    setTeachers(demoData.teachers);
-    setSections(demoData.sections);
-    setSubjects(demoData.subjects);
-    setRooms(demoData.rooms);
-    setTimeSlots(demoData.timeSlots);
-    
-    const formattedDemo = formatResult(DEMO_RESULT);
-    setResult(formattedDemo);
-    
-    activeStateRef.current = {
-      teachers: demoData.teachers,
-      sections: demoData.sections,
-      subjects: demoData.subjects,
-      rooms: demoData.rooms,
-      timeSlots: demoData.timeSlots,
-      result: formattedDemo
-    };
-
-    setRescheduleNote("Academic demonstration dataset loaded (30+ courses, faculty profiles, and venues configured).");
-    seedDemoFacultyData();
-
-    try {
-      const demoPayload = buildApiPayload(demoData);
-      axios.post(`${API_BASE_URL}/analytics/seed-demo-history`).catch(() => null);
-      axios.post(`${API_BASE_URL}/faculty/seed-lnct`).catch(() => null);
-      await axios.post(`${API_BASE_URL}/generate`, demoPayload, { timeout: 20000 });
-    } catch (err) {
-      console.warn("Backend solver call failed, keeping local LNCT DEMO_RESULT fallback:", err);
-    } finally {
-      saveToCloud(true, {
-        teachers: demoData.teachers,
-        sections: demoData.sections,
-        subjects: demoData.subjects,
-        rooms: demoData.rooms,
-        timeSlots: demoData.timeSlots,
-        result: formattedDemo
-      });
-    }
-  }, [saveToCloud]);
-
-  const handleRemoveDemoData = useCallback(async () => {
+  const handleResetWorkspace = useCallback(async () => {
     const defaultSlots = [
       "09:00 AM - 09:45 AM",
       "09:45 AM - 10:30 AM",
@@ -453,7 +410,7 @@ export function AcademicProvider({ children }) {
     setRooms([]);
     setTimeSlots(defaultSlots);
     setResult(null);
-    setRescheduleNote("Workspace reset complete. All demo data, attendance percentages, and substitution records cleared.");
+    setRescheduleNote("Workspace reset complete. All entities and draft schedules cleared to clean state.");
 
     activeStateRef.current = {
       teachers: [],
@@ -480,26 +437,9 @@ export function AcademicProvider({ children }) {
             result: null,
             updated_at: new Date().toISOString()
           });
-
-        await Promise.allSettled([
-          supabase.from('attendance_records').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-          supabase.from('substitution_log').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-          supabase.from('leave_applications').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-          supabase.from('faculty_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-          supabase.from('leave_balances').delete().neq('faculty_id', '00000000-0000-0000-0000-000000000000'),
-        ]);
       }
     } catch (e) {
       console.warn("Could not reset Supabase draft state:", e);
-    }
-
-    try {
-      await Promise.allSettled([
-        axios.post(`${API_BASE_URL}/analytics/clear-demo`),
-        axios.post(`${API_BASE_URL}/faculty/clear-all`)
-      ]);
-    } catch (err) {
-      // Ignore
     }
   }, []);
 
@@ -721,8 +661,8 @@ export function AcademicProvider({ children }) {
     toggleTheme,
     saveToCloud,
     generateTimetable,
-    generateDemoTimetable,
-    handleRemoveDemoData,
+    handleResetWorkspace,
+    handleRemoveDemoData: handleResetWorkspace,
     handleAddFaculty,
     handleTeachersChange,
     assignProxy,

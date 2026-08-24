@@ -9,7 +9,6 @@ import {
   assignSubstitution as assignSubService,
   subscribeToTable,
   getLeaveApplications,
-  seedDemoSubstitutions,
 } from "../../services/realtimeFacultyService";
 
 export default function SubstitutionPanel() {
@@ -264,13 +263,6 @@ export default function SubstitutionPanel() {
     }
   };
 
-  const handleSeedDemoData = () => {
-    seedDemoSubstitutions();
-    fetchSubstitutions();
-    setSuccessToast("Sample proxy allocations and substitution logs loaded successfully!");
-    setTimeout(() => setSuccessToast(""), 4000);
-  };
-
   return (
     <div className="space-y-6 animate-fade-in text-slate-900 dark:text-slate-100">
       {/* Header Banner */}
@@ -302,16 +294,6 @@ export default function SubstitutionPanel() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {allCombinedSubstitutions.length === 0 && (
-            <button
-              onClick={handleSeedDemoData}
-              className="btn-secondary text-xs py-2 px-3 font-bold flex items-center gap-1.5"
-              title="Load realistic sample substitution records"
-            >
-              <svg className="w-3.5 h-3.5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              Load Sample Proxies
-            </button>
-          )}
           <button
             onClick={() => setShowManualModal(true)}
             className="btn-gradient text-xs py-2.5 px-4 font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20"
@@ -581,14 +563,8 @@ export default function SubstitutionPanel() {
               No substitution records found.
             </p>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Assign a proxy teacher using the button above or load sample demonstration records to inspect the workflow.
+              Assign an emergency or planned proxy teacher using the Quick Assign Proxy button above.
             </p>
-            <button
-              onClick={handleSeedDemoData}
-              className="btn-secondary text-xs py-2 px-4 font-bold inline-flex items-center gap-1.5"
-            >
-              ⚡ Load Sample Demonstrations
-            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">

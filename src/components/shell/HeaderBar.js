@@ -39,7 +39,7 @@ export default function HeaderBar({
   unreadNotificationsCount = 0,
   onSaveCloud,
   isCloudSaving,
-  onLoadDemo,
+  onResetWorkspace,
   onRemoveDemo,
   user,
   onLogout,
@@ -257,35 +257,23 @@ export default function HeaderBar({
           </button>
         )}
 
-        {/* Load Demo Data Quick Action */}
-        {onLoadDemo && (
+        {/* Reset Workspace Action */}
+        {(onResetWorkspace || onRemoveDemo) && (
           <button
-            onClick={onLoadDemo}
+            onClick={() => {
+              if (window.confirm("Are you sure you want to reset your workspace? This will clear active draft entries.")) {
+                (onResetWorkspace || onRemoveDemo)();
+              }
+            }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
               isLight
-                ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300/60 text-emerald-700'
-                : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-300/80 text-slate-700'
+                : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
             }`}
-            title="Load complete academic demo data across all modules"
+            title="Clear current workspace and start with a clean configuration"
           >
-            <svg className="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span className="hidden sm:inline">Load Demo Data</span>
-          </button>
-        )}
-
-        {/* Remove Demo Data / Clear Workspace Action */}
-        {onRemoveDemo && (
-          <button
-            onClick={onRemoveDemo}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
-              isLight
-                ? 'bg-rose-50 hover:bg-rose-100 border-rose-300/60 text-rose-700'
-                : 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 text-rose-300'
-            }`}
-            title="Remove demo data and switch to clean real implementation workspace"
-          >
-            <svg className="w-3.5 h-3.5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            <span className="hidden sm:inline">Remove Demo Data</span>
+            <svg className="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span className="hidden sm:inline">Reset Workspace</span>
           </button>
         )}
 

@@ -157,62 +157,6 @@ export function clearAllFacultyCaches() {
   }
 }
 
-export function seedDemoFacultyData() {
-  try {
-    const today = new Date().toISOString().split("T")[0];
-    const demoTeachers = [
-      { id: "EMP-LNCT-001", teacher_name: "Prof Ripusoodan Sharma", department: "Computer Applications", designation: "Professor", status: "present", in_time: "08:52 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-002", teacher_name: "Prof Anshu Gangwar", department: "Computer Applications", designation: "Professor", status: "present", in_time: "08:55 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-003", teacher_name: "Dr Satish Manwani", department: "Computer Applications", designation: "Associate Professor", status: "present", in_time: "08:58 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-004", teacher_name: "Prof Pragya Shastri", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "09:02 AM", punch_status: "Late (+2m)" },
-      { id: "EMP-LNCT-005", teacher_name: "Prof Mohit Kubade", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "08:48 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-006", teacher_name: "Dr Sonal Sharma", department: "Computer Applications", designation: "Professor", status: "on_leave", in_time: null, punch_status: "Approved CL" },
-      { id: "EMP-LNCT-007", teacher_name: "Mr. Aniket Satpute", department: "AI & DA", designation: "Assistant Professor", status: "present", in_time: "08:50 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-008", teacher_name: "Prof Jagruti Durugkar", department: "AI & DA", designation: "Assistant Professor", status: "present", in_time: "08:54 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-009", teacher_name: "Mr Kaiwalya Zankar", department: "Computer Science", designation: "Lecturer", status: "present", in_time: "08:56 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-010", teacher_name: "Ms. Swarupa Waghmare", department: "Information Tech", designation: "Lecturer", status: "present", in_time: "08:51 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-011", teacher_name: "Prof Dipanshu Jha", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "08:57 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-012", teacher_name: "Dr Alka Gulati", department: "Computer Science", designation: "Associate Professor", status: "present", in_time: "08:49 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-013", teacher_name: "Prof Neha Swanakar", department: "Information Tech", designation: "Assistant Professor", status: "present", in_time: "09:00 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-014", teacher_name: "Dr Swagatika Lenka", department: "Computer Applications", designation: "Associate Professor", status: "present", in_time: "08:53 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-015", teacher_name: "Mr Jitendra Maind", department: "AI & DA", designation: "Assistant Professor", status: "present", in_time: "08:59 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-016", teacher_name: "Prof Pramod Kumar Saket", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "08:45 AM", punch_status: "On Time" },
-      { id: "EMP-LNCT-017", teacher_name: "Prof Atul Verma", department: "Computer Applications", designation: "Assistant Professor", status: "present", in_time: "08:50 AM", punch_status: "On Time" },
-    ];
-
-    const attendanceRecords = demoTeachers.map(t => ({
-      id: `att-${t.id}-${today}`,
-      faculty_id: t.id,
-      teacher_name: t.teacher_name,
-      department: t.department,
-      date: today,
-      status: t.status,
-      in_time: t.in_time,
-      punch_status: t.punch_status
-    }));
-
-    saveStoredAttendance(attendanceRecords);
-
-    const demoLeaves = [{
-      id: "leave-demo-001",
-      faculty_id: "EMP-LNCT-006",
-      teacher_name: "Dr Sonal Sharma",
-      leave_type: "CL",
-      from_date: today,
-      to_date: today,
-      days_count: 1,
-      reason: "Academic Conference & Research Symposium presentation",
-      status: "approved",
-      substitute_id: "EMP-LNCT-001",
-      substitute_name: "Prof Ripusoodan Sharma",
-      applied_at: new Date().toISOString()
-    }];
-    saveStoredLeaves(demoLeaves);
-  } catch (e) {
-    console.warn("Could not seed demo faculty caches:", e);
-  }
-}
-
 /**
  * Unified Faculty Pipeline: Syncs teachers configured in the Timetable Workspace
  * directly into the Institutional Faculty Profiles directory and leave ledgers.
@@ -1014,57 +958,6 @@ export async function getSubstitutionLogs() {
   }
 
   return Array.from(map.values());
-}
-
-export function seedDemoSubstitutions() {
-  const today = new Date().toISOString().split("T")[0];
-  const demoSubs = [
-    {
-      id: "sub-demo-001",
-      original_faculty_name: "Prof. Rajesh Sharma",
-      substitute_faculty_name: "Dr. Arvind Kumar",
-      date: today,
-      day: "Mon",
-      slot: "09:00 AM - 09:45 AM",
-      subject: "CS301 Data Structures & Algorithms",
-      section: "MCA-I (A)",
-      room: "Room 308/MCA",
-      reason: "University Academic Committee Meeting",
-      status: "Confirmed",
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: "sub-demo-002",
-      original_faculty_name: "Prof. Mohit Kubade",
-      substitute_faculty_name: "Dr. Meenakshi Pathak",
-      date: today,
-      day: "Tue",
-      slot: "11:20 AM - 12:10 PM",
-      subject: "CS402 Database Management Systems",
-      section: "BCA-II (B)",
-      room: "Lab Room No. 006",
-      reason: "Faculty Medical Leave",
-      status: "Confirmed",
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: "sub-demo-003",
-      original_faculty_name: "Dr. Arvind Kumar",
-      substitute_faculty_name: "Prof. Rajesh Sharma",
-      date: today,
-      day: "Wed",
-      slot: "01:50 PM - 02:40 PM",
-      subject: "CS503 Operating Systems & Architecture",
-      section: "MCA-II",
-      room: "Room 305/LNCT",
-      reason: "AICTE Workshop Attendance",
-      status: "Completed",
-      created_at: new Date(Date.now() - 172800000).toISOString(),
-    }
-  ];
-
-  saveStoredSubstitutions(demoSubs);
-  return demoSubs;
 }
 
 export async function assignSubstitution(data) {

@@ -407,7 +407,7 @@ function AdminLayout() {
     error,
     rescheduleNote,
     saveToCloud,
-    generateDemoTimetable,
+    handleResetWorkspace,
     handleRemoveDemoData,
     generateTimetable,
     handleAddFaculty,
@@ -460,7 +460,7 @@ function AdminLayout() {
       onRoleChange={setUserRole}
       onSaveCloud={saveToCloud}
       isCloudSaving={loading}
-      onLoadDemo={generateDemoTimetable}
+      onResetWorkspace={handleResetWorkspace}
       onRemoveDemo={handleRemoveDemoData}
       user={user}
       onLogout={handleLogout}
@@ -634,7 +634,7 @@ function AdminLayout() {
           sections={sections}
           rooms={rooms}
           timeSlots={timeSlots}
-          onLoadDemo={generateDemoTimetable}
+          onResetWorkspace={handleResetWorkspace}
           onRemoveDemo={handleRemoveDemoData}
           onGenerateTimetable={generateTimetable}
           onAddFaculty={handleAddFaculty}

@@ -85,32 +85,21 @@ def simulate_influx(
     automatically calculating late_minutes and status.
     """
     try:
-        req_count = payload.count if payload and payload.count else count
-        sim_date = (payload.date if payload and payload.date else None) or target_date or date.today().isoformat()
+        req_count = payload.count if (payload and payload.count) else (count if isinstance(count, int) else 30)
+        resolved_date = (payload.date if (payload and payload.date) else None) or (target_date if isinstance(target_date, str) else None) or date.today().isoformat()
 
         active_faculty = list_faculty(status="active")
 
-        # Auto-seed mock faculty if none exist
+        # If no active faculty exist in the database, return clean zero-count response
         if not active_faculty:
-            sample_names = [
-                ("Dr. Robert Chen", "FAC101", "Computer Science"),
-                ("Prof. Sarah Miller", "FAC102", "Mathematics"),
-                ("Dr. Alan Turing", "FAC103", "Computer Science"),
-                ("Prof. Emily Davis", "FAC104", "Physics"),
-                ("Dr. Michael Chang", "FAC105", "Electrical Eng"),
-                ("Prof. Lisa Ray", "FAC106", "Mechanical Eng"),
-                ("Dr. Vikram Malhotra", "FAC107", "Computer Science"),
-                ("Prof. Ananya Sharma", "FAC108", "Mathematics"),
-            ]
-            for name, emp_id, dept in sample_names:
-                create_faculty({
-                    "teacher_name": name,
-                    "employee_id": emp_id,
-                    "designation": "Associate Professor",
-                    "status": "active",
-                    "joining_date": "2024-01-15"
-                })
-            active_faculty = list_faculty(status="active")
+            return SimulateInfluxResponse(
+                message="No active faculty members found in institutional directory to record biometric punches.",
+                simulated_count=0,
+                present=0,
+                late=0,
+                absent=0,
+                date=resolved_date
+            )
 
         faculty_to_simulate = active_faculty[:req_count]
 

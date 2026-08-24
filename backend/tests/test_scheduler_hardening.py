@@ -488,3 +488,43 @@ def test_solver_rejects_impossible_infeasible_schedule():
 
     assert exc_info.value.status_code == 422
     assert "infeasible" in str(exc_info.value.detail).lower() or "No feasible timetable" in str(exc_info.value.detail)
+
+
+# ==============================================================================
+# 6. Production Hardening & Demo Data Removal Tests
+# ==============================================================================
+
+def test_production_seed_endpoints_strictly_rejected():
+    """Verifies that seed endpoints are locked down and reject execution when APP_ENV=production."""
+    from faculty_routes import seed_lnct
+    from analytics_routes import seed_analytics_demo_history
+    from fastapi import HTTPException
+    import os
+
+    old_env = os.environ.get("APP_ENV")
+    try:
+        os.environ["APP_ENV"] = "production"
+        
+        with pytest.raises(HTTPException) as exc_faculty:
+            seed_lnct()
+        assert exc_faculty.value.status_code == 403
+        assert "disabled in production" in exc_faculty.value.detail.lower()
+
+        with pytest.raises(HTTPException) as exc_analytics:
+            seed_analytics_demo_history()
+        assert exc_analytics.value.status_code == 403
+        assert "disabled in production" in exc_analytics.value.detail.lower()
+    finally:
+        if old_env is not None:
+            os.environ["APP_ENV"] = old_env
+        else:
+            os.environ.pop("APP_ENV", None)
+
+
+def test_simulate_influx_zero_faculty_safe():
+    """Verifies that biometric simulation on an empty database does NOT automatically seed fake faculty."""
+    from attendance_routes import simulate_influx
+    
+    res = simulate_influx()
+    assert res.simulated_count == 0
+    assert "no active faculty" in res.message.lower()

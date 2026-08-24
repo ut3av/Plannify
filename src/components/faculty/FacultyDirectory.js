@@ -765,7 +765,7 @@ export default function FacultyDirectory({
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-slate-400">
           <svg className="w-12 h-12 mx-auto mb-3 opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          <p className="text-sm font-medium">No faculty found. Register or seed faculty members to begin.</p>
+          <p className="text-sm font-medium">No faculty members found. Register new faculty profiles or import a roster to begin.</p>
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

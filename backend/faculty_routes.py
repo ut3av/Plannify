@@ -45,9 +45,20 @@ def faculty_dashboard_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+import os
+
+APP_ENV = os.getenv("APP_ENV", "production").lower()
+
+
 @router.post("/seed-lnct")
 def seed_lnct():
-    """Seeds LNCT University Bhopal 17 Faculty Members."""
+    """Seeds LNCT Faculty Members (Development / Staging Only)."""
+    if APP_ENV == "production":
+        raise HTTPException(
+            status_code=403,
+            detail="Demo data seeding is strictly disabled in production environments."
+        )
+
     lnct = [
         {"teacher_name": "Prof Ripusoodan Sharma", "employee_id": "EMP-LNCT-001", "designation": "Professor", "phone": "+91-7869543871"},
         {"teacher_name": "Prof Anshu Gangwar", "employee_id": "EMP-LNCT-002", "designation": "Professor", "phone": "+91-8519064890"},
@@ -76,7 +87,7 @@ def seed_lnct():
                 added.append(res)
         except Exception:
             pass
-    return {"message": "LNCT Faculty members seeded successfully", "count": len(added)}
+    return {"message": "LNCT Faculty members seeded successfully (Development Environment)", "count": len(added)}
 
 
 # ── Departments ─────────────────────────────────────────────

@@ -67,7 +67,7 @@ export default function AIChatBot({
   sections = [],
   rooms = [],
   timeSlots = [],
-  onLoadDemo,
+  onResetWorkspace,
   onRemoveDemo,
   onGenerateTimetable,
   onAddFaculty,
@@ -247,25 +247,17 @@ export default function AIChatBot({
       };
     }
 
-    // 5. REMOVE DEMO / RESET
-    if (p.includes("remove demo") || p.includes("clear demo") || p.includes("clean workspace") || p.includes("reset")) {
+    // 5. RESET WORKSPACE
+    if (p.includes("reset workspace") || p.includes("clear workspace") || p.includes("reset") || p.includes("clear all")) {
       return {
-        reply: "**Workspace Reset to Clean State**\n\nAll demo entries (faculty profiles, mock attendance, substitutions, and schedule assignments) have been purged.",
-        action: "clear_demo"
+        reply: "**Workspace Reset to Clean State**\n\nAll current draft entries have been cleared.",
+        action: "clear_workspace"
       };
     }
 
-    // 6. LOAD DEMO
-    if (p.includes("load demo") || p.includes("demo data") || p.includes("demo timetable")) {
-      return {
-        reply: "**Academic Demo Dataset Loaded**\n\nPopulated 30+ classes across BCA Sections A-F, 17+ faculty profiles, lab allocations, and classroom arrangements.",
-        action: "load_demo"
-      };
-    }
-
-    // 7. DEFAULT CONTEXTUAL ASSISTANCE FOR ADMIN
+    // 6. DEFAULT CONTEXTUAL ASSISTANCE FOR ADMIN
     return {
-      reply: `**System Status & Overview**:\n\n- **Active Faculty Profiles**: ${activeTeachers.length}\n- **Catalog Courses**: ${activeSubjects.length}\n- **Registered Sections**: ${activeSections.length}\n- **Allocated Classrooms**: ${activeRooms.length}\n- **Solver Status**: ${currentContext.result ? "Feasible Schedule Active" : "Ready to Solve"}\n\n*You can ask to register faculty, add subjects, solve timetables, load demo datasets, or attach an image of a paper timetable to extract it via OCR.*`
+      reply: `**System Status & Overview**:\n\n- **Active Faculty Profiles**: ${activeTeachers.length}\n- **Catalog Courses**: ${activeSubjects.length}\n- **Registered Sections**: ${activeSections.length}\n- **Allocated Classrooms**: ${activeRooms.length}\n- **Solver Status**: ${currentContext.result ? "Feasible Schedule Active" : "Ready to Solve"}\n\n*You can ask to register faculty, add subjects, solve timetables, analyze workloads, or attach an image of a paper timetable to extract it via OCR.*`
     };
   };
 
@@ -324,11 +316,8 @@ export default function AIChatBot({
         if (res.data.action === "generate" && onGenerateTimetable) {
           onGenerateTimetable();
         }
-        if (res.data.action === "load_demo" && onLoadDemo) {
-          onLoadDemo();
-        }
-        if (res.data.action === "clear_demo" && onRemoveDemo) {
-          onRemoveDemo();
+        if ((res.data.action === "clear_workspace" || res.data.action === "clear_demo") && (onResetWorkspace || onRemoveDemo)) {
+          (onResetWorkspace || onRemoveDemo)();
         }
       }
     } catch (err) {
@@ -353,11 +342,8 @@ export default function AIChatBot({
         if (localResult.action === "generate" && onGenerateTimetable) {
           onGenerateTimetable();
         }
-        if (localResult.action === "load_demo" && onLoadDemo) {
-          onLoadDemo();
-        }
-        if (localResult.action === "clear_demo" && onRemoveDemo) {
-          onRemoveDemo();
+        if ((localResult.action === "clear_workspace" || localResult.action === "clear_demo") && (onResetWorkspace || onRemoveDemo)) {
+          (onResetWorkspace || onRemoveDemo)();
         }
       }, 400);
     } finally {
@@ -389,8 +375,7 @@ export default function AIChatBot({
     { label: "Check Leave Balances & Policy", iconType: "file-text" },
     { label: "Draft Lecture Plan / Quiz", iconType: "zap" },
   ] : [
-    { label: "Load Demo Data", iconType: "database", action: "demo" },
-    { label: "Remove Demo Data", iconType: "trash", action: "clear_demo" },
+    { label: "Reset Workspace", iconType: "trash", action: "clear_workspace" },
     { label: "Upload Timetable (OCR)", iconType: "camera", action: "ocr" },
     { label: "Add Dr. Priya Sharma (CSE)", iconType: "user-plus" },
     { label: "Generate Timetable", iconType: "zap" },
@@ -577,24 +562,13 @@ export default function AIChatBot({
                 <button
                   key={idx}
                   onClick={() => {
-                    if (s.action === "demo" && onLoadDemo) {
-                      onLoadDemo();
+                    if ((s.action === "clear_workspace" || s.action === "clear_demo") && (onResetWorkspace || onRemoveDemo)) {
+                      (onResetWorkspace || onRemoveDemo)();
                       setMessages(prev => [
                         ...prev,
                         {
                           id: Date.now().toString(),
-                          text: "**Academic Demo Dataset Loaded**\n\nPopulated 30+ classes across BCA Sections A-F, 17+ faculty profiles, lab allocations, and classroom arrangements.",
-                          sender: 'bot',
-                          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                        }
-                      ]);
-                    } else if (s.action === "clear_demo" && onRemoveDemo) {
-                      onRemoveDemo();
-                      setMessages(prev => [
-                        ...prev,
-                        {
-                          id: Date.now().toString(),
-                          text: "**Workspace Reset to Clean State**\n\nAll demonstration data has been removed. You are now in real institutional operation mode ready to add active faculty and courses.",
+                          text: "**Workspace Reset to Clean State**\n\nAll current draft entries have been cleared.",
                           sender: 'bot',
                           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         }
@@ -606,9 +580,7 @@ export default function AIChatBot({
                     }
                   }}
                   className={`whitespace-nowrap px-3 py-1 rounded-xl text-[11px] font-bold border transition-all flex items-center gap-1.5 active:scale-95 ${
-                    s.action === "demo"
-                      ? "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/25"
-                      : s.action === "clear_demo"
+                    s.action === "clear_workspace" || s.action === "clear_demo"
                       ? "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30 hover:bg-rose-500/25"
                       : "bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white shadow-sm"
                   }`}

@@ -38,12 +38,21 @@ except ImportError:
         clear_all_demo_data,
     )
 
+import os
+
+APP_ENV = os.getenv("APP_ENV", "production").lower()
+
 router = APIRouter(prefix="/analytics", tags=["Faculty Analytics"])
 
 
 @router.post("/seed-demo-history")
 def seed_analytics_demo_history():
-    """Seeds 30 days of rich LNCT operational history (attendance, half days, substitutions, leaves)."""
+    """Seeds 30 days of operational history (Development / Staging Only)."""
+    if APP_ENV == "production":
+        raise HTTPException(
+            status_code=403,
+            detail="Demo data seeding is strictly disabled in production environments."
+        )
     try:
         return seed_30day_demo_history()
     except Exception as e:
@@ -53,7 +62,12 @@ def seed_analytics_demo_history():
 @router.post("/clear-demo")
 @router.delete("/clear-demo")
 def clear_analytics_demo_history():
-    """Purges demo attendance punches, substitution logs, and leave records."""
+    """Purges demo attendance punches, substitution logs, and leave records (Development / Staging Only)."""
+    if APP_ENV == "production":
+        raise HTTPException(
+            status_code=403,
+            detail="Demo cleanup endpoint is disabled in production."
+        )
     try:
         return clear_all_demo_data()
     except Exception as e:

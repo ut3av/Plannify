@@ -139,25 +139,19 @@ def generate_fallback_nlp_response(user_msg: str, ctx: dict) -> str:
             f"- Optimizing hard room and teacher collision constraints."
         )
 
-    # 5. Load Demo / Remove Demo
-    if "load demo" in msg_lower or "seed demo" in msg_lower:
-        json_payload = json.dumps({"action": "load_demo"}, indent=2)
-        return f"### 🚀 Loading Full Academic Demo Dataset...\n\n```json\n{json_payload}\n```"
-
-    if "remove demo" in msg_lower or "clear demo" in msg_lower or "reset workspace" in msg_lower:
-        json_payload = json.dumps({"action": "clear_demo"}, indent=2)
-        return f"### 🧹 Resetting Workspace to Clean Real Implementation...\n\n```json\n{json_payload}\n```"
+    if "reset workspace" in msg_lower or "clear all data" in msg_lower:
+        json_payload = json.dumps({"action": "clear_workspace"}, indent=2)
+        return f"### 🧹 Resetting Workspace to Clean Operational State...\n\n```json\n{json_payload}\n```"
 
     return (
         "### 🤖 Planify AI Operations Assistant\n\n"
         f"I have analyzed your active operational context (`{len(assignments)} scheduled sessions` across active sections).\n\n"
-        "**Available Voice & Text Commands**:\n"
+        "**Available Commands**:\n"
         "- 👨‍🏫 `Add teacher Dr. Ananya in Data Science`\n"
         "- 📚 `Add subject Machine Learning code CS701 taught by Dr. Satish for section MCA-A`\n"
         "- 🏛️ `Add section MCA-C with room Room-205`\n"
         "- 🏢 `Add rooms Lab-3, Room-204, Auditorium`\n"
-        "- ✨ `Generate timetable now`\n"
-        "- 🚀 `Load demo data` or 🗑️ `Remove demo data`"
+        "- ✨ `Generate timetable now`"
     )
 
 
@@ -179,7 +173,7 @@ def chat_with_groq(request: ChatRequest):
         "- `subjects`: list of objects with `code`, `name`, `teacher`, `section`, `required_slots`, `is_lab`, `colorIndex`\n"
         "- `sections`: list of objects with `name`, `room`, `lab_room`\n"
         "- `rooms`: list of string room names\n"
-        "- `action`: 'add_data' | 'generate_timetable' | 'load_demo' | 'clear_demo'\n\n"
+        "- `action`: 'add_data' | 'generate_timetable' | 'clear_workspace'\n\n"
         f"Active System Context: {json.dumps(ctx, default=str)}"
     )
 

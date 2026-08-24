@@ -16,12 +16,8 @@ export default function LandingPage({ onExploreDemo }) {
     navigate('/login');
   };
 
-  const handleDemoClick = () => {
-    if (onExploreDemo) {
-      onExploreDemo();
-    } else {
-      navigate('/login');
-    }
+  const handlePublicPortal = () => {
+    navigate('/public/timetable');
   };
 
   const ROLE_SOLUTIONS = {
@@ -159,11 +155,11 @@ export default function LandingPage({ onExploreDemo }) {
           {/* Right Action Buttons */}
           <div className="flex items-center gap-3">
             <button
-              onClick={handleDemoClick}
+              onClick={handlePublicPortal}
               className="btn-secondary text-xs py-2 px-3.5 font-bold flex items-center gap-1.5 hover:border-indigo-500/40"
             >
-              <svg className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              <span>1-Click Demo</span>
+              <svg className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Public Timetable</span>
             </button>
             <button
               onClick={handleLaunchApp}
@@ -216,11 +212,11 @@ export default function LandingPage({ onExploreDemo }) {
               </button>
 
               <button
-                onClick={handleDemoClick}
+                onClick={handlePublicPortal}
                 className="w-full sm:w-auto btn-secondary text-sm py-3.5 px-7 font-bold flex items-center justify-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:border-indigo-500/40 transition-all"
               >
-                <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                <span>Explore Interactive Demo</span>
+                <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>View Public Timetable</span>
               </button>
             </div>
 
@@ -786,10 +782,11 @@ export default function LandingPage({ onExploreDemo }) {
                 </button>
 
                 <button
-                  onClick={handleDemoClick}
+                  onClick={handlePublicPortal}
                   className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-black text-sm border border-white/30 flex items-center justify-center gap-2 transition-all"
                 >
-                  <span>1-Click Live Demo</span>
+                  <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <span>Student Timetable Portal</span>
                 </button>
               </div>
 

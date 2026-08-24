@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
 import { supabase } from '../../supabaseClient';
-import { DEMO_TIMETABLE_DATA, DEMO_RESULT, formatResult } from '../../data/demoTimetableData';
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
@@ -114,11 +113,8 @@ export default function PublicTimetablePortal() {
       console.warn("Local storage read note:", e);
     }
 
-    // 3. Fallback to Demo Timetable
-    setTimetableState({
-      ...DEMO_TIMETABLE_DATA,
-      result: formatResult(DEMO_RESULT),
-    });
+    // 3. No timetable data found
+    setTimetableState(null);
     setLastSyncTime(new Date());
   }, []);
 
@@ -200,10 +196,7 @@ export default function PublicTimetablePortal() {
       return { allSections: [], timeSlots: DEFAULT_TIME_SLOTS, assignments: [] };
     }
 
-    const secs = timetableState.sections?.map(s => typeof s === 'string' ? s : (s?.name || s?.section_name)) || [
-      "Section A (BCA-III)", "Section B (BCA-III)", "Section C (BCA-III)",
-      "Section D (BCA-III)", "Section E (BCA-III)", "Section F (BCA-III)"
-    ];
+    const secs = timetableState.sections?.map(s => typeof s === 'string' ? s : (s?.name || s?.section_name)) || [];
 
     const slots = (Array.isArray(timetableState.timeSlots) && timetableState.timeSlots.length > 0)
       ? timetableState.timeSlots
@@ -501,34 +494,46 @@ export default function PublicTimetablePortal() {
           </div>
         </div>
 
-        {/* ── Active View Title Banner ── */}
-        <div className="glass-card p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm no-print">
-          <div>
-            <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <span>{selectedSection === "ALL" ? `${selectedBranch} (All Branch Sections)` : selectedSection}</span>
-            </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-              {filteredAssignments.length} Weekly Teaching & Practical Sessions Configured
+        {assignments.length === 0 ? (
+          <div className="card p-12 text-center max-w-lg mx-auto my-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 mx-auto flex items-center justify-center mb-4">
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">No Published Timetable</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+              No official academic timetable has been published for this term yet. Once the institutional administration validates and publishes the master schedule, it will appear here in real-time.
             </p>
           </div>
+        ) : (
+          <>
+            {/* ── Active View Title Banner ── */}
+            <div className="glass-card p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm no-print">
+              <div>
+                <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>{selectedSection === "ALL" ? `${selectedBranch} (All Branch Sections)` : selectedSection}</span>
+                </h2>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  {filteredAssignments.length} Weekly Teaching & Practical Sessions Configured
+                </p>
+              </div>
 
-          {currentLiveSlot && (
-            <div className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-ping" />
-              <span>Current Ongoing Slot: {currentLiveSlot}</span>
+              {currentLiveSlot && (
+                <div className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-ping" />
+                  <span>Current Ongoing Slot: {currentLiveSlot}</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* ── Master Grid Table ── */}
-        <div className="overflow-x-auto rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm print-container">
-          <table className="w-full text-left border-collapse min-w-[850px]">
-            <thead>
-              <tr className="bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 border-b border-slate-300 dark:border-slate-700 text-[11px] font-black uppercase tracking-wider">
-                <th className="py-3 px-3.5 border-r border-slate-300 dark:border-slate-700 w-20 text-center">
-                  Day
-                </th>
-                {timeSlots.map((slot, idx) => {
+            {/* ── Master Grid Table ── */}
+            <div className="overflow-x-auto rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm print-container">
+              <table className="w-full text-left border-collapse min-w-[850px]">
+                <thead>
+                  <tr className="bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 border-b border-slate-300 dark:border-slate-700 text-[11px] font-black uppercase tracking-wider">
+                    <th className="py-3 px-3.5 border-r border-slate-300 dark:border-slate-700 w-20 text-center">
+                      Day
+                    </th>
+                    {timeSlots.map((slot, idx) => {
                   const isCurrent = slot === currentLiveSlot;
                   return (
                     <th
@@ -682,7 +687,9 @@ export default function PublicTimetablePortal() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </>
+    )}
+  </main>
+</div>
   );
 }

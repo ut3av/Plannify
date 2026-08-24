@@ -36,7 +36,7 @@ function EmptyState({ loading }) {
           No Timetable Generated
         </h2>
         <p className="mt-2 max-w-sm mx-auto text-sm leading-6 text-slate-400">
-          Click <span className="text-indigo-400 font-bold">Load Demo Data</span> or <span className="text-indigo-400 font-bold">Generate AI Timetable</span> to launch the master schedule workspace.
+          Configure your faculty, sections, and subjects in Academic Setup, then click <span className="text-indigo-400 font-bold">Generate AI Timetable</span> to construct the master schedule.
         </p>
       </div>
     </div>

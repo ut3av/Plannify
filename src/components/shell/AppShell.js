@@ -13,7 +13,7 @@ export default function AppShell({
   onRoleChange,
   onSaveCloud,
   isCloudSaving,
-  onLoadDemo,
+  onResetWorkspace,
   onRemoveDemo,
   user,
   onLogout,
@@ -48,7 +48,7 @@ export default function AppShell({
         onOpenQRModal={() => setIsQRModalOpen(true)}
         onSaveCloud={onSaveCloud}
         isCloudSaving={isCloudSaving}
-        onLoadDemo={onLoadDemo}
+        onResetWorkspace={onResetWorkspace}
         onRemoveDemo={onRemoveDemo}
         user={user}
         onLogout={onLogout}

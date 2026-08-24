@@ -50,14 +50,14 @@ export default function InstitutionalDashboard({
     }
   };
 
-  const activeFaculty = teachersCount === 0 ? 0 : (stats?.total_faculty !== undefined ? stats.total_faculty : (teachersCount || 0));
-  const attendanceRate = activeFaculty > 0 
-    ? (stats?.attendance_rate !== undefined ? stats.attendance_rate : 94.1) 
+  const activeFaculty = stats?.total_faculty !== undefined ? stats.total_faculty : (teachersCount || 0);
+  const attendanceRate = (stats?.attendance_rate !== undefined && stats?.attendance_rate !== null) 
+    ? stats.attendance_rate 
     : 0;
-  const pendingLeaves = activeFaculty > 0 ? (stats?.pending_leaves !== undefined ? stats.pending_leaves : 0) : 0;
-  const onLeaveToday = activeFaculty > 0 ? (stats?.on_leave_today !== undefined ? stats.on_leave_today : 1) : 0;
-  const substitutionsToday = activeFaculty > 0 ? (stats?.substitutions_today !== undefined ? stats.substitutions_today : 1) : 0;
-  const timetableScore = hasResult ? 100 : (sectionsCount > 0 && activeFaculty > 0 ? 94 : 0);
+  const pendingLeaves = stats?.pending_leaves || 0;
+  const onLeaveToday = stats?.on_leave_today || 0;
+  const substitutionsToday = stats?.substitutions_today || 0;
+  const timetableScore = hasResult ? 100 : 0;
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-900 dark:text-slate-100">
