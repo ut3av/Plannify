@@ -82,6 +82,114 @@
 
 ---
 
+## 🛡️ 3-Layer Security & Collision Validation Architecture
+
+Plannify enforces a multi-tiered **Defense-in-Depth validation model** to guarantee mathematical impossibility of double-bookings, faculty schedule overlaps, or illegal room allocations:
+
+```
+                                 ┌─────────────────────────────────────────────────────────┐
+                                 │       INPUT: Academic Setup / OCR / Manual Entry        │
+                                 └────────────────────────────┬────────────────────────────┘
+                                                              ▼
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 1: MATHEMATICAL CONSTRAINT SOLVER (Google OR-Tools CP-SAT)                                                      │
+│ • Boolean Decision Matrix: X[t, s, r, d, p] ∈ {0, 1}                                                                   │
+│ • Hard Constraints: Teacher Uniqueness, Section Uniqueness, Room Exclusivity, Continuous Lab Blocks                    │
+│ • Soft Constraints: Teacher Daily Gaps, UGC 14-18h Workload Balancing, Even Period Distribution                      │
+└─────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────┘
+                                              ▼  Generated Schedule Payload
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 2: INDEPENDENT DETERMINISTIC VALIDATOR (TimetableValidator — 18 Institutional Rules)                             │
+│ • Standalone audit engine verifying 18 rules before database commit                                                     │
+│ • Verifies Faculty Availability, Room Capacity, Lab Facility Compatibility, Teacher Inactive/On-Leave Detection         │
+│ • Generates structured Violation Reports with Severity Levels (ERROR vs WARNING)                                       │
+└─────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────┘
+                                              ▼  Validated Payload (valid == True)
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 3: RELATIONAL DATABASE INTEGRITY & ROW-LEVEL SECURITY (PostgreSQL / Supabase)                                    │
+│ • Composite Database Unique Constraints:                                                                               │
+│     - UNIQUE (timetable_id, day, slot, teacher_name)                                                                   │
+│     - UNIQUE (timetable_id, day, slot, room)                                                                           │
+│     - UNIQUE (timetable_id, day, slot, section)                                                                        │
+│ • Versioning State Machine: Draft → Published → Archived with Immutable History Tracking                               │
+│ • PostgreSQL Row-Level Security (RLS) policies isolating department records                                            │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Layer Breakdown:
+
+1. **Layer 1 — Mathematical CP-SAT Optimization Solver**:
+   - Variables represent exact allocations across Teacher ($t$), Subject ($s$), Room ($r$), Day ($d$), and Slot ($p$).
+   - Solves integer constraint satisfaction problems preventing any physical overlap mathematically before candidate schedules are materialized.
+
+2. **Layer 2 — Independent Deterministic 18-Rule Audit Engine (`TimetableValidator`)**:
+   - Completely decoupled from the solver, this engine audits all schedules (generated, manual edits, OCR scans, or CSV imports) against 18 comprehensive operational rules.
+   - If any hard constraint fails (e.g. faculty double-booked, room type mismatch), execution is halted with an `HTTP 422 Unprocessable Entity` detailed diagnostics report.
+
+3. **Layer 3 — Relational Database Constraints & Security**:
+   - Even if anomalous payloads bypass application memory, Supabase/PostgreSQL database-level composite unique keys physically reject colliding rows at the storage engine level.
+   - Transactional versioning isolates active published master timetables from work-in-progress drafts.
+
+---
+
+## 🔄 End-to-End Operational Pipelines
+
+```mermaid
+flowchart TD
+    subgraph P1["1. Timetable Generation & Publishing Pipeline"]
+        A1["Academic Context\n(Faculty, Subjects, Rooms, Slots)"] --> B1["FastAPI /generate Endpoint"]
+        B1 --> C1["Google OR-Tools CP-SAT Solver (Layer 1)"]
+        C1 --> D1["18-Rule Deterministic Audit (Layer 2)"]
+        D1 --> E1["Relational Draft Save (Layer 3)"]
+        E1 --> F1["Official Publication & Student Portal Live"]
+    end
+
+    subgraph P2["2. Multi-Modal Vision OCR Pipeline"]
+        A2["Document Upload\n(Photo, Paper Scan, Excel Image)"] --> B2["Client-Side Resolution & Compression"]
+        B2 --> C2["Gemini 2.5 / Groq LLaMA 3.2 Vision"]
+        C2 --> D2["JSON Cleaning & Normalization"]
+        D2 --> E2["Academic Context & Supabase Sync"]
+    end
+
+    subgraph P3["3. Attendance, Leave & Auto-Substitution Pipeline"]
+        A3["Biometric Punch\n(CSV / Hardware REST)"] --> B3["Attendance Analytics & Late Calculations"]
+        C3["Leave Application\n(Casual, Medical, Duty)"] --> D3["Leave Balance Verification"]
+        D3 --> E3["Dynamic Proxy Recommendation Engine"]
+        E3 --> F3["Real-time Timetable Re-assignment"]
+    end
+
+    subgraph P4["4. Automation & Multi-Channel Broadcast Pipeline"]
+        A4["Published Schedule Event"] --> B4["OpenPyXL Multi-Sheet Workbook Generation"]
+        B4 --> C4["Make.com Webhook Dispatch"]
+        C4 --> D4["Personalized Faculty Excel Attachments & WhatsApp Alerts"]
+    end
+```
+
+### 1. Timetable Generation & Publishing Pipeline
+- **Input Ingestion**: Gathers faculty availability, subjects, required slots, room tags, and section configurations.
+- **Solving**: Invokes Google OR-Tools CP-SAT engine to find optimal zero-collision distributions.
+- **Validation**: Verifies compliance against 18 institutional rules.
+- **Relational Storage**: Persists normalized rows into `timetables` and `timetable_assignments` tables in Supabase.
+- **Publication**: Transitions draft to published state, instantly updating public student/faculty portals in real time.
+
+### 2. Multi-Modal Vision OCR Ingestion Pipeline
+- **Capture**: Administrators attach photos of physical paper timetables or faculty spreadsheets.
+- **Image Optimization**: Client-side canvas normalization compresses images for high-speed API payload transmission.
+- **Vision Extraction**: Google Gemini 2.5 Flash / Groq Vision extracts names, contact details, designations, course codes, and slot mappings.
+- **Auto-Sync**: Automatically populates `teachers`, `subjects`, and `sections` states and syncs with Supabase `faculty_profiles`.
+
+### 3. Attendance, Leave & Proxy Substitution Pipeline
+- **Biometric Processing**: Ingests hardware punches, calculating on-time, late minutes, and absences.
+- **Leave Lifecycle**: Validates leave quota balances (`CL`, `EL`, `ML`, `OD`, `CO`) upon application.
+- **Proxy Matching**: Automatically identifies available, qualified faculty with free periods and minimum weekly workload burden.
+- **Live Re-routing**: Updates the master timetable grid and marks substitute coverage badges in real time.
+
+### 4. Automated Broadcast & Excel Pipeline
+- **Master & Individual Workbooks**: Generates institutional multi-tab master workbooks and personalized faculty weekly agendas via OpenPyXL.
+- **Make.com Webhook Delivery**: Dispatches automated payloads to Make.com scenarios for WhatsApp proxy alerts, SMS broadcasts, and bulk email distributions.
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
