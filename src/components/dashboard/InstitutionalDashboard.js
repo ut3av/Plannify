@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { API_BASE_URL as API } from "../../apiConfig";
 import AnimatedCounter from "../common/AnimatedCounter";
@@ -16,25 +16,7 @@ export default function InstitutionalDashboard({
   const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [teachersCount, sectionsCount, subjectsCount, roomsCount]);
-
-  useEffect(() => {
-    const handleSync = () => {
-      fetchDashboardData(true);
-    };
-    window.addEventListener("planify_attendance_updated", handleSync);
-    window.addEventListener("planify_leave_updated", handleSync);
-    window.addEventListener("planify_substitution_updated", handleSync);
-    return () => {
-      window.removeEventListener("planify_attendance_updated", handleSync);
-      window.removeEventListener("planify_leave_updated", handleSync);
-      window.removeEventListener("planify_substitution_updated", handleSync);
-    };
-  }, []);
-
-  const fetchDashboardData = async (isSilent = false) => {
+  const fetchDashboardData = useCallback(async (isSilent = false) => {
     try {
       if (!isSilent && !stats) setLoading(true);
       const [statsRes, insightsRes] = await Promise.all([
@@ -48,7 +30,25 @@ export default function InstitutionalDashboard({
     } finally {
       setLoading(false);
     }
-  };
+  }, [stats]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [teachersCount, sectionsCount, subjectsCount, roomsCount, fetchDashboardData]);
+
+  useEffect(() => {
+    const handleSync = () => {
+      fetchDashboardData(true);
+    };
+    window.addEventListener("planify_attendance_updated", handleSync);
+    window.addEventListener("planify_leave_updated", handleSync);
+    window.addEventListener("planify_substitution_updated", handleSync);
+    return () => {
+      window.removeEventListener("planify_attendance_updated", handleSync);
+      window.removeEventListener("planify_leave_updated", handleSync);
+      window.removeEventListener("planify_substitution_updated", handleSync);
+    };
+  }, [fetchDashboardData]);
 
   const activeFaculty = stats?.total_faculty !== undefined ? stats.total_faculty : (teachersCount || 0);
   const attendanceRate = (stats?.attendance_rate !== undefined && stats?.attendance_rate !== null) 

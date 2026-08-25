@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { provisioningAuthClient, supabase } from "../../supabaseClient";
 import DispatchPreviewModal from "../common/DispatchPreviewModal";
@@ -44,7 +44,7 @@ export default function FacultyDirectory({
     accountPassword: "Plannify@2026",
   });
 
-  const fetchFaculty = async (isSilent = false) => {
+  const fetchFaculty = useCallback(async (isSilent = false) => {
     try {
       if (!isSilent && faculty.length === 0) setLoading(true);
       const res = await axios.get(`${API}/faculty`, { timeout: 4000 });
@@ -74,9 +74,9 @@ export default function FacultyDirectory({
     } finally {
       setLoading(false);
     }
-  };
+  }, [faculty.length]);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/faculty/departments`, { timeout: 4000 });
       if (res.data && Array.isArray(res.data)) {
@@ -95,7 +95,7 @@ export default function FacultyDirectory({
     } catch (err) {
       console.error("Failed to fetch departments:", err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchFaculty(false);
@@ -118,7 +118,7 @@ export default function FacultyDirectory({
       unsubFaculty();
       unsubDept();
     };
-  }, []);
+  }, [fetchFaculty, fetchDepartments]);
 
   const handleDelete = async (e, f) => {
     e.stopPropagation();

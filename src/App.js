@@ -1,10 +1,9 @@
 import React, { Suspense, useCallback } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { saveAs } from "file-saver";
-
 import { AcademicProvider, useAcademic } from "./context/AcademicContext";
 import { API_BASE_URL } from "./apiConfig";
+import { exportTimetableToExcel } from "./utils/exportUtils";
 import BrandLogo from "./components/common/BrandLogo";
 import GooeyLoader from "./components/common/GooeyLoader";
 import AppShell from "./components/shell/AppShell";
@@ -159,128 +158,10 @@ function TimetableWorkspaceRoute() {
     }
   };
 
-  const exportToExcel = useCallback(async () => {
+  const exportToExcel = useCallback(() => {
     if (!result) return;
-    const XLSX = await import("xlsx");
-    const sectionsSet = new Set();
-    if (result.assignments) {
-      result.assignments.forEach((a) => {
-        if (a.section) sectionsSet.add(a.section);
-      });
-    }
-    if (sectionsSet.size === 0) sectionsSet.add("Default");
-
-    const workbook = XLSX.utils.book_new();
-
-    sectionsSet.forEach((section) => {
-      const branchName = section.includes("-") ? section.split("-")[0] : "Default";
-      const sectionName = section.includes("-") ? section.split("-")[1] : section;
-      const sectionObj = sections.find((s) => s.name === section);
-      const roomDisplay = sectionObj && sectionObj.room ? sectionObj.room : "Auto";
-      const headerInfoRow = [
-        `Branch: ${branchName}`,
-        "",
-        `Section: ${sectionName}`,
-        "",
-        `Room No.: ${roomDisplay}`,
-        "",
-        `Classes w.e.f.: ${new Date().toLocaleDateString()}`,
-      ];
-
-      const periodNums = ["Day / (Period & Time)"];
-      const timeSlotsRow = [""];
-      const lunchColIdxList = [];
-
-      let periodCounter = 1;
-      for (let i = 0; i < result.time_slots.length; i++) {
-        periodNums.push(["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][periodCounter - 1] || periodCounter.toString());
-        timeSlotsRow.push(result.time_slots[i]);
-
-        if (i < result.time_slots.length - 1) {
-          const endMatch = result.time_slots[i].split("-")[1]?.trim();
-          const nextStartMatch = result.time_slots[i + 1].split("-")[0]?.trim();
-          if (endMatch && nextStartMatch && endMatch !== nextStartMatch) {
-            periodNums.push("");
-            timeSlotsRow.push("LUNCH");
-            lunchColIdxList.push(timeSlotsRow.length - 1);
-          }
-        }
-        periodCounter++;
-      }
-
-      const rows = [headerInfoRow, periodNums, timeSlotsRow];
-      const sectionSubjectsMap = new Map();
-
-      result.days.forEach((day) => {
-        const row = [day];
-        let slotCounter = 0;
-
-        for (let i = 1; i < timeSlotsRow.length; i++) {
-          if (lunchColIdxList.includes(i)) {
-            row.push("");
-            continue;
-          }
-          const slotName = result.time_slots[slotCounter];
-          const assignments = result.timetable?.[day]?.[slotName] || [];
-          const secAssigned = assignments.find(
-            (a) => a.section === section || (!a.section && section === "Default"),
-          );
-
-          if (!secAssigned) {
-            row.push("");
-          } else {
-            if (secAssigned.code || secAssigned.subject) {
-              sectionSubjectsMap.set(
-                secAssigned.code || secAssigned.subject,
-                secAssigned,
-              );
-            }
-            row.push(secAssigned.code ? secAssigned.code : secAssigned.subject);
-          }
-          slotCounter++;
-        }
-        rows.push(row);
-      });
-
-      rows.push([]);
-      rows.push(["Subjects as per University Scheme", "", "Lab. Room No.", "Name of Faculty"]);
-      rows.push(["Code No.", "Name of Subject", "", ""]);
-
-      sectionSubjectsMap.forEach((info) => {
-        rows.push([
-          info.code || "-",
-          info.subject || "-",
-          info.is_lab ? info.room : "",
-          info.teacher || "-",
-        ]);
-      });
-
-      const worksheet = XLSX.utils.aoa_to_sheet(rows);
-      if (!worksheet["!merges"]) worksheet["!merges"] = [];
-      const subjHeaderRowIdx = 4 + result.days.length;
-      worksheet["!merges"].push({
-        s: { r: subjHeaderRowIdx, c: 0 },
-        e: { r: subjHeaderRowIdx, c: 1 },
-      });
-
-      let sheetName = section.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 31);
-      if (!sheetName) sheetName = "Sheet1";
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-      lunchColIdxList.forEach((colIdx) => {
-        const startRow = 2;
-        const endRow = 2 + result.days.length;
-        worksheet["!merges"].push({
-          s: { r: startRow, c: colIdx },
-          e: { r: endRow, c: colIdx },
-        });
-      });
-    });
-
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" });
-    saveAs(data, `timetable_${new Date().toISOString().slice(0, 10)}.xlsx`);
-  }, [result, sections]);
+    exportTimetableToExcel(result, sections, teachers, subjects);
+  }, [result, sections, teachers, subjects]);
 
   return (
     <div className="space-y-6">

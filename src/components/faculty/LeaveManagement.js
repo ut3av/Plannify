@@ -157,7 +157,7 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
       });
     }
 
-    setFacultyList(Array.from(map.values()));
+    setFaculty(Array.from(map.values()));
   }, [contextTeachers]);
 
   // Initial fetch

@@ -3,7 +3,7 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import * as XLSX from 'xlsx';
-import BrandLogo, { PlannifyIconMark } from './common/BrandLogo';
+import { PlannifyIconMark } from './common/BrandLogo';
 import { API_BASE_URL } from '../apiConfig';
 
 const compressImage = (file, maxWidth = 1200, quality = 0.82) => {
@@ -442,18 +442,18 @@ export default function AIChatBot({
       onExtractedData(currentFile.autoExtracted);
     }
 
+    let imagePayload = null;
+    let promptToSend = userText;
+
+    if (currentFile?.type === 'image') {
+      imagePayload = currentFile.base64;
+    } else if (currentFile?.type === 'pdf') {
+      imagePayload = 'data:application/pdf;base64,' + currentFile.base64;
+    } else if (currentFile?.type === 'excel') {
+      promptToSend = `${userText}\n\n${currentFile.textContent}`;
+    }
+
     try {
-      let imagePayload = null;
-      let promptToSend = userText;
-
-      if (currentFile?.type === 'image') {
-        imagePayload = currentFile.base64;
-      } else if (currentFile?.type === 'pdf') {
-        imagePayload = 'data:application/pdf;base64,' + currentFile.base64;
-      } else if (currentFile?.type === 'excel') {
-        promptToSend = `${userText}\n\n${currentFile.textContent}`;
-      }
-
       const payload = {
         prompt: promptToSend,
         image: imagePayload,
