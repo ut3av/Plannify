@@ -221,9 +221,11 @@ function FacultyDirectoryRoute() {
   const {
     teachers,
     subjects,
+    sections,
     result,
     setSelectedFaculty,
     handleAddFaculty,
+    handleBatchImportData,
     handleTeachersChange
   } = useAcademic();
 
@@ -234,12 +236,14 @@ function FacultyDirectoryRoute() {
         <FacultyDirectory
           teachers={teachers}
           subjects={subjects}
+          sections={sections}
           result={result}
           onSelectFaculty={(f) => {
             setSelectedFaculty(f);
             if (f?.id) navigate(`/faculty/${f.id}`);
           }}
           onAddFaculty={handleAddFaculty}
+          onBatchImport={handleBatchImportData}
           onTeachersChange={handleTeachersChange}
         />
         <AttendanceDashboard />
@@ -292,6 +296,7 @@ function AdminLayout() {
     handleRemoveDemoData,
     generateTimetable,
     handleAddFaculty,
+    handleBatchImportData,
     handleLogout,
     theme,
     toggleTheme,
@@ -521,15 +526,11 @@ function AdminLayout() {
           onAddFaculty={handleAddFaculty}
           onExtractedData={(data) => {
             if (!data) return;
-            if (data.teachers && data.teachers.length > 0) {
-              data.teachers.forEach(t => handleAddFaculty(t));
-            }
-            if (data.subjects && data.subjects.length > 0) {
-              setSubjects(data.subjects);
-            }
-            if (data.sections && data.sections.length > 0) {
-              setSections(data.sections);
-            }
+            handleBatchImportData({
+              teachers: data.teachers || [],
+              sections: data.sections || [],
+              subjects: data.subjects || []
+            });
             if (data.rooms && data.rooms.length > 0) {
               setRooms(data.rooms);
             }

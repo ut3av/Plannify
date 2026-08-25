@@ -488,6 +488,88 @@ export function AcademicProvider({ children }) {
     });
   }, [saveToCloud]);
 
+  const handleBatchImportData = useCallback(({ teachers: newTeachers = [], sections: newSections = [], subjects: newSubjects = [] }) => {
+    let updatedTeachers = activeStateRef.current.teachers || [];
+    let updatedSections = activeStateRef.current.sections || [];
+    let updatedSubjects = activeStateRef.current.subjects || [];
+
+    // 1. Merge Teachers
+    if (Array.isArray(newTeachers) && newTeachers.length > 0) {
+      const teacherNames = new Set(updatedTeachers.map(t => (typeof t === 'string' ? t : t?.name || t?.teacher_name || '').toLowerCase().trim()));
+      newTeachers.forEach(t => {
+        const name = (typeof t === 'string' ? t : t?.name || t?.teacher_name || '').trim();
+        if (name && !teacherNames.has(name.toLowerCase())) {
+          teacherNames.add(name.toLowerCase());
+          updatedTeachers = [
+            ...updatedTeachers,
+            typeof t === 'object' ? {
+              name,
+              free_periods: t.free_periods || 1,
+              email: t.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
+              phone: t.phone || "+91-9876543210",
+              department: t.department || t.department_name || "Computer Applications",
+              employee_id: t.employee_id || `EMP-${Date.now().toString().slice(-4)}`,
+              designation: t.designation || "Assistant Professor",
+              status: "active"
+            } : { name, free_periods: 1, department: "Computer Applications", status: "active" }
+          ];
+        }
+      });
+      setTeachers(updatedTeachers);
+    }
+
+    // 2. Merge Sections (Auto-Generated)
+    if (Array.isArray(newSections) && newSections.length > 0) {
+      const sectionNames = new Set(updatedSections.map(s => (typeof s === 'string' ? s : s?.name || '').toLowerCase().trim()));
+      newSections.forEach(s => {
+        const name = (typeof s === 'string' ? s : s?.name || '').trim();
+        if (name && !sectionNames.has(name.toLowerCase())) {
+          sectionNames.add(name.toLowerCase());
+          updatedSections = [
+            ...updatedSections,
+            typeof s === 'object' ? {
+              name,
+              room: s.room || "Auto",
+              preferred_faculty: s.preferred_faculty || []
+            } : { name, room: "Auto", preferred_faculty: [] }
+          ];
+        }
+      });
+      setSections(updatedSections);
+    }
+
+    // 3. Merge Subjects
+    if (Array.isArray(newSubjects) && newSubjects.length > 0) {
+      const subjectNames = new Set(updatedSubjects.map(sub => (typeof sub === 'string' ? sub : sub?.name || '').toLowerCase().trim()));
+      newSubjects.forEach(sub => {
+        const name = (typeof sub === 'string' ? sub : sub?.name || '').trim();
+        if (name && !subjectNames.has(name.toLowerCase())) {
+          subjectNames.add(name.toLowerCase());
+          updatedSubjects = [
+            ...updatedSubjects,
+            typeof sub === 'object' ? sub : { name, weekly_lectures: 4, department: "Computer Applications" }
+          ];
+        }
+      });
+      setSubjects(updatedSubjects);
+    }
+
+    // Persist combined state to Cloud
+    saveToCloud(true, {
+      teachers: updatedTeachers,
+      sections: updatedSections,
+      subjects: updatedSubjects,
+      rooms: activeStateRef.current.rooms,
+      timeSlots: activeStateRef.current.timeSlots,
+      result: activeStateRef.current.result
+    });
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("planify_sections_updated"));
+      window.dispatchEvent(new CustomEvent("planify_faculty_updated"));
+    }
+  }, [saveToCloud]);
+
   const handleTeachersChange = useCallback((updated) => {
     setTeachers(updated);
     saveToCloud(true, {
@@ -664,6 +746,7 @@ export function AcademicProvider({ children }) {
     handleResetWorkspace,
     handleRemoveDemoData: handleResetWorkspace,
     handleAddFaculty,
+    handleBatchImportData,
     handleTeachersChange,
     assignProxy,
     rescheduleTimetable,

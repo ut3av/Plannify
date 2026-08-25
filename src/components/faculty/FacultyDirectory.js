@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import axios from "axios";
 import { provisioningAuthClient, supabase } from "../../supabaseClient";
 import DispatchPreviewModal from "../common/DispatchPreviewModal";
 import GooeyLoader from "../common/GooeyLoader";
 import { subscribeToTable } from "../../services/realtimeFacultyService";
+import { parseFacultyExcelData, uploadFacultyAndSectionsToCloud } from "../../utils/excelImportUtils";
+import { useAcademic } from "../../context/AcademicContext";
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
@@ -11,10 +13,13 @@ export default function FacultyDirectory({
   onSelectFaculty,
   teachers = [],
   subjects = [],
+  sections = [],
   result,
   onAddFaculty,
+  onBatchImport,
   onTeachersChange,
 }) {
+  const { handleBatchImportData: contextBatchImport, sections: contextSections } = useAcademic() || {};
   const [faculty, setFaculty] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +35,11 @@ export default function FacultyDirectory({
   const [showAddForm, setShowAddForm] = useState(false);
   const [deletedKeys, setDeletedKeys] = useState(new Set());
   const [dispatchTeacher, setDispatchTeacher] = useState(null);
+  const [importingExcel, setImportingExcel] = useState(false);
+  const [importProgress, setImportProgress] = useState("");
+  const [importSummary, setImportSummary] = useState(null);
+  const fileInputRef = useRef(null);
+
   const [form, setForm] = useState({
     teacher_name: "",
     employee_id: "",
@@ -419,6 +429,72 @@ export default function FacultyDirectory({
     }
   };
 
+  const handleExcelFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setImportingExcel(true);
+      setErrorMessage("");
+      setSuccessMessage("");
+      setImportProgress("Reading spreadsheet data & analyzing columns...");
+
+      const arrayBuffer = await file.arrayBuffer();
+      const allExistingSecs = (sections && sections.length > 0) ? sections : (contextSections || []);
+      const parsed = parseFacultyExcelData(arrayBuffer, allExistingSecs, teachers);
+
+      if (!parsed || parsed.facultyCount === 0) {
+        alert("No valid faculty rows found in the uploaded spreadsheet. Please ensure columns include Faculty/Teacher Name.");
+        setImportingExcel(false);
+        return;
+      }
+
+      setImportProgress(`Uploading ${parsed.facultyCount} faculty profiles to directory & auto-generating ${parsed.sectionsCount} sections...`);
+
+      // 1. Upload to Supabase and Backend API
+      await uploadFacultyAndSectionsToCloud(parsed, (p) => {
+        setImportProgress(`Uploading faculty profile (${p.current}/${p.total}): ${p.facultyName}`);
+      });
+
+      // 2. Register into AcademicContext (Teachers, Sections, Subjects)
+      if (onBatchImport) {
+        onBatchImport({
+          teachers: parsed.parsedFaculty,
+          sections: parsed.generatedSections,
+          subjects: parsed.generatedSubjects
+        });
+      } else if (contextBatchImport) {
+        contextBatchImport({
+          teachers: parsed.parsedFaculty,
+          sections: parsed.generatedSections,
+          subjects: parsed.generatedSubjects
+        });
+      } else if (onAddFaculty) {
+        parsed.parsedFaculty.forEach(f => onAddFaculty(f));
+      }
+
+      // 3. Refresh live faculty list
+      await fetchFaculty(true);
+
+      // 4. Set import summary
+      setImportSummary({
+        fileName: file.name,
+        facultyCount: parsed.facultyCount,
+        sections: parsed.generatedSections.map(s => s.name),
+        subjects: parsed.generatedSubjects.map(s => s.name)
+      });
+      setSuccessMessage(`Successfully ingested "${file.name}": Uploaded ${parsed.facultyCount} faculty profiles and auto-generated ${parsed.sectionsCount} academic sections!`);
+
+    } catch (err) {
+      console.error("Excel import failed:", err);
+      setErrorMessage(err.message || "Failed to process faculty spreadsheet.");
+    } finally {
+      setImportingExcel(false);
+      setImportProgress("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const filtered = useMemo(() => {
     return allFaculty.filter(f => {
       const matchSearch = !search || 
@@ -459,7 +535,25 @@ export default function FacultyDirectory({
           <p className="text-sm text-slate-500 mt-1">{filtered.length} active faculty profiles registered • Real-time database & auth account sync</p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Excel / Spreadsheet Upload Button */}
+          <label className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 transition-all flex items-center gap-2 shadow-sm cursor-pointer" title="Upload Excel spreadsheet to auto-import faculty & generate sections">
+            <svg className={`w-4 h-4 text-emerald-600 dark:text-emerald-400 ${importingExcel ? "animate-spin" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span>{importingExcel ? "Processing Roster..." : "Upload Faculty Excel"}</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleExcelFileUpload}
+              disabled={importingExcel}
+              className="hidden"
+            />
+          </label>
+
           <button
             onClick={handleSyncAccounts}
             disabled={syncingAccounts || loading}
@@ -484,6 +578,52 @@ export default function FacultyDirectory({
           </button>
         </div>
       </div>
+
+      {/* Progress notification during Excel ingestion */}
+      {importingExcel && (
+        <div className="animate-slide-down p-4 mb-6 rounded-2xl bg-indigo-950/80 border border-indigo-500/40 shadow-xl flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin shrink-0" />
+          <div>
+            <h4 className="text-xs font-bold text-white">Ingesting Faculty Spreadsheet...</h4>
+            <p className="text-[11px] text-indigo-300 mt-0.5">{importProgress}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Ingestion Summary Card */}
+      {importSummary && (
+        <div className="animate-slide-down p-5 mb-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900/90 to-indigo-950/90 border border-emerald-500/40 shadow-xl backdrop-blur-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">✓</span>
+                <h4 className="text-sm font-bold text-white">
+                  Ingestion Complete: {importSummary.facultyCount} Faculty Profiles Uploaded
+                </h4>
+              </div>
+              <p className="text-xs text-slate-300 mt-1">
+                Data from <strong>{importSummary.fileName}</strong> was parsed and synced to Faculty Directory and Supabase.
+              </p>
+              {importSummary.sections && importSummary.sections.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+                  <span className="text-slate-400 text-[11px] font-semibold mr-1">Generated Sections:</span>
+                  {importSummary.sections.map((sec, idx) => (
+                    <span key={idx} className="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px] font-mono font-bold">
+                      {sec}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setImportSummary(null)}
+              className="btn-secondary text-xs py-1.5 px-3 self-start sm:self-center"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Created Account Credentials Card */}
       {createdAccountInfo && (

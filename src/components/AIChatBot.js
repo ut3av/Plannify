@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import * as XLSX from 'xlsx';
 import { PlannifyIconMark } from './common/BrandLogo';
 import { API_BASE_URL } from '../apiConfig';
+import { parseFacultyExcelData, uploadFacultyAndSectionsToCloud } from '../utils/excelImportUtils';
 
 const compressImage = (file, maxWidth = 1200, quality = 0.82) => {
   return new Promise((resolve, reject) => {
@@ -108,51 +109,40 @@ export default function AIChatBot({
     const isPdf = file.type === "application/pdf" || fileName.endsWith(".pdf");
     const isExcel = fileName.endsWith(".xlsx") || fileName.endsWith(".xls") || fileName.endsWith(".csv");
 
-    // 1. SPREADSHEET (EXCEL / CSV) PARSING VIA SHEETJS
+    // 1. SPREADSHEET (EXCEL / CSV) PARSING VIA SHEETJS & SMART INGESTION
     if (isExcel) {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
           const data = new Uint8Array(event.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
           let extractedText = `### 📊 SPREADSHEET INGESTION (${file.name}):\n\n`;
-          let totalRows = 0;
-          let parsedTeachers = [];
 
           workbook.SheetNames.forEach((sheetName) => {
             const sheet = workbook.Sheets[sheetName];
             const rawJson = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-            totalRows += rawJson.length;
             const csvContent = XLSX.utils.sheet_to_csv(sheet);
             extractedText += `#### Sheet: ${sheetName} (${rawJson.length} rows)\n\`\`\`csv\n${csvContent}\n\`\`\`\n\n`;
+          });
 
-            // Auto-detect faculty rows in spreadsheet
-            rawJson.forEach((row) => {
-              const nameKey = Object.keys(row).find(k => /name|faculty|teacher|professor|instructor/i.test(k));
-              const emailKey = Object.keys(row).find(k => /email|mail/i.test(k));
-              const phoneKey = Object.keys(row).find(k => /phone|mobile|contact|cell/i.test(k));
-              const deptKey = Object.keys(row).find(k => /dept|department|branch/i.test(k));
-              const desigKey = Object.keys(row).find(k => /designation|role|post|rank/i.test(k));
-
-              if (nameKey && row[nameKey] && String(row[nameKey]).trim().length > 2) {
-                parsedTeachers.push({
-                  name: String(row[nameKey]).trim(),
-                  email: emailKey && row[emailKey] ? String(row[emailKey]).trim() : `${String(row[nameKey]).toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
-                  phone: phoneKey && row[phoneKey] ? String(row[phoneKey]).trim() : "+91-9893000000",
-                  department: deptKey && row[deptKey] ? String(row[deptKey]).trim() : "Computer Applications",
-                  designation: desigKey && row[desigKey] ? String(row[desigKey]).trim() : "Assistant Professor",
-                  free_periods: 1
-                });
-              }
-            });
+          // Smart parser for faculty, sections, and subjects
+          const parsed = parseFacultyExcelData(data, sections || [], teachers || []);
+          
+          // Auto-upload to Faculty Directory and Supabase in background
+          uploadFacultyAndSectionsToCloud(parsed).catch((err) => {
+            console.warn("Background cloud sync notice:", err);
           });
 
           setAttachedFile({
             type: 'excel',
             name: file.name,
             textContent: extractedText,
-            rowCount: totalRows,
-            autoExtracted: parsedTeachers.length > 0 ? { teachers: parsedTeachers } : null
+            rowCount: parsed.totalRows,
+            autoExtracted: {
+              teachers: parsed.parsedFaculty,
+              sections: parsed.generatedSections,
+              subjects: parsed.generatedSubjects
+            }
           });
         } catch (err) {
           console.error("Spreadsheet parse error:", err);
