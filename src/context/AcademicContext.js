@@ -778,12 +778,10 @@ export function AcademicProvider({ children }) {
     activeStateRef.current = { teachers, sections, subjects, rooms, timeSlots, result };
   });
 
-  // Unified Faculty Pipeline: Automatically sync faculty directory profiles and leave ledgers
-  useEffect(() => {
-    if (teachers && teachers.length > 0) {
-      syncFacultyFromTimetable(teachers);
-    }
-  }, [teachers]);
+  // NOTE: syncFacultyFromTimetable auto-trigger REMOVED.
+  // It was writing teachers to localStorage and calling POST /faculty/bulk-sync,
+  // which resurrected deleted faculty records. Faculty profiles are now managed
+  // exclusively through the Faculty Directory UI + Supabase faculty_profiles table.
 
   // Real-time UGC Workload Compliance calculation
   const facultyWorkloadAudit = useMemo(() => {
@@ -1061,6 +1059,8 @@ export function AcademicProvider({ children }) {
         if (facultyName) {
           await supabase.from("faculty_subject_allocations").delete().eq("faculty_name", facultyName);
           await supabase.from("faculty_profiles").delete().eq("teacher_name", facultyName);
+          // Also delete from teachers table
+          await supabase.from("teachers").delete().eq("name", facultyName).catch(() => null);
         }
       } catch (err) {
         console.warn("Supabase delete notice:", err);
@@ -1077,14 +1077,23 @@ export function AcademicProvider({ children }) {
       console.warn("Backend delete notice:", err);
     }
 
-    // 3. Clear local cache
+    // 3. Purge ALL local caches that could resurrect this faculty member
     try {
-      const cached = JSON.parse(localStorage.getItem("planify_faculty_cache") || "[]");
-      const cleanCache = cached.filter(f => {
-        const fName = (f.teacher_name || f.name || "").toLowerCase().trim();
-        return f.id !== facultyId && fName !== nameLower && !isTestOrMockFaculty(fName);
-      });
-      localStorage.setItem("planify_faculty_cache", JSON.stringify(cleanCache));
+      localStorage.removeItem("planify_faculty_cache");
+    } catch {}
+    try {
+      // Also purge from timetable_state localStorage copy
+      const stateRaw = localStorage.getItem("planify_timetable_state");
+      if (stateRaw) {
+        const parsed = JSON.parse(stateRaw);
+        if (Array.isArray(parsed?.teachers)) {
+          parsed.teachers = parsed.teachers.filter(t => {
+            const tName = ((typeof t === 'string' ? t : t?.name || t?.teacher_name) || '').toLowerCase().trim();
+            return tName !== nameLower;
+          });
+          localStorage.setItem("planify_timetable_state", JSON.stringify(parsed));
+        }
+      }
     } catch {}
 
     // 4. Update active subjects state (de-link deleted faculty from courses)
@@ -1180,14 +1189,22 @@ export function AcademicProvider({ children }) {
       console.warn("Backend batch delete notice:", err);
     }
 
-    // 3. Clear local cache
+    // 3. Purge ALL local caches
     try {
-      const cached = JSON.parse(localStorage.getItem("planify_faculty_cache") || "[]");
-      const cleanCache = cached.filter(f => {
-        const fName = (f.teacher_name || f.name || "").toLowerCase().trim();
-        return !idsToDelete.includes(f.id) && !nameLowerSet.has(fName) && !isTestOrMockFaculty(fName);
-      });
-      localStorage.setItem("planify_faculty_cache", JSON.stringify(cleanCache));
+      localStorage.removeItem("planify_faculty_cache");
+    } catch {}
+    try {
+      const stateRaw = localStorage.getItem("planify_timetable_state");
+      if (stateRaw) {
+        const parsed = JSON.parse(stateRaw);
+        if (Array.isArray(parsed?.teachers)) {
+          parsed.teachers = parsed.teachers.filter(t => {
+            const tName = ((typeof t === 'string' ? t : t?.name || t?.teacher_name) || '').toLowerCase().trim();
+            return !nameLowerSet.has(tName);
+          });
+          localStorage.setItem("planify_timetable_state", JSON.stringify(parsed));
+        }
+      }
     } catch {}
 
     // 4. Update active subjects state (de-link deleted faculty from courses)

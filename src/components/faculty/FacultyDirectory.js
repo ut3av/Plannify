@@ -3,7 +3,6 @@ import axios from "axios";
 import { provisioningAuthClient, supabase } from "../../supabaseClient";
 import DispatchPreviewModal from "../common/DispatchPreviewModal";
 import GooeyLoader from "../common/GooeyLoader";
-import { subscribeToTable } from "../../services/realtimeFacultyService";
 import { parseFacultyExcelData, uploadFacultyAndSectionsToCloud } from "../../utils/excelImportUtils";
 import { isTestOrMockFaculty, useAcademic } from "../../context/AcademicContext";
 
@@ -56,77 +55,44 @@ export default function FacultyDirectory({
     accountPassword: "Plannify@2026",
   });
 
+  // Monotonic sequence counter to prevent stale async responses from overwriting newer state
+  const fetchSequenceRef = useRef(0);
+
   const fetchFaculty = useCallback(async (isSilent = false) => {
+    const thisSequence = ++fetchSequenceRef.current;
     try {
-      if (!isSilent && faculty.length === 0) setLoading(true);
+      if (!isSilent) setLoading(true);
 
-      // 1. Direct Supabase Query (Primary Real-time Source of Truth)
-      let supabaseProfiles = [];
-      try {
-        const { data: supaData, error: supaErr } = await supabase
-          .from('faculty_profiles')
-          .select('*, departments(name)')
-          .order('teacher_name');
-        if (!supaErr && Array.isArray(supaData)) {
-          supabaseProfiles = supaData.map((f) => ({
-            ...f,
-            department_name: f.departments?.name || f.department_name || f.department || "Computer Applications",
-          }));
-        }
-      } catch (err) {
-        console.warn("Supabase fetch notice:", err);
+      // SINGLE SOURCE OF TRUTH: Supabase faculty_profiles only
+      const { data: supaData, error: supaErr } = await supabase
+        .from('faculty_profiles')
+        .select('*, departments(name)')
+        .order('teacher_name');
+
+      // If a newer fetch was initiated while this one was in-flight, discard this result
+      if (fetchSequenceRef.current !== thisSequence) return;
+
+      if (supaErr) {
+        console.error("Supabase faculty fetch error:", supaErr);
+        // On error, do NOT overwrite state with stale/empty data — keep current state
+        return;
       }
 
-      // 2. Backend Database Query
-      let backendProfiles = [];
-      try {
-        const res = await axios.get(`${API}/faculty`, { timeout: 3500 });
-        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-          backendProfiles = res.data;
-        }
-      } catch (e) {
-        // Backend offline or unreachable
-      }
+      const profiles = (Array.isArray(supaData) ? supaData : []).map((f) => ({
+        ...f,
+        department_name: f.departments?.name || f.department_name || f.department || "Computer Applications",
+      }));
 
-      // 3. Merge profiles, giving priority to live Supabase entries
-      const map = new Map();
-
-      // Add backend entries (excluding test names)
-      backendProfiles.forEach(f => {
-        const name = (f.teacher_name || f.name || "").trim().toLowerCase();
-        if (name && !isTestOrMockFaculty(name)) map.set(name, f);
-      });
-
-      // Overlay live Supabase entries (excluding test names)
-      supabaseProfiles.forEach(f => {
-        const name = (f.teacher_name || f.name || "").trim().toLowerCase();
-        if (name && !isTestOrMockFaculty(name)) {
-          const existing = map.get(name) || {};
-          map.set(name, { ...existing, ...f });
-        }
-      });
-
-      // If both had nothing, fallback to teachers prop
-      if (map.size === 0 && Array.isArray(teachers) && teachers.length > 0) {
-        teachers.forEach(t => {
-          const name = typeof t === 'string' ? t : (t.teacher_name || t.name);
-          if (name && !isTestOrMockFaculty(name)) {
-            const key = name.trim().toLowerCase();
-            map.set(key, typeof t === 'object' ? t : { teacher_name: name, department_name: "Computer Applications", status: "active" });
-          }
-        });
-      }
-
-      const merged = Array.from(map.values()).filter(f => !isTestOrMockFaculty(f.teacher_name || f.name));
-      if (merged.length > 0) {
-        setFaculty(merged);
-      }
+      // Always set faculty — including empty array when database has 0 records
+      setFaculty(profiles);
     } catch (err) {
       console.error("Failed to fetch faculty:", err);
     } finally {
-      setLoading(false);
+      if (fetchSequenceRef.current === thisSequence) {
+        setLoading(false);
+      }
     }
-  }, [teachers, faculty.length]);
+  }, []); // Stable: no deps — Supabase client is module-level singleton
 
   const fetchDepartments = useCallback(async () => {
     try {
@@ -153,73 +119,54 @@ export default function FacultyDirectory({
     fetchFaculty(false);
     fetchDepartments();
 
-    // 1. Direct Realtime Supabase Subscription on faculty_profiles table
+    // ONE stable Supabase Realtime subscription — created on mount, removed on unmount
     let supaChannel = null;
     if (supabase) {
       supaChannel = supabase
-        .channel(`realtime_faculty_profiles_dir_${Date.now()}`)
+        .channel('realtime_faculty_directory')
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'faculty_profiles' },
           (payload) => {
-            console.log("⚡ [Realtime Supabase] Faculty event received:", payload.eventType, payload.new || payload.old);
             if (payload.eventType === 'INSERT' && payload.new) {
               const newProfile = {
                 ...payload.new,
                 department_name: payload.new.department_name || payload.new.department || "Computer Applications",
               };
               setFaculty(prev => {
-                const exists = prev.some(f => 
-                  (f.teacher_name && f.teacher_name.toLowerCase() === newProfile.teacher_name?.toLowerCase()) ||
-                  f.id === newProfile.id ||
-                  (f.employee_id && f.employee_id === newProfile.employee_id)
-                );
+                // Deduplicate: if a record with this ID already exists, update it; otherwise prepend
+                const exists = prev.some(f => f.id === newProfile.id);
                 if (exists) {
-                  return prev.map(f => (
-                    (f.teacher_name && f.teacher_name.toLowerCase() === newProfile.teacher_name?.toLowerCase()) ||
-                    f.id === newProfile.id ||
-                    (f.employee_id && f.employee_id === newProfile.employee_id)
-                  ) ? { ...f, ...newProfile } : f);
+                  return prev.map(f => f.id === newProfile.id ? { ...f, ...newProfile } : f);
                 }
                 return [newProfile, ...prev];
               });
             } else if (payload.eventType === 'UPDATE' && payload.new) {
-              setFaculty(prev => prev.map(f => (f.id === payload.new.id || f.teacher_name === payload.new.teacher_name) ? { ...f, ...payload.new } : f));
+              setFaculty(prev => prev.map(f => f.id === payload.new.id ? { ...f, ...payload.new } : f));
             } else if (payload.eventType === 'DELETE' && payload.old) {
               const oldId = payload.old.id;
-              const oldName = (payload.old.teacher_name || '').toLowerCase().trim();
-              setFaculty(prev => prev.filter(f => {
-                const fName = (f.teacher_name || f.name || '').toLowerCase().trim();
-                return f.id !== oldId && fName !== oldName;
-              }));
+              setFaculty(prev => prev.filter(f => f.id !== oldId));
+              // Also clear from deletedKeys tracking
+              setDeletedKeys(prev => {
+                const next = new Set(prev);
+                next.delete(oldId);
+                return next;
+              });
             }
-            fetchFaculty(true);
+            // NOTE: We do NOT call fetchFaculty(true) here — the local state mutation
+            // above is sufficient and avoids race conditions / stale overwrites
           }
         )
         .subscribe();
     }
 
-    // 2. Local Custom Event Subscriptions
-    const unsubFaculty = subscribeToTable('faculty_profiles', () => {
-      fetchFaculty(true);
-    });
-    const unsubDept = subscribeToTable('departments', () => {
-      fetchDepartments();
-    });
-
-    const interval = setInterval(() => {
-      fetchFaculty(true);
-    }, 8000);
-
     return () => {
-      clearInterval(interval);
       if (supaChannel && supabase) {
         supabase.removeChannel(supaChannel);
       }
-      unsubFaculty();
-      unsubDept();
     };
-  }, [fetchFaculty, fetchDepartments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps: subscribe ONCE on mount, unsubscribe on unmount
 
   const getFacultyKey = (f) => {
     if (!f) return "";
@@ -250,26 +197,42 @@ export default function FacultyDirectory({
     }
 
     try {
-      const nameLower = (facultyName || "").toLowerCase().trim();
       const key = getFacultyKey(f);
       setSelectedIds(prev => {
         const next = new Set(prev);
         next.delete(key);
         return next;
       });
-      setDeletedKeys(prev => new Set([...prev, facultyId, nameLower]));
-      setFaculty(prev => prev.filter(item => item.id !== facultyId && (item.teacher_name || item.name || '').toLowerCase().trim() !== nameLower));
 
-      if (deleteFacultyProfile) {
-        await deleteFacultyProfile(facultyId, facultyName);
-      } else {
-        if (facultyId && !facultyId.toString().startsWith("ocr-")) {
-          await axios.delete(`${API}/faculty/${facultyId}?hard_delete=true`).catch(() => null);
+      // Optimistic removal — save snapshot for rollback
+      const previousFaculty = faculty;
+      setDeletedKeys(prev => new Set([...prev, facultyId]));
+      setFaculty(prev => prev.filter(item => item.id !== facultyId));
+
+      try {
+        if (deleteFacultyProfile) {
+          await deleteFacultyProfile(facultyId, facultyName);
+        } else {
+          if (facultyId && !facultyId.toString().startsWith("ocr-")) {
+            await axios.delete(`${API}/faculty/${facultyId}?hard_delete=true`);
+          }
         }
+        setSuccessMessage(`${facultyName} removed from faculty directory.`);
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } catch (deleteErr) {
+        // Rollback: restore previous state on failure
+        console.error("Delete failed, rolling back:", deleteErr);
+        setFaculty(previousFaculty);
+        setDeletedKeys(prev => {
+          const next = new Set(prev);
+          next.delete(facultyId);
+          return next;
+        });
+        setErrorMessage(`Failed to delete ${facultyName}. The server may have rejected the request.`);
       }
-      await fetchFaculty(true);
     } catch (err) {
       console.error("Failed to delete faculty:", err);
+      setErrorMessage("An unexpected error occurred during deletion.");
     }
   };
 
@@ -291,31 +254,41 @@ export default function FacultyDirectory({
       setIsBatchDeleting(true);
       setErrorMessage("");
 
-      const deletedSet = new Set(selectedList.flatMap(f => [
-        f.id,
-        (f.teacher_name || f.name || "").toLowerCase().trim(),
-        f.employee_id
-      ].filter(Boolean)));
+      const deletedIds = new Set(selectedList.map(f => f.id).filter(Boolean));
 
-      // Optimistic local state update
-      setDeletedKeys(prev => new Set([...prev, ...deletedSet]));
-      setFaculty(prev => prev.filter(f => !deletedSet.has(f.id) && !deletedSet.has((f.teacher_name || f.name || "").toLowerCase().trim())));
+      // Optimistic removal — save snapshot for rollback
+      const previousFaculty = faculty;
+      setDeletedKeys(prev => new Set([...prev, ...deletedIds]));
+      setFaculty(prev => prev.filter(f => !deletedIds.has(f.id)));
       setSelectedIds(new Set());
 
-      if (deleteMultipleFacultyProfiles) {
-        await deleteMultipleFacultyProfiles(selectedList);
-      } else {
-        for (const f of selectedList) {
-          if (deleteFacultyProfile) {
-            await deleteFacultyProfile(f.id, f.teacher_name || f.name);
-          } else if (f.id && !f.id.toString().startsWith("ocr-")) {
-            await axios.delete(`${API}/faculty/${f.id}?hard_delete=true`).catch(() => null);
+      try {
+        if (deleteMultipleFacultyProfiles) {
+          await deleteMultipleFacultyProfiles(selectedList);
+        } else {
+          for (const f of selectedList) {
+            if (deleteFacultyProfile) {
+              await deleteFacultyProfile(f.id, f.teacher_name || f.name);
+            } else if (f.id && !f.id.toString().startsWith("ocr-")) {
+              await axios.delete(`${API}/faculty/${f.id}?hard_delete=true`).catch(() => null);
+            }
           }
         }
+        setSuccessMessage(`Successfully deleted ${selectedList.length} faculty member(s).`);
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } catch (deleteErr) {
+        // Rollback on failure
+        console.error("Batch delete failed, rolling back:", deleteErr);
+        setFaculty(previousFaculty);
+        deletedIds.forEach(id => {
+          setDeletedKeys(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+        });
+        setErrorMessage("Failed to complete batch deletion. Please try again.");
       }
-
-      setSuccessMessage(`Successfully deleted ${selectedList.length} faculty member(s) in real-time.`);
-      await fetchFaculty(true);
     } catch (err) {
       console.error("Batch delete error:", err);
       setErrorMessage("Failed to complete batch deletion. Please try again.");
@@ -343,108 +316,23 @@ export default function FacultyDirectory({
     }
   };
 
-  // Merge backend faculty with active state teachers, AI OCR teachers, and subject assignments
+  // Faculty list derived directly from Supabase state — NO merging from teachers prop or subjects
   const allFaculty = useMemo(() => {
-    const list = faculty
-      .filter(f => !deletedKeys.has(f.id) && !deletedKeys.has(f.teacher_name?.trim().toLowerCase()) && !isTestOrMockFaculty(f.teacher_name))
-      .map(f => {
-        // Enrich existing backend faculty if missing email/phone from teachers prop
-        const matchingTeacher = Array.isArray(teachers)
-          ? teachers.find(t => (typeof t === 'string' ? t : t?.name)?.trim().toLowerCase() === f.teacher_name?.trim().toLowerCase())
-          : null;
-        return {
-          ...f,
-          email: f.email || (typeof matchingTeacher === 'object' ? matchingTeacher?.email : null) || `${f.teacher_name?.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
-          phone: f.phone || (typeof matchingTeacher === 'object' ? matchingTeacher?.phone : null) || "+91-9876543210",
-          department_name: f.department_name || (typeof matchingTeacher === 'object' ? matchingTeacher?.department : null) || "Computer Applications"
-        };
-      });
-
-    const existingNames = new Set(list.map(f => f.teacher_name?.trim().toLowerCase()));
-
-    const addIfMissing = (tObj) => {
-      const name = typeof tObj === 'string' ? tObj : tObj?.name;
-      const trimmed = name?.trim();
-      if (!trimmed || existingNames.has(trimmed.toLowerCase()) || deletedKeys.has(trimmed.toLowerCase()) || isTestOrMockFaculty(trimmed)) return;
-
-      const hash = Math.abs(trimmed.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0));
-      const newFacultyObj = {
-        id: (typeof tObj === 'object' && tObj?.id) || `ocr-${hash}`,
-        teacher_name: trimmed,
-        employee_id: (typeof tObj === 'object' && tObj?.employee_id) || `EMP-LNCT-${(hash % 9000) + 1000}`,
-        designation: (typeof tObj === 'object' && tObj?.designation) || "Faculty Member",
-        qualification: (typeof tObj === 'object' && tObj?.qualification) || "M.Tech / Ph.D",
-        employment_type: (typeof tObj === 'object' && tObj?.employment_type) || "full-time",
-        status: "active",
-        department_name: (typeof tObj === 'object' && tObj?.department) || "Computer Applications",
-        email: (typeof tObj === 'object' && tObj?.email) || `${trimmed.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
-        phone: (typeof tObj === 'object' && tObj?.phone) || "+91-9876543210",
-        is_synced: false
-      };
-      list.push(newFacultyObj);
-      existingNames.add(trimmed.toLowerCase());
-    };
-
-    if (Array.isArray(teachers)) {
-      teachers.forEach(t => addIfMissing(t));
-    }
-
-    if (Array.isArray(subjects)) {
-      subjects.forEach(s => {
-        if (s.teacher) addIfMissing({ name: s.teacher, department: "Computer Applications" });
-      });
-    }
-
-    return list.filter(f => !isTestOrMockFaculty(f.teacher_name));
-  }, [faculty, teachers, subjects, deletedKeys]);
-
-  // Auto-sync unsynced teachers to backend DB so they persist permanently
-  useEffect(() => {
-    const syncMissing = async () => {
-      const unsynced = allFaculty.filter(f => f.id?.toString().startsWith('ocr-') && !isTestOrMockFaculty(f.teacher_name));
-      if (unsynced.length === 0) return;
-
-      let newlyCreated = false;
-      for (const f of unsynced) {
-        try {
-          await axios.post(`${API}/faculty`, {
-            teacher_name: f.teacher_name,
-            employee_id: f.employee_id,
-            designation: f.designation,
-            employment_type: f.employment_type,
-            email: f.email,
-            phone: f.phone,
-            status: "active"
-          });
-          newlyCreated = true;
-        } catch (err) {
-          // Ignore duplicate creation if created concurrently
-        }
-      }
-      if (newlyCreated) {
-        const res = await axios.get(`${API}/faculty`).catch(() => null);
-        if (res?.data) setFaculty(res.data.filter(f => !isTestOrMockFaculty(f.teacher_name)));
-      }
-    };
-
-    syncMissing();
-  }, [allFaculty]);
+    return faculty.filter(f => !deletedKeys.has(f.id) && !isTestOrMockFaculty(f.teacher_name));
+  }, [faculty, deletedKeys]);
 
   const handleSyncAccounts = async () => {
     try {
       setSyncingAccounts(true);
       setErrorMessage("");
       setSuccessMessage("");
-      const [facRes, deptRes] = await Promise.all([
-        axios.get(`${API}/faculty`),
-        axios.get(`${API}/faculty/departments`)
-      ]);
-      if (facRes.data) setFaculty(facRes.data);
-      if (deptRes.data) setDepartments(deptRes.data);
-      setSuccessMessage(`Faculty Directory synchronized (${facRes.data?.length || 0} registered faculty records verified).`);
+      await fetchFaculty(false);
+      await fetchDepartments();
+      setSuccessMessage(`Faculty Directory synchronized with Supabase (${faculty.length} records).`);
       setTimeout(() => setSuccessMessage(""), 4000);
     } catch (e) {
       console.error("Failed to sync accounts:", e);
+
       setErrorMessage("Failed to refresh faculty accounts from backend.");
     } finally {
       setSyncingAccounts(false);

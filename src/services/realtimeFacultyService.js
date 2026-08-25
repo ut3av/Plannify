@@ -174,8 +174,10 @@ const isTestOrMock = (name) => {
 };
 
 /**
- * Unified Faculty Pipeline: Syncs teachers configured in the Timetable Workspace
- * directly into the Institutional Faculty Profiles directory and leave ledgers.
+ * Unified Faculty Pipeline: Builds faculty profile objects from a teachers list.
+ * NOTE: No longer writes to localStorage or calls POST /faculty/bulk-sync
+ * to prevent resurrection of deleted faculty. Faculty profiles are managed
+ * exclusively through the Faculty Directory UI + Supabase faculty_profiles table.
  */
 export async function syncFacultyFromTimetable(teachersList = []) {
   if (!Array.isArray(teachersList) || teachersList.length === 0) return [];
@@ -211,15 +213,9 @@ export async function syncFacultyFromTimetable(teachersList = []) {
       };
     });
 
-    localStorage.setItem("planify_faculty_cache", JSON.stringify(profiles));
+    // DO NOT write to localStorage — deleted faculty would be resurrected
+    // DO NOT call POST /faculty/bulk-sync — same resurrection risk
     cachedFacultyProfiles = profiles;
-
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("planify_faculty_updated", { detail: profiles }));
-    }
-
-    // Try backend bulk sync asynchronously
-    axios.post(`${API}/faculty/bulk-sync`, { faculty: profiles }).catch(() => null);
 
     return profiles;
   } catch (e) {
@@ -359,7 +355,7 @@ let cachedFacultyProfiles = [];
 export async function fetchAllFacultyProfiles() {
   const map = new Map();
 
-  // 1. Try Supabase faculty_profiles
+  // 1. Try Supabase faculty_profiles (primary source)
   try {
     if (supabase) {
       const { data, error } = await supabase
@@ -401,31 +397,8 @@ export async function fetchAllFacultyProfiles() {
     // Ignore fallback
   }
 
-  // 3. Try Academic timetable draft state in localStorage
-  try {
-    const stateRaw = localStorage.getItem("planify_timetable_state");
-    if (stateRaw) {
-      const parsed = JSON.parse(stateRaw);
-      if (Array.isArray(parsed?.teachers)) {
-        parsed.teachers.forEach((t) => {
-          const name = typeof t === "string" ? t : t?.name || t?.teacher_name;
-          if (name) {
-            const item = {
-              id: t.id || name,
-              teacher_name: name,
-              employee_id: t.employee_id || "EMP-LNCT-1001",
-              department: t.department || "Computer Applications",
-              designation: t.designation || "Faculty Member",
-            };
-            if (t.id) map.set(t.id, item);
-            map.set(name.toLowerCase().trim(), item);
-          }
-        });
-      }
-    }
-  } catch {
-    // Ignore fallback
-  }
+  // NOTE: localStorage 'planify_timetable_state' source REMOVED.
+  // Reading deleted faculty from localStorage was a resurrection vector.
 
   cachedFacultyProfiles = Array.from(new Set(map.values()));
   return cachedFacultyProfiles;
