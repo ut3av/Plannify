@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { syncRelationalData } from '../services/supabaseService';
-import { clearAllFacultyCaches, syncFacultyFromTimetable, getFacultyWorkloadAnalytics } from '../services/realtimeFacultyService';
+import { clearAllFacultyCaches, getFacultyWorkloadAnalytics } from '../services/realtimeFacultyService';
 import { API_BASE_URL } from '../apiConfig';
 import { buildApiPayload, formatResult } from '../utils/timetableFormatter';
 
