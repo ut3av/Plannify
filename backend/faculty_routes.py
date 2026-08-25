@@ -200,10 +200,21 @@ def remove_faculty(faculty_id: str, hard_delete: bool = True):
 
 @router.post("/clear-all")
 @router.delete("/clear-all")
-def purge_all_faculty():
+def purge_all_faculty_endpoint():
     """Purges all faculty profiles and associated records to allow clean real data onboarding."""
     try:
         return clear_all_faculty()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/purge-test-data")
+@router.delete("/purge-test-data")
+def purge_test_faculty_endpoint():
+    """Purges only test/demo faculty profiles (Test A, Dr. Sanjana Singh, etc.) from database."""
+    from faculty_db import purge_test_faculty
+    try:
+        return purge_test_faculty()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

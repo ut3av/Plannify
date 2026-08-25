@@ -517,19 +517,25 @@ def delete_faculty(faculty_id: str) -> dict:
     sb = get_supabase()
     if sb:
         try:
+            # Cascade delete in Supabase
+            sb.table("faculty_subject_allocations").delete().eq("faculty_id", faculty_id).execute()
             sb.table("leave_balances").delete().eq("faculty_id", faculty_id).execute()
+            sb.table("leave_applications").delete().eq("faculty_id", faculty_id).execute()
             sb.table("attendance_records").delete().eq("faculty_id", faculty_id).execute()
             sb.table("substitution_log").delete().eq("original_teacher_id", faculty_id).execute()
+            sb.table("substitution_log").delete().eq("substitute_teacher_id", faculty_id).execute()
             res = sb.table("faculty_profiles").delete().eq("id", faculty_id).execute()
-            return {"deleted": True, "id": faculty_id}
         except Exception as e:
             logger.warning(f"Supabase delete_faculty failed: {e}. Using SQLite fallback.")
 
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        cursor.execute("DELETE FROM faculty_subject_allocations WHERE faculty_id = ?", (faculty_id,))
         cursor.execute("DELETE FROM leave_balances WHERE faculty_id = ?", (faculty_id,))
+        cursor.execute("DELETE FROM leave_applications WHERE faculty_id = ?", (faculty_id,))
         cursor.execute("DELETE FROM attendance_records WHERE faculty_id = ?", (faculty_id,))
+        cursor.execute("DELETE FROM substitution_log WHERE original_teacher_id = ? OR substitute_teacher_id = ?", (faculty_id, faculty_id))
         cursor.execute("DELETE FROM faculty_profiles WHERE id = ?", (faculty_id,))
         conn.commit()
     finally:
@@ -537,11 +543,46 @@ def delete_faculty(faculty_id: str) -> dict:
     return {"deleted": True, "id": faculty_id}
 
 
+def purge_test_faculty() -> dict:
+    """Removes all test/mock faculty profiles (Test A, Dr. Sanjana Singh, etc.) from database."""
+    test_names = [
+        "Test A", "Test B", "Test C", "Test Teacher", "Test Faculty",
+        "Dr. Sanjana Singh", "Sanjana Singh",
+        "Dr. Amit Patel", "Amit Patel",
+        "Prof. Rajesh Verma", "Rajesh Verma",
+        "Prof. Neha Gupta", "Neha Gupta",
+        "Dr. Vikram Joshi", "Vikram Joshi",
+        "Prof. Suresh Kumar", "Suresh Kumar",
+        "Demo Teacher", "Demo Faculty"
+    ]
+    sb = get_supabase()
+    if sb:
+        for t_name in test_names:
+            try:
+                sb.table("faculty_subject_allocations").delete().eq("faculty_name", t_name).execute()
+                sb.table("faculty_profiles").delete().eq("teacher_name", t_name).execute()
+            except Exception:
+                pass
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        for t_name in test_names:
+            cursor.execute("DELETE FROM faculty_subject_allocations WHERE faculty_name = ?", (t_name,))
+            cursor.execute("DELETE FROM faculty_profiles WHERE teacher_name = ?", (t_name,))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {"status": "success", "message": "Purged test faculty records."}
+
+
 def clear_all_faculty() -> dict:
     """Purges all faculty profiles and associated records to reset workspace."""
     sb = get_supabase()
     if sb:
         try:
+            sb.table("faculty_subject_allocations").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
             sb.table("leave_balances").delete().neq("faculty_id", "00000000-0000-0000-0000-000000000000").execute()
             sb.table("attendance_records").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
             sb.table("substitution_log").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
@@ -553,6 +594,7 @@ def clear_all_faculty() -> dict:
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        cursor.execute("DELETE FROM faculty_subject_allocations")
         cursor.execute("DELETE FROM leave_balances")
         cursor.execute("DELETE FROM attendance_records")
         cursor.execute("DELETE FROM substitution_log")

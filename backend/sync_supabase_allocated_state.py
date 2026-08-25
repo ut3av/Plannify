@@ -36,14 +36,22 @@ for p in supa_profiles:
             "status": p.get("status", "active")
         })
 
-# Also include teaching faculty from timetable
+# Also include teaching faculty from real LNCT academic roster
 for name, dept, desig in [
-    ("Dr. Sanjana Singh", "Computer Applications", "Associate Professor"),
-    ("Dr. Amit Patel", "Computer Applications", "Associate Professor"),
-    ("Prof. Rajesh Verma", "Computer Applications", "Assistant Professor"),
-    ("Prof. Neha Gupta", "Computer Applications", "Assistant Professor"),
-    ("Dr. Sharma", "Computer Science", "Professor"),
-    ("Teacher A", "Computer Science", "Lecturer")
+    ("Dr. Alka Gulati", "Computer Applications", "Professor & HOD"),
+    ("Dr. Kavita Kanathey", "Computer Applications", "Professor"),
+    ("Dr. Neelu Singh", "Computer Applications", "Professor"),
+    ("Prof. Kanal Soni", "Computer Applications", "Assistant Professor"),
+    ("Prof. Ripusoodan Sharma", "Computer Applications", "Assistant Professor"),
+    ("Mayank Patel", "Computer Applications", "Assistant Professor"),
+    ("Muskan Mirza", "Computer Applications", "Assistant Professor"),
+    ("Ravi Bhushan Roy", "Computer Applications", "Assistant Professor"),
+    ("Karuna Vishwakarma", "Computer Applications", "Assistant Professor"),
+    ("Rashmi Shaikh", "Computer Applications", "Assistant Professor"),
+    ("Seema Joshi", "Computer Applications", "Assistant Professor"),
+    ("Atul Verma", "Computer Applications", "Assistant Professor"),
+    ("Rohit Singh", "Computer Applications", "Assistant Professor"),
+    ("Sanjana Igral", "Computer Applications", "Assistant Professor")
 ]:
     if name.lower() not in seen_teachers:
         seen_teachers.add(name.lower())
@@ -77,7 +85,7 @@ sections_list = [
         "lab_room": "Lab Room No. 007",
         "lab_rooms": ["Lab Room No. 007", "Lab Room No. 006"],
         "student_count": 55,
-        "preferred_faculty": ["Dr. Sanjana Singh", "Dr. Amit Patel", "Prof. Rajesh Verma"]
+        "preferred_faculty": ["Dr. Alka Gulati", "Dr. Kavita Kanathey", "Prof. Kanal Soni"]
     },
     {
         "name": "MCA-1B",
@@ -85,7 +93,7 @@ sections_list = [
         "lab_room": "Lab Room No. 006",
         "lab_rooms": ["Lab Room No. 006", "Lab Room No. 007"],
         "student_count": 55,
-        "preferred_faculty": ["Prof. Neha Gupta", "Dr. Sanjana Singh", "Prof. Rajesh Verma"]
+        "preferred_faculty": ["Prof. Ripusoodan Sharma", "Dr. Neelu Singh", "Mayank Patel"]
     },
     {
         "name": "Sec A",
@@ -93,7 +101,7 @@ sections_list = [
         "lab_room": "Lab Room No. 006",
         "lab_rooms": ["Lab Room No. 006"],
         "student_count": 60,
-        "preferred_faculty": ["Dr. Sharma", "Teacher A"]
+        "preferred_faculty": ["Dr. Kavita Kanathey", "Prof. Kanal Soni"]
     }
 ]
 
@@ -102,7 +110,7 @@ subjects_list = [
     {
         "name": "Database Systems",
         "code": "MCA-101",
-        "teacher": "Dr. Sanjana Singh",
+        "teacher": "Dr. Alka Gulati",
         "department": "Computer Applications",
         "weekly_lectures": 4,
         "required_slots": 4,
@@ -112,7 +120,7 @@ subjects_list = [
     {
         "name": "Operating Systems",
         "code": "MCA-102",
-        "teacher": "Dr. Amit Patel",
+        "teacher": "Dr. Kavita Kanathey",
         "department": "Computer Applications",
         "weekly_lectures": 4,
         "required_slots": 4,
@@ -122,7 +130,7 @@ subjects_list = [
     {
         "name": "Data Structures",
         "code": "MCA-103",
-        "teacher": "Prof. Rajesh Verma",
+        "teacher": "Prof. Kanal Soni",
         "department": "Computer Applications",
         "weekly_lectures": 4,
         "required_slots": 4,
@@ -132,7 +140,7 @@ subjects_list = [
     {
         "name": "Computer Networks",
         "code": "MCA-104",
-        "teacher": "Prof. Neha Gupta",
+        "teacher": "Prof. Ripusoodan Sharma",
         "department": "Computer Applications",
         "weekly_lectures": 4,
         "required_slots": 4,
@@ -142,7 +150,7 @@ subjects_list = [
     {
         "name": "DBMS Lab",
         "code": "MCA-105",
-        "teacher": "Dr. Sanjana Singh",
+        "teacher": "Dr. Alka Gulati",
         "department": "Computer Applications",
         "weekly_lectures": 2,
         "required_slots": 2,

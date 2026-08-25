@@ -5,7 +5,7 @@ import DispatchPreviewModal from "../common/DispatchPreviewModal";
 import GooeyLoader from "../common/GooeyLoader";
 import { subscribeToTable } from "../../services/realtimeFacultyService";
 import { parseFacultyExcelData, uploadFacultyAndSectionsToCloud } from "../../utils/excelImportUtils";
-import { useAcademic } from "../../context/AcademicContext";
+import { isTestOrMockFaculty, useAcademic } from "../../context/AcademicContext";
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
@@ -19,7 +19,7 @@ export default function FacultyDirectory({
   onBatchImport,
   onTeachersChange,
 }) {
-  const { handleBatchImportData: contextBatchImport, sections: contextSections } = useAcademic() || {};
+  const { handleBatchImportData: contextBatchImport, sections: contextSections, deleteFacultyProfile } = useAcademic() || {};
   const [faculty, setFaculty] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,16 +89,16 @@ export default function FacultyDirectory({
       // 3. Merge profiles, giving priority to live Supabase entries
       const map = new Map();
 
-      // Add backend entries
+      // Add backend entries (excluding test names)
       backendProfiles.forEach(f => {
         const name = (f.teacher_name || f.name || "").trim().toLowerCase();
-        if (name) map.set(name, f);
+        if (name && !isTestOrMockFaculty(name)) map.set(name, f);
       });
 
-      // Overlay live Supabase entries
+      // Overlay live Supabase entries (excluding test names)
       supabaseProfiles.forEach(f => {
         const name = (f.teacher_name || f.name || "").trim().toLowerCase();
-        if (name) {
+        if (name && !isTestOrMockFaculty(name)) {
           const existing = map.get(name) || {};
           map.set(name, { ...existing, ...f });
         }
@@ -108,14 +108,14 @@ export default function FacultyDirectory({
       if (map.size === 0 && Array.isArray(teachers) && teachers.length > 0) {
         teachers.forEach(t => {
           const name = typeof t === 'string' ? t : (t.teacher_name || t.name);
-          if (name) {
+          if (name && !isTestOrMockFaculty(name)) {
             const key = name.trim().toLowerCase();
             map.set(key, typeof t === 'object' ? t : { teacher_name: name, department_name: "Computer Applications", status: "active" });
           }
         });
       }
 
-      const merged = Array.from(map.values());
+      const merged = Array.from(map.values()).filter(f => !isTestOrMockFaculty(f.teacher_name || f.name));
       if (merged.length > 0) {
         setFaculty(merged);
       }
@@ -222,8 +222,12 @@ export default function FacultyDirectory({
     }
 
     try {
-      if (f.id && !f.id.toString().startsWith("ocr-")) {
-        await axios.delete(`${API}/faculty/${f.id}?hard_delete=true`).catch(() => null);
+      if (deleteFacultyProfile) {
+        await deleteFacultyProfile(f.id, facultyName);
+      } else {
+        if (f.id && !f.id.toString().startsWith("ocr-")) {
+          await axios.delete(`${API}/faculty/${f.id}?hard_delete=true`).catch(() => null);
+        }
       }
       setDeletedKeys(prev => new Set([...prev, f.id, facultyName?.trim().toLowerCase()]));
       setFaculty(prev => prev.filter(item => item.id !== f.id && item.teacher_name !== facultyName));
@@ -254,7 +258,7 @@ export default function FacultyDirectory({
   // Merge backend faculty with active state teachers, AI OCR teachers, and subject assignments
   const allFaculty = useMemo(() => {
     const list = faculty
-      .filter(f => !deletedKeys.has(f.id) && !deletedKeys.has(f.teacher_name?.trim().toLowerCase()))
+      .filter(f => !deletedKeys.has(f.id) && !deletedKeys.has(f.teacher_name?.trim().toLowerCase()) && !isTestOrMockFaculty(f.teacher_name))
       .map(f => {
         // Enrich existing backend faculty if missing email/phone from teachers prop
         const matchingTeacher = Array.isArray(teachers)
@@ -273,7 +277,7 @@ export default function FacultyDirectory({
     const addIfMissing = (tObj) => {
       const name = typeof tObj === 'string' ? tObj : tObj?.name;
       const trimmed = name?.trim();
-      if (!trimmed || existingNames.has(trimmed.toLowerCase()) || deletedKeys.has(trimmed.toLowerCase())) return;
+      if (!trimmed || existingNames.has(trimmed.toLowerCase()) || deletedKeys.has(trimmed.toLowerCase()) || isTestOrMockFaculty(trimmed)) return;
 
       const hash = Math.abs(trimmed.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0));
       const newFacultyObj = {
@@ -303,13 +307,13 @@ export default function FacultyDirectory({
       });
     }
 
-    return list;
+    return list.filter(f => !isTestOrMockFaculty(f.teacher_name));
   }, [faculty, teachers, subjects, deletedKeys]);
 
   // Auto-sync unsynced teachers to backend DB so they persist permanently
   useEffect(() => {
     const syncMissing = async () => {
-      const unsynced = allFaculty.filter(f => f.id?.toString().startsWith('ocr-'));
+      const unsynced = allFaculty.filter(f => f.id?.toString().startsWith('ocr-') && !isTestOrMockFaculty(f.teacher_name));
       if (unsynced.length === 0) return;
 
       let newlyCreated = false;
@@ -331,7 +335,7 @@ export default function FacultyDirectory({
       }
       if (newlyCreated) {
         const res = await axios.get(`${API}/faculty`).catch(() => null);
-        if (res?.data) setFaculty(res.data);
+        if (res?.data) setFaculty(res.data.filter(f => !isTestOrMockFaculty(f.teacher_name)));
       }
     };
 

@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import GooeyLoader from "../common/GooeyLoader";
+import { useAcademic } from "../../context/AcademicContext";
 
 import { API_BASE_URL as API } from "../../apiConfig";
 
 export default function FacultyProfile({ faculty, onBack, onUpdate }) {
+  const { deleteFacultyProfile } = useAcademic() || {};
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [detail, setDetail] = useState(null);
@@ -83,12 +85,17 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
 
   const handleDelete = async () => {
     const facultyName = detail?.teacher_name || faculty?.teacher_name || "this faculty member";
+    const facultyId = detail?.id || faculty?.id;
     if (!window.confirm(`Are you sure you want to permanently remove ${facultyName} from the faculty directory?`)) {
       return;
     }
     try {
-      if (faculty?.id && !faculty.id.toString().startsWith('ocr-')) {
-        await axios.delete(`${API}/faculty/${faculty.id}?hard_delete=true`).catch(() => null);
+      if (deleteFacultyProfile) {
+        await deleteFacultyProfile(facultyId, facultyName);
+      } else {
+        if (facultyId && !facultyId.toString().startsWith('ocr-')) {
+          await axios.delete(`${API}/faculty/${facultyId}?hard_delete=true`).catch(() => null);
+        }
       }
       if (onUpdate) onUpdate();
       if (onBack) onBack();
