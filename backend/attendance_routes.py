@@ -86,7 +86,7 @@ def simulate_influx(
     """
     try:
         req_count = payload.count if (payload and payload.count) else (count if isinstance(count, int) else 30)
-        resolved_date = (payload.date if (payload and payload.date) else None) or (target_date if isinstance(target_date, str) else None) or date.today().isoformat()
+        sim_date = (payload.date if (payload and payload.date) else None) or (target_date if isinstance(target_date, str) else None) or date.today().isoformat()
 
         active_faculty = list_faculty(status="active")
 
@@ -98,7 +98,7 @@ def simulate_influx(
                 present=0,
                 late=0,
                 absent=0,
-                date=resolved_date
+                date=sim_date
             )
 
         faculty_to_simulate = active_faculty[:req_count]

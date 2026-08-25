@@ -51,6 +51,10 @@ from attendance_routes import router as attendance_router
 from substitution_routes import router as substitution_router
 from analytics_routes import router as analytics_router
 from services.timetable_validator import TimetableValidator
+try:
+    from .faculty_db import get_supabase
+except ImportError:
+    from faculty_db import get_supabase
 from db import (
     init_db,
     save_timetable_to_db,

@@ -10,8 +10,10 @@ import logging
 
 try:
     from .faculty_db import get_supabase
+    from .db import get_connection
 except ImportError:
     from faculty_db import get_supabase
+    from db import get_connection
 
 logger = logging.getLogger("ai-timetablex.analytics")
 
