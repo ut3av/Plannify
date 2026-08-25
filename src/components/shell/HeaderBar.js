@@ -104,18 +104,18 @@ export default function HeaderBar({
         ? 'bg-white/95 border-slate-200 text-slate-900'
         : 'bg-slate-900/95 border-slate-800 text-slate-100'
     }`}>
-      {/* LEFT: Toggle & Breadcrumbs */}
-      <div className="flex items-center gap-4 min-w-0">
+      {/* LEFT: Toggle, Brand, & Breadcrumbs */}
+      <div className="flex items-center gap-3 min-w-0 flex-shrink-0 sm:flex-shrink">
         <button
           onClick={onToggleSidebar}
-          className={`p-2 rounded-xl transition-colors border ${
+          className={`p-2 rounded-xl transition-colors border shrink-0 ${
             isLight
-              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 shadow-sm'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700/80'
           }`}
           title={isSidebarOpen ? "Collapse navigation" : "Expand navigation"}
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="18" x2="21" y2="18" />
@@ -128,15 +128,15 @@ export default function HeaderBar({
             if (onSelectPage) onSelectPage("dashboard");
             navigate("/dashboard");
           }}
-          className={`flex items-center gap-2.5 shrink-0 pr-3 border-r text-left cursor-pointer hover:opacity-90 transition-all group ${
+          className={`flex items-center gap-2 shrink-0 pr-3 border-r text-left cursor-pointer hover:opacity-90 transition-all ${
             isLight ? 'border-slate-200' : 'border-slate-800'
           }`}
         >
           <BrandLogo size="md" isWarm={false} showIcon={true} />
         </button>
 
-        {/* Dynamic Breadcrumbs */}
-        <nav className={`flex items-center gap-2 text-xs min-w-0 overflow-hidden ${
+        {/* Dynamic Breadcrumbs - clear and readable */}
+        <nav className={`hidden sm:flex items-center gap-1.5 text-xs whitespace-nowrap overflow-hidden ${
           isLight ? 'text-slate-500' : 'text-slate-400'
         }`}>
           <span
@@ -144,7 +144,7 @@ export default function HeaderBar({
               if (onSelectPage) onSelectPage("dashboard");
               navigate("/dashboard");
             }}
-            className={`cursor-pointer font-medium ${
+            className={`cursor-pointer font-medium transition-colors ${
               isLight ? 'hover:text-slate-900' : 'hover:text-slate-200'
             }`}
           >
@@ -152,10 +152,10 @@ export default function HeaderBar({
           </span>
           {breadcrumbs.map((crumb, idx) => (
             <React.Fragment key={idx}>
-              <span className={isLight ? 'text-slate-300' : 'text-slate-600'}>/</span>
-              <span className={`truncate ${idx === breadcrumbs.length - 1
-                ? `font-bold ${isLight ? 'text-slate-900' : 'text-white'}`
-                : `${isLight ? 'hover:text-slate-900' : 'hover:text-slate-200'} cursor-pointer`
+              <span className={`text-[10px] font-bold ${isLight ? 'text-slate-300' : 'text-slate-600'}`}>/</span>
+              <span className={`font-semibold transition-colors ${idx === breadcrumbs.length - 1
+                ? (isLight ? 'text-slate-900 font-bold' : 'text-white font-bold')
+                : (isLight ? 'hover:text-slate-900 cursor-pointer' : 'hover:text-slate-200 cursor-pointer')
               }`}>
                 {crumb}
               </span>
@@ -165,7 +165,7 @@ export default function HeaderBar({
       </div>
 
       {/* CENTER: Institutional Program & Semester Filter Scope Selector */}
-      <div className="hidden md:flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-xs shadow-sm">
+      <div className="hidden lg:flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 text-xs shadow-sm shrink-0">
         {/* Level Toggle: ALL | UG | PG */}
         <div className="flex items-center bg-white dark:bg-slate-900 rounded-xl p-0.5 border border-slate-200/80 dark:border-slate-800">
           {["ALL", "UG", "PG"].map((lvl) => (
@@ -200,7 +200,7 @@ export default function HeaderBar({
             if (p === "MCA") setAcademicLevel && setAcademicLevel("PG");
             if (p === "BCA" || p === "B.Tech") setAcademicLevel && setAcademicLevel("UG");
           }}
-          className="input-premium py-1 px-2.5 text-xs bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white cursor-pointer rounded-xl font-bold"
+          className="py-1 px-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 cursor-pointer rounded-xl font-bold outline-none"
           title="Filter by Academic Program"
         >
           <option value="ALL">All Programs</option>
@@ -219,7 +219,7 @@ export default function HeaderBar({
         <select
           value={selectedSemester}
           onChange={(e) => setSelectedSemester && setSelectedSemester(e.target.value)}
-          className="input-premium py-1 px-2.5 text-xs bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white cursor-pointer rounded-xl font-bold"
+          className="py-1 px-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 cursor-pointer rounded-xl font-bold outline-none"
           title="Filter by Semester"
         >
           <option value="ALL">All Semesters</option>
@@ -242,26 +242,24 @@ export default function HeaderBar({
         </select>
       </div>
 
-      {/* RIGHT: Theme Toggle, Search, Cloud Sync, Notifications, Profile */}
-      <div className="flex items-center gap-3 shrink-0">
+      {/* RIGHT: Theme Toggle, Search, Actions, Notifications, Profile */}
+      <div className="flex items-center gap-2 shrink-0">
         {/* Theme Toggle Button */}
         {onToggleTheme && (
           <button
             onClick={onToggleTheme}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-300 ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all duration-300 ${
               isLight
                 ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 shadow-sm'
-                : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 text-amber-400 hover:text-amber-300'
+                : 'bg-slate-800/90 hover:bg-slate-800 border-slate-700 text-amber-400 hover:text-amber-300'
             }`}
             title={isLight ? 'Switch to Dark theme' : 'Switch to Light theme'}
           >
             {isLight ? (
-              /* Moon icon for switching to dark */
               <svg className="w-3.5 h-3.5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
               </svg>
             ) : (
-              /* Sun icon for switching to light */
               <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="5" />
                 <line x1="12" y1="1" x2="12" y2="3" />
@@ -274,26 +272,26 @@ export default function HeaderBar({
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
               </svg>
             )}
-            <span className="hidden md:inline-block">{isLight ? 'Dark' : 'Light'}</span>
+            <span className="hidden xl:inline-block text-[11px]">{isLight ? 'Dark' : 'Light'}</span>
           </button>
         )}
 
         {/* Global Search Button */}
         <button
           onClick={onOpenSearch}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs transition-all ${
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs transition-all ${
             isLight
-              ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-500 hover:text-slate-800'
-              : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 text-slate-400 hover:text-slate-200'
+              ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-600 hover:text-slate-900 shadow-sm'
+              : 'bg-slate-800/90 hover:bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
           }`}
           title="Global Search (Ctrl+K)"
         >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <span className="hidden md:inline-block">Search...</span>
-          <kbd className={`hidden md:inline-block px-1.5 py-0.5 rounded border text-[10px] font-mono ${
+          <span className="hidden xl:inline-block text-[11px]">Search</span>
+          <kbd className={`hidden 2xl:inline-block px-1 py-0.2 rounded border text-[9px] font-mono ${
             isLight
               ? 'bg-white border-slate-200 text-slate-500'
               : 'bg-slate-900 border-slate-700 text-slate-400'
@@ -302,24 +300,24 @@ export default function HeaderBar({
           </kbd>
         </button>
 
-        {/* Student Branch QR Code Generator Quick Action */}
+        {/* Student Branch QR Code Quick Action */}
         {onOpenQRModal && (
           <button
             onClick={onOpenQRModal}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
               isLight
-                ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-400 text-emerald-800'
+                ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-800'
                 : 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/40 text-emerald-300'
             }`}
-            title="Generate & print student branch timetable QR codes"
+            title="Generate student branch timetable QR codes"
           >
-            <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <rect x="3" y="3" width="7" height="7" rx="1" />
               <rect x="14" y="3" width="7" height="7" rx="1" />
               <rect x="14" y="14" width="7" height="7" rx="1" />
               <rect x="3" y="14" width="7" height="7" rx="1" />
             </svg>
-            <span className="hidden sm:inline">Student QR</span>
+            <span className="hidden md:inline text-[11px]">QR Code</span>
           </button>
         )}
 
@@ -328,19 +326,19 @@ export default function HeaderBar({
           <button
             onClick={onSaveCloud}
             disabled={isCloudSaving}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
               isLight
-                ? 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-700'
-                : 'bg-indigo-500/10 hover:bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
+                ? 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-700 shadow-sm'
+                : 'bg-indigo-500/15 hover:bg-indigo-500/25 border-indigo-500/30 text-indigo-300'
             }`}
             title="Save draft to Supabase Cloud"
           >
-            <svg className={`w-3.5 h-3.5 ${isCloudSaving ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className={`w-3.5 h-3.5 shrink-0 ${isCloudSaving ? 'animate-spin text-indigo-600' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
               <polyline points="17 21 17 13 7 13 7 21" />
               <polyline points="7 3 7 8 15 8" />
             </svg>
-            <span className="hidden lg:inline">{isCloudSaving ? "Saving..." : "Save Cloud"}</span>
+            <span className="hidden lg:inline text-[11px]">{isCloudSaving ? "Saving..." : "Save"}</span>
           </button>
         )}
 
@@ -352,25 +350,25 @@ export default function HeaderBar({
                 (onResetWorkspace || onRemoveDemo)();
               }
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
               isLight
-                ? 'bg-slate-100 hover:bg-slate-200 border-slate-300/80 text-slate-700'
-                : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+                : 'bg-slate-800/90 hover:bg-slate-800 border-slate-700 text-slate-300'
             }`}
             title="Clear current workspace and start with a clean configuration"
           >
-            <svg className="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            <span className="hidden sm:inline">Reset Workspace</span>
+            <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span className="hidden lg:inline text-[11px]">Reset</span>
           </button>
         )}
 
         {/* Notifications Bell */}
         <button
           onClick={() => setShowNotificationCenter(true)}
-          className={`p-2 rounded-xl transition-colors border relative ${
+          className={`p-2 rounded-xl transition-colors border relative shrink-0 ${
             isLight
-              ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'
-              : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700/80'
+              ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200 shadow-sm'
+              : 'bg-slate-800/90 hover:bg-slate-800 text-slate-300 border-slate-700/80'
           }`}
           title="Real-Time Notifications"
         >
