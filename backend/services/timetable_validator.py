@@ -105,13 +105,15 @@ class TimetableValidator:
         for r in self.rooms:
             if isinstance(r, str):
                 r_name = r.strip()
-                room_names.add(r_name)
-                room_lab_map[r_name] = "lab" in r_name.lower()
-            elif isinstance(r, dict):
-                r_name = (r.get("name") or "").strip()
                 if r_name:
                     room_names.add(r_name)
-                    room_lab_map[r_name] = bool(r.get("is_lab", "lab" in r_name.lower()))
+                    room_lab_map[r_name] = "lab" in r_name.lower()
+            elif isinstance(r, dict):
+                r_name = (r.get("room_number") or r.get("name") or "").strip()
+                if r_name:
+                    room_names.add(r_name)
+                    room_type = (r.get("room_type") or "").upper()
+                    room_lab_map[r_name] = bool(r.get("is_lab", "LAB" in room_type or "lab" in r_name.lower()))
 
         section_names: Set[str] = set()
         section_lab_rooms: Dict[str, List[str]] = defaultdict(list)

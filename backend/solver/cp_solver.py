@@ -64,7 +64,7 @@ class SectionInput(BaseModel):
 class GenerateRequest(BaseModel):
     teachers: List[TeacherInput]
     subjects: List[SubjectInput]
-    rooms: List[str]
+    rooms: List[Any]
     sections: List[SectionInput] = []
     time_slots: List[str] = DEFAULT_SLOTS
     unavailability: Optional[Dict[str, List[Tuple[str, str]]]] = None
@@ -91,12 +91,22 @@ def scheduler_error(status_code: int, message: str, suggestions: List[str], fact
     )
 
 
-def clean_name(value: str) -> str:
-    return " ".join(value.strip().split())
+def clean_name(value: Any) -> str:
+    if isinstance(value, str):
+        return " ".join(value.strip().split())
+    if isinstance(value, dict):
+        val = value.get("room_number") or value.get("name") or value.get("teacher_name") or ""
+        return " ".join(str(val).strip().split())
+    return " ".join(str(value or "").strip().split())
 
 
 def validate_request(request: GenerateRequest) -> GenerateRequest:
-    rooms = [clean_name(r) for r in request.rooms if clean_name(r)]
+    cleaned_rooms = []
+    for r in request.rooms:
+        val = clean_name(r)
+        if val:
+            cleaned_rooms.append(val)
+    rooms = cleaned_rooms
     slots = [clean_name(s) for s in request.time_slots if clean_name(s)]
     teachers = [TeacherInput(name=clean_name(t.name), free_periods=t.free_periods, max_weekly_hours=t.max_weekly_hours or UGC_MAX_WEEKLY_PERIODS_DEFAULT, email=t.email, phone=t.phone, is_substitute=t.is_substitute) for t in request.teachers if clean_name(t.name)]
     subjects = [
