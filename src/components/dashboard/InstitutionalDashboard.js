@@ -51,9 +51,6 @@ export default function InstitutionalDashboard({
   }, [fetchDashboardData]);
 
   const activeFaculty = stats?.total_faculty !== undefined ? stats.total_faculty : (teachersCount || 0);
-  const attendanceRate = (stats?.attendance_rate !== undefined && stats?.attendance_rate !== null) 
-    ? stats.attendance_rate 
-    : 0;
   const pendingLeaves = stats?.pending_leaves || 0;
   const onLeaveToday = stats?.on_leave_today || 0;
   const substitutionsToday = stats?.substitutions_today || 0;
