@@ -1128,6 +1128,130 @@ export function AcademicProvider({ children }) {
     }
   }, [saveToCloud]);
 
+  const deleteMultipleFacultyProfiles = useCallback(async (facultyList = []) => {
+    if (!Array.isArray(facultyList) || facultyList.length === 0) return;
+
+    const idsToDelete = [];
+    const namesToDelete = [];
+    const nameLowerSet = new Set();
+
+    facultyList.forEach(f => {
+      if (!f) return;
+      const id = typeof f === 'object' ? f.id : f;
+      const name = typeof f === 'object' ? (f.teacher_name || f.name) : f;
+      if (id && !id.toString().startsWith("ocr-")) {
+        idsToDelete.push(id);
+      }
+      if (name) {
+        const cleanName = name.trim();
+        namesToDelete.push(cleanName);
+        nameLowerSet.add(cleanName.toLowerCase());
+      }
+    });
+
+    // 1. Direct Supabase cascade batch delete
+    if (supabase) {
+      try {
+        if (idsToDelete.length > 0) {
+          await supabase.from("faculty_subject_allocations").delete().in("faculty_id", idsToDelete);
+          await supabase.from("leave_balances").delete().in("faculty_id", idsToDelete);
+          await supabase.from("attendance_records").delete().in("faculty_id", idsToDelete);
+          await supabase.from("teachers").delete().in("id", idsToDelete);
+          await supabase.from("faculty_profiles").delete().in("id", idsToDelete);
+        }
+        if (namesToDelete.length > 0) {
+          await supabase.from("faculty_subject_allocations").delete().in("faculty_name", namesToDelete);
+          await supabase.from("teachers").delete().in("name", namesToDelete);
+          await supabase.from("faculty_profiles").delete().in("teacher_name", namesToDelete);
+        }
+      } catch (err) {
+        console.warn("Supabase batch delete notice:", err);
+      }
+    }
+
+    // 2. Backend SQLite delete
+    try {
+      await Promise.all(
+        idsToDelete.map(id =>
+          axios.delete(`${API_BASE_URL}/faculty/${id}?hard_delete=true`).catch(() => null)
+        )
+      );
+    } catch (err) {
+      console.warn("Backend batch delete notice:", err);
+    }
+
+    // 3. Clear local cache
+    try {
+      const cached = JSON.parse(localStorage.getItem("planify_faculty_cache") || "[]");
+      const cleanCache = cached.filter(f => {
+        const fName = (f.teacher_name || f.name || "").toLowerCase().trim();
+        return !idsToDelete.includes(f.id) && !nameLowerSet.has(fName) && !isTestOrMockFaculty(fName);
+      });
+      localStorage.setItem("planify_faculty_cache", JSON.stringify(cleanCache));
+    } catch {}
+
+    // 4. Update active subjects state (de-link deleted faculty from courses)
+    setSubjects(prev => {
+      const current = Array.isArray(prev) ? prev : [];
+      return current.map(s => {
+        if (nameLowerSet.has((s.teacher || "").toLowerCase().trim())) {
+          return { ...s, teacher: "" };
+        }
+        return s;
+      });
+    });
+
+    // 5. Update active sections state (remove from preferred_faculty)
+    setSections(prev => {
+      const current = Array.isArray(prev) ? prev : [];
+      return current.map(sec => {
+        if (Array.isArray(sec.preferred_faculty)) {
+          return {
+            ...sec,
+            preferred_faculty: sec.preferred_faculty.filter(pf => !nameLowerSet.has(pf.toLowerCase().trim()))
+          };
+        }
+        return sec;
+      });
+    });
+
+    // 6. Update active teachers state and persist updated timetable_state
+    setTeachers(prev => {
+      const filtered = (Array.isArray(prev) ? prev : []).filter(t => {
+        const tName = ((typeof t === 'string' ? t : t?.name || t?.teacher_name) || '').toLowerCase().trim();
+        const tId = typeof t === 'object' ? t?.id : null;
+        if (tId && idsToDelete.includes(tId)) return false;
+        if (tName && nameLowerSet.has(tName)) return false;
+        if (isTestOrMockFaculty(tName)) return false;
+        return true;
+      });
+
+      saveToCloud(true, {
+        teachers: filtered,
+        sections: (activeStateRef.current.sections || []).map(sec => ({
+          ...sec,
+          preferred_faculty: Array.isArray(sec.preferred_faculty)
+            ? sec.preferred_faculty.filter(pf => !nameLowerSet.has(pf.toLowerCase().trim()))
+            : []
+        })),
+        subjects: (activeStateRef.current.subjects || []).map(s => (
+          nameLowerSet.has((s.teacher || "").toLowerCase().trim()) ? { ...s, teacher: "" } : s
+        )),
+        rooms: activeStateRef.current.rooms,
+        timeSlots: activeStateRef.current.timeSlots,
+        result: activeStateRef.current.result
+      });
+
+      return filtered;
+    });
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("planify_faculty_updated"));
+      window.dispatchEvent(new CustomEvent("planify_leave_updated"));
+      window.dispatchEvent(new CustomEvent("planify_attendance_updated"));
+    }
+  }, [saveToCloud]);
+
   const handleBatchImportData = useCallback(({ teachers: newTeachers = [], sections: newSections = [], subjects: newSubjects = [] }) => {
     let updatedTeachers = activeStateRef.current.teachers || [];
     let updatedSections = activeStateRef.current.sections || [];
@@ -1387,6 +1511,7 @@ export function AcademicProvider({ children }) {
     handleRemoveDemoData: handleResetWorkspace,
     handleAddFaculty,
     deleteFacultyProfile,
+    deleteMultipleFacultyProfiles,
     handleBatchImportData,
     handleTeachersChange,
     assignProxy,
