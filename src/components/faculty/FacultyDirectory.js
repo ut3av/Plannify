@@ -184,7 +184,12 @@ export default function FacultyDirectory({
             } else if (payload.eventType === 'UPDATE' && payload.new) {
               setFaculty(prev => prev.map(f => (f.id === payload.new.id || f.teacher_name === payload.new.teacher_name) ? { ...f, ...payload.new } : f));
             } else if (payload.eventType === 'DELETE' && payload.old) {
-              setFaculty(prev => prev.filter(f => f.id !== payload.old.id));
+              const oldId = payload.old.id;
+              const oldName = (payload.old.teacher_name || '').toLowerCase().trim();
+              setFaculty(prev => prev.filter(f => {
+                const fName = (f.teacher_name || f.name || '').toLowerCase().trim();
+                return f.id !== oldId && fName !== oldName;
+              }));
             }
             fetchFaculty(true);
           }
@@ -215,22 +220,26 @@ export default function FacultyDirectory({
   }, [fetchFaculty, fetchDepartments]);
 
   const handleDelete = async (e, f) => {
-    e.stopPropagation();
+    e && e.stopPropagation();
     const facultyName = f.teacher_name || f.name;
-    if (!window.confirm(`Are you sure you want to remove ${facultyName} from the faculty directory?`)) {
+    const facultyId = f.id;
+    if (!window.confirm(`Are you sure you want to permanently remove ${facultyName} from the faculty directory?`)) {
       return;
     }
 
     try {
+      const nameLower = (facultyName || "").toLowerCase().trim();
+      setDeletedKeys(prev => new Set([...prev, facultyId, nameLower]));
+      setFaculty(prev => prev.filter(item => item.id !== facultyId && (item.teacher_name || item.name || '').toLowerCase().trim() !== nameLower));
+
       if (deleteFacultyProfile) {
-        await deleteFacultyProfile(f.id, facultyName);
+        await deleteFacultyProfile(facultyId, facultyName);
       } else {
-        if (f.id && !f.id.toString().startsWith("ocr-")) {
-          await axios.delete(`${API}/faculty/${f.id}?hard_delete=true`).catch(() => null);
+        if (facultyId && !facultyId.toString().startsWith("ocr-")) {
+          await axios.delete(`${API}/faculty/${facultyId}?hard_delete=true`).catch(() => null);
         }
       }
-      setDeletedKeys(prev => new Set([...prev, f.id, facultyName?.trim().toLowerCase()]));
-      setFaculty(prev => prev.filter(item => item.id !== f.id && item.teacher_name !== facultyName));
+      await fetchFaculty(true);
     } catch (err) {
       console.error("Failed to delete faculty:", err);
     }

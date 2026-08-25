@@ -157,6 +157,22 @@ export function clearAllFacultyCaches() {
   }
 }
 
+const isTestOrMock = (name) => {
+  if (!name) return true;
+  const n = name.trim().toLowerCase();
+  const testNames = [
+    "test a", "test b", "test c", "test teacher", "test faculty", "test",
+    "dr. sanjana singh", "sanjana singh",
+    "dr. amit patel", "amit patel",
+    "prof. rajesh verma", "rajesh verma",
+    "prof. neha gupta", "neha gupta",
+    "dr. vikram joshi", "vikram joshi",
+    "prof. suresh kumar", "suresh kumar",
+    "demo teacher", "demo faculty", "demo user", "sample faculty"
+  ];
+  return testNames.includes(n) || n.startsWith("test ") || n.startsWith("demo ") || n.startsWith("sample ") || n === "teacher 1" || n === "teacher 2";
+};
+
 /**
  * Unified Faculty Pipeline: Syncs teachers configured in the Timetable Workspace
  * directly into the Institutional Faculty Profiles directory and leave ledgers.
@@ -164,7 +180,14 @@ export function clearAllFacultyCaches() {
 export async function syncFacultyFromTimetable(teachersList = []) {
   if (!Array.isArray(teachersList) || teachersList.length === 0) return [];
   try {
-    const profiles = teachersList.map((t, idx) => {
+    const cleanTeachers = teachersList.filter(t => {
+      const name = typeof t === "string" ? t : (t.name || t.teacher_name || "");
+      return name && !isTestOrMock(name);
+    });
+
+    if (cleanTeachers.length === 0) return [];
+
+    const profiles = cleanTeachers.map((t, idx) => {
       const name = typeof t === "string" ? t : (t.name || t.teacher_name || `Faculty ${idx + 1}`);
       const designation = (typeof t === "object" && t.designation)
         ? t.designation
@@ -173,15 +196,16 @@ export async function syncFacultyFromTimetable(teachersList = []) {
       const empId = (typeof t === "object" && t.employee_id) ? t.employee_id : `EMP-LNCT-${String(idx + 1).padStart(3, "0")}`;
 
       return {
-        id: empId,
+        id: (typeof t === "object" && t.id) || empId,
         teacher_name: name,
         employee_id: empId,
         department: dept,
+        department_name: dept,
         designation: designation,
         email: (typeof t === "object" && t.email) ? t.email : `${name.toLowerCase().replace(/[^a-z]/g, '')}@lnctu.ac.in`,
         phone: (typeof t === "object" && t.phone) ? t.phone : "+91-9893700000",
         free_periods: (typeof t === "object" && t.free_periods !== undefined) ? t.free_periods : 1,
-        max_weekly_hours: (typeof t === "object" && t.max_weekly_hours) ? t.max_weekly_hours : 18,
+        max_weekly_hours: (typeof t === "object" && t.max_weekly_hours) ? t.max_weekly_hours : 40,
         status: "active",
         ugc_compliant: true,
       };

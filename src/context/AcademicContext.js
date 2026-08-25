@@ -730,12 +730,16 @@ export function AcademicProvider({ children }) {
   }, [saveToCloud]);
 
   const deleteFacultyProfile = useCallback(async (facultyId, facultyName) => {
-    // 1. Direct Supabase delete (faculty_profiles and allocations)
+    const nameLower = (facultyName || "").toLowerCase().trim();
+
+    // 1. Direct Supabase cascade delete (faculty_profiles, allocations, balances)
     if (supabase) {
       try {
         if (facultyId && !facultyId.toString().startsWith("ocr-")) {
-          await supabase.from("faculty_subject_allocations").delete().eq("faculty_id", facultyId);
-          await supabase.from("faculty_profiles").delete().eq("id", facultyId);
+          await supabase.from("faculty_subject_allocations").delete().or(`faculty_id.eq.${facultyId},faculty_name.eq.${facultyName || facultyId}`);
+          await supabase.from("leave_balances").delete().eq("faculty_id", facultyId);
+          await supabase.from("attendance_records").delete().eq("faculty_id", facultyId);
+          await supabase.from("faculty_profiles").delete().or(`id.eq.${facultyId},employee_id.eq.${facultyId}`);
         }
         if (facultyName) {
           await supabase.from("faculty_subject_allocations").delete().eq("faculty_name", facultyName);
@@ -748,28 +752,50 @@ export function AcademicProvider({ children }) {
 
     // 2. Backend SQLite delete
     try {
-      if (facultyId && !facultyId.toString().startsWith("ocr-")) {
-        await axios.delete(`${API_BASE_URL}/faculty/${facultyId}?hard_delete=true`).catch(() => null);
+      const deleteKey = facultyId || encodeURIComponent(facultyName);
+      if (deleteKey && !deleteKey.toString().startsWith("ocr-")) {
+        await axios.delete(`${API_BASE_URL}/faculty/${deleteKey}?hard_delete=true`).catch(() => null);
       }
     } catch (err) {
       console.warn("Backend delete notice:", err);
     }
 
-    // 3. Update active teachers state and persist updated timetable_state
-    const nameLower = (facultyName || "").toLowerCase().trim();
+    // 3. Clear local cache
+    try {
+      const cached = JSON.parse(localStorage.getItem("planify_faculty_cache") || "[]");
+      const cleanCache = cached.filter(f => {
+        const fName = (f.teacher_name || f.name || "").toLowerCase().trim();
+        return f.id !== facultyId && fName !== nameLower && !isTestOrMockFaculty(fName);
+      });
+      localStorage.setItem("planify_faculty_cache", JSON.stringify(cleanCache));
+    } catch {}
+
+    // 4. Update active subjects state (de-link deleted faculty from courses)
+    setSubjects(prev => {
+      const current = Array.isArray(prev) ? prev : [];
+      return current.map(s => {
+        if ((s.teacher || "").toLowerCase().trim() === nameLower) {
+          return { ...s, teacher: "" };
+        }
+        return s;
+      });
+    });
+
+    // 5. Update active teachers state and persist updated timetable_state
     setTeachers(prev => {
       const filtered = (Array.isArray(prev) ? prev : []).filter(t => {
         const tName = ((typeof t === 'string' ? t : t?.name || t?.teacher_name) || '').toLowerCase().trim();
         const tId = typeof t === 'object' ? t?.id : null;
         if (facultyId && tId === facultyId) return false;
         if (nameLower && tName === nameLower) return false;
+        if (isTestOrMockFaculty(tName)) return false;
         return true;
       });
 
       saveToCloud(true, {
         teachers: filtered,
         sections: activeStateRef.current.sections,
-        subjects: activeStateRef.current.subjects,
+        subjects: (activeStateRef.current.subjects || []).map(s => ((s.teacher || "").toLowerCase().trim() === nameLower ? { ...s, teacher: "" } : s)),
         rooms: activeStateRef.current.rooms,
         timeSlots: activeStateRef.current.timeSlots,
         result: activeStateRef.current.result
@@ -777,6 +803,12 @@ export function AcademicProvider({ children }) {
 
       return filtered;
     });
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("planify_faculty_updated"));
+      window.dispatchEvent(new CustomEvent("planify_leave_updated"));
+      window.dispatchEvent(new CustomEvent("planify_attendance_updated"));
+    }
   }, [saveToCloud]);
 
   const handleBatchImportData = useCallback(({ teachers: newTeachers = [], sections: newSections = [], subjects: newSubjects = [] }) => {

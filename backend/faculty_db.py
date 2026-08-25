@@ -523,26 +523,25 @@ def delete_faculty(faculty_id: str) -> dict:
     sb = get_supabase()
     if sb:
         try:
-            # Cascade delete in Supabase
-            sb.table("faculty_subject_allocations").delete().eq("faculty_id", faculty_id).execute()
+            # Cascade delete in Supabase by UUID, employee_id, and teacher_name
+            sb.table("faculty_subject_allocations").delete().or_(f"faculty_id.eq.{faculty_id},faculty_name.eq.{faculty_id}").execute()
             sb.table("leave_balances").delete().eq("faculty_id", faculty_id).execute()
             sb.table("leave_applications").delete().eq("faculty_id", faculty_id).execute()
             sb.table("attendance_records").delete().eq("faculty_id", faculty_id).execute()
-            sb.table("substitution_log").delete().eq("original_teacher_id", faculty_id).execute()
-            sb.table("substitution_log").delete().eq("substitute_teacher_id", faculty_id).execute()
-            res = sb.table("faculty_profiles").delete().eq("id", faculty_id).execute()
+            sb.table("substitution_log").delete().or_(f"original_teacher_id.eq.{faculty_id},substitute_teacher_id.eq.{faculty_id}").execute()
+            sb.table("faculty_profiles").delete().or_(f"id.eq.{faculty_id},employee_id.eq.{faculty_id},teacher_name.eq.{faculty_id}").execute()
         except Exception as e:
             logger.warning(f"Supabase delete_faculty failed: {e}. Using SQLite fallback.")
 
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("DELETE FROM faculty_subject_allocations WHERE faculty_id = ?", (faculty_id,))
+        cursor.execute("DELETE FROM faculty_subject_allocations WHERE faculty_id = ? OR faculty_name = ?", (faculty_id, faculty_id))
         cursor.execute("DELETE FROM leave_balances WHERE faculty_id = ?", (faculty_id,))
         cursor.execute("DELETE FROM leave_applications WHERE faculty_id = ?", (faculty_id,))
         cursor.execute("DELETE FROM attendance_records WHERE faculty_id = ?", (faculty_id,))
         cursor.execute("DELETE FROM substitution_log WHERE original_teacher_id = ? OR substitute_teacher_id = ?", (faculty_id, faculty_id))
-        cursor.execute("DELETE FROM faculty_profiles WHERE id = ?", (faculty_id,))
+        cursor.execute("DELETE FROM faculty_profiles WHERE id = ? OR employee_id = ? OR teacher_name = ?", (faculty_id, faculty_id, faculty_id))
         conn.commit()
     finally:
         conn.close()
