@@ -271,14 +271,16 @@ export function subscribeToTable(tableName, onEvent) {
     }
   };
 
-  const eventName = tableName.includes("leave")
-    ? "planify_leave_updated"
-    : tableName.includes("attendance")
-    ? "planify_attendance_updated"
-    : "planify_table_updated";
+  const eventNames = [];
+  if (tableName.includes("leave")) eventNames.push("planify_leave_updated");
+  if (tableName.includes("attendance")) eventNames.push("planify_attendance_updated");
+  if (tableName.includes("faculty")) eventNames.push("planify_faculty_updated");
+  if (tableName.includes("section")) eventNames.push("planify_sections_updated");
+  if (tableName.includes("subject")) eventNames.push("planify_subjects_updated");
+  eventNames.push("planify_table_updated");
 
   if (typeof window !== "undefined") {
-    window.addEventListener(eventName, handleLocalEvent);
+    eventNames.forEach(evt => window.addEventListener(evt, handleLocalEvent));
   }
 
   return () => {
@@ -287,7 +289,7 @@ export function subscribeToTable(tableName, onEvent) {
         supabase.removeChannel(channel);
       }
       if (typeof window !== "undefined") {
-        window.removeEventListener(eventName, handleLocalEvent);
+        eventNames.forEach(evt => window.removeEventListener(evt, handleLocalEvent));
       }
     } catch {
       // Graceful cleanup

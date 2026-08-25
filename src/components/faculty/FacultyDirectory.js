@@ -57,53 +57,93 @@ export default function FacultyDirectory({
   const fetchFaculty = useCallback(async (isSilent = false) => {
     try {
       if (!isSilent && faculty.length === 0) setLoading(true);
-      const res = await axios.get(`${API}/faculty`, { timeout: 4000 });
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setFaculty(res.data);
-        return;
-      }
-    } catch (e) {
-      // Try Supabase directly
-    }
 
-    try {
-      const { data, error } = await supabase
-        .from('faculty_profiles')
-        .select('*, departments(name)')
-        .order('teacher_name');
-      if (!error && Array.isArray(data)) {
-        setFaculty(
-          data.map((f) => ({
+      // 1. Direct Supabase Query (Primary Real-time Source of Truth)
+      let supabaseProfiles = [];
+      try {
+        const { data: supaData, error: supaErr } = await supabase
+          .from('faculty_profiles')
+          .select('*, departments(name)')
+          .order('teacher_name');
+        if (!supaErr && Array.isArray(supaData)) {
+          supabaseProfiles = supaData.map((f) => ({
             ...f,
-            department_name: f.departments?.name || f.department_name || "Computer Applications",
-          }))
-        );
+            department_name: f.departments?.name || f.department_name || f.department || "Computer Applications",
+          }));
+        }
+      } catch (err) {
+        console.warn("Supabase fetch notice:", err);
+      }
+
+      // 2. Backend Database Query
+      let backendProfiles = [];
+      try {
+        const res = await axios.get(`${API}/faculty`, { timeout: 3500 });
+        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+          backendProfiles = res.data;
+        }
+      } catch (e) {
+        // Backend offline or unreachable
+      }
+
+      // 3. Merge profiles, giving priority to live Supabase entries
+      const map = new Map();
+
+      // Add backend entries
+      backendProfiles.forEach(f => {
+        const name = (f.teacher_name || f.name || "").trim().toLowerCase();
+        if (name) map.set(name, f);
+      });
+
+      // Overlay live Supabase entries
+      supabaseProfiles.forEach(f => {
+        const name = (f.teacher_name || f.name || "").trim().toLowerCase();
+        if (name) {
+          const existing = map.get(name) || {};
+          map.set(name, { ...existing, ...f });
+        }
+      });
+
+      // If both had nothing, fallback to teachers prop
+      if (map.size === 0 && Array.isArray(teachers) && teachers.length > 0) {
+        teachers.forEach(t => {
+          const name = typeof t === 'string' ? t : (t.teacher_name || t.name);
+          if (name) {
+            const key = name.trim().toLowerCase();
+            map.set(key, typeof t === 'object' ? t : { teacher_name: name, department_name: "Computer Applications", status: "active" });
+          }
+        });
+      }
+
+      const merged = Array.from(map.values());
+      if (merged.length > 0) {
+        setFaculty(merged);
       }
     } catch (err) {
       console.error("Failed to fetch faculty:", err);
     } finally {
       setLoading(false);
     }
-  }, [faculty.length]);
+  }, [teachers, faculty.length]);
 
   const fetchDepartments = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/faculty/departments`, { timeout: 4000 });
-      if (res.data && Array.isArray(res.data)) {
-        setDepartments(res.data);
+      const { data, error } = await supabase.from('departments').select('*').order('name');
+      if (!error && Array.isArray(data) && data.length > 0) {
+        setDepartments(data);
         return;
       }
-    } catch (e) {
-      // Try Supabase directly
+    } catch (err) {
+      // Try backend
     }
 
     try {
-      const { data, error } = await supabase.from('departments').select('*').order('name');
-      if (!error && Array.isArray(data)) {
-        setDepartments(data);
+      const res = await axios.get(`${API}/faculty/departments`, { timeout: 3500 });
+      if (res.data && Array.isArray(res.data)) {
+        setDepartments(res.data);
       }
-    } catch (err) {
-      console.error("Failed to fetch departments:", err);
+    } catch (e) {
+      console.warn("Failed to fetch departments:", e);
     }
   }, []);
 
@@ -111,7 +151,48 @@ export default function FacultyDirectory({
     fetchFaculty(false);
     fetchDepartments();
 
-    // Supabase real-time subscriptions — Silent Background Sync
+    // 1. Direct Realtime Supabase Subscription on faculty_profiles table
+    let supaChannel = null;
+    if (supabase) {
+      supaChannel = supabase
+        .channel(`realtime_faculty_profiles_dir_${Date.now()}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'faculty_profiles' },
+          (payload) => {
+            console.log("⚡ [Realtime Supabase] Faculty event received:", payload.eventType, payload.new || payload.old);
+            if (payload.eventType === 'INSERT' && payload.new) {
+              const newProfile = {
+                ...payload.new,
+                department_name: payload.new.department_name || payload.new.department || "Computer Applications",
+              };
+              setFaculty(prev => {
+                const exists = prev.some(f => 
+                  (f.teacher_name && f.teacher_name.toLowerCase() === newProfile.teacher_name?.toLowerCase()) ||
+                  f.id === newProfile.id ||
+                  (f.employee_id && f.employee_id === newProfile.employee_id)
+                );
+                if (exists) {
+                  return prev.map(f => (
+                    (f.teacher_name && f.teacher_name.toLowerCase() === newProfile.teacher_name?.toLowerCase()) ||
+                    f.id === newProfile.id ||
+                    (f.employee_id && f.employee_id === newProfile.employee_id)
+                  ) ? { ...f, ...newProfile } : f);
+                }
+                return [newProfile, ...prev];
+              });
+            } else if (payload.eventType === 'UPDATE' && payload.new) {
+              setFaculty(prev => prev.map(f => (f.id === payload.new.id || f.teacher_name === payload.new.teacher_name) ? { ...f, ...payload.new } : f));
+            } else if (payload.eventType === 'DELETE' && payload.old) {
+              setFaculty(prev => prev.filter(f => f.id !== payload.old.id));
+            }
+            fetchFaculty(true);
+          }
+        )
+        .subscribe();
+    }
+
+    // 2. Local Custom Event Subscriptions
     const unsubFaculty = subscribeToTable('faculty_profiles', () => {
       fetchFaculty(true);
     });
@@ -121,10 +202,13 @@ export default function FacultyDirectory({
 
     const interval = setInterval(() => {
       fetchFaculty(true);
-    }, 12000);
+    }, 8000);
 
     return () => {
       clearInterval(interval);
+      if (supaChannel && supabase) {
+        supabase.removeChannel(supaChannel);
+      }
       unsubFaculty();
       unsubDept();
     };
