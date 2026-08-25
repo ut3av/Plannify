@@ -1189,18 +1189,59 @@ export default function FacultyDirectory({
                             className="mt-3 p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800/80 hover:border-indigo-500/40 transition-all cursor-pointer group/meter"
                             title="Click to view full course workload breakdown"
                           >
-                            <div className="flex items-center justify-between text-[11px] mb-1.5">
-                              <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
+                            <div className="flex items-center justify-between text-[11px] mb-2 gap-1.5 flex-wrap">
+                              <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1 shrink-0">
                                 <svg className="w-3 h-3 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                 Weekly Workload
                               </span>
-                              <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
-                                utilization > 100 ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" :
-                                utilization >= 70 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
-                                "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-                              }`}>
-                                {assigned} / {capacity} hrs ({utilization}%)
-                              </span>
+
+                              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                {/* Direct +/- Stepper */}
+                                <div className="flex items-center bg-slate-900 border border-slate-700/90 rounded-lg p-0.5 shadow-inner">
+                                  <button
+                                    type="button"
+                                    title="Decrease workload quota by 1 slot"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const next = Math.max(1, capacity - 1);
+                                      if (updateFacultyWorkloadCapacity) {
+                                        updateFacultyWorkloadCapacity(f.teacher_name, next);
+                                      }
+                                      setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
+                                    }}
+                                    className="w-5 h-5 rounded flex items-center justify-center bg-slate-800 hover:bg-indigo-600 active:scale-95 text-slate-300 hover:text-white font-bold text-xs transition-all"
+                                  >
+                                    -
+                                  </button>
+                                  <span className="px-1.5 font-mono text-[11px] font-black text-indigo-300 select-none">
+                                    {capacity}s
+                                  </span>
+                                  <button
+                                    type="button"
+                                    title="Increase workload quota by 1 slot"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const next = capacity + 1;
+                                      if (updateFacultyWorkloadCapacity) {
+                                        updateFacultyWorkloadCapacity(f.teacher_name, next);
+                                      }
+                                      setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
+                                    }}
+                                    className="w-5 h-5 rounded flex items-center justify-center bg-slate-800 hover:bg-indigo-600 active:scale-95 text-slate-300 hover:text-white font-bold text-xs transition-all"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+
+                                {/* Utilization Badge */}
+                                <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                                  utilization > 100 ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" :
+                                  utilization >= 70 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
+                                  "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                                }`}>
+                                  {assigned} / {capacity} ({utilization}%)
+                                </span>
+                              </div>
                             </div>
                             
                             {/* Progress Bar */}
@@ -1216,7 +1257,7 @@ export default function FacultyDirectory({
                             </div>
 
                             <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1">
-                              <span>{utilization > 100 ? "⚠️ Over capacity" : (capacity - assigned) + " hrs free"}</span>
+                              <span>{utilization > 100 ? "⚠️ Over capacity" : (capacity - assigned) + " slots free"}</span>
                               <span className="text-indigo-400 group-hover/meter:underline font-semibold">Breakdown →</span>
                             </div>
                           </div>
@@ -1372,15 +1413,50 @@ export default function FacultyDirectory({
                       e.stopPropagation();
                       setSelectedWorkloadFaculty({ ...f, capacity, assigned, workloadInfo });
                     }}>
-                      <div className="space-y-1 min-w-[130px] p-1 rounded-lg hover:bg-slate-800/80 transition-colors">
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="font-mono text-slate-300 font-bold">{assigned} / {capacity} hrs</span>
-                          <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                      <div className="space-y-1.5 min-w-[150px] p-1.5 rounded-lg hover:bg-slate-800/80 transition-colors">
+                        <div className="flex items-center justify-between text-[10px] gap-1">
+                          <div className="flex items-center bg-slate-900 border border-slate-700/80 rounded-md p-0.5" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              title="Decrease workload"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const next = Math.max(1, capacity - 1);
+                                if (updateFacultyWorkloadCapacity) {
+                                  updateFacultyWorkloadCapacity(f.teacher_name, next);
+                                }
+                                setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
+                              }}
+                              className="w-4 h-4 rounded flex items-center justify-center bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white font-bold text-[10px]"
+                            >
+                              -
+                            </button>
+                            <span className="px-1 font-mono text-[10px] font-black text-indigo-300">
+                              {capacity}s
+                            </span>
+                            <button
+                              type="button"
+                              title="Increase workload"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const next = capacity + 1;
+                                if (updateFacultyWorkloadCapacity) {
+                                  updateFacultyWorkloadCapacity(f.teacher_name, next);
+                                }
+                                setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
+                              }}
+                              className="w-4 h-4 rounded flex items-center justify-center bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white font-bold text-[10px]"
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
                             utilization > 100 ? "bg-rose-500/20 text-rose-300" :
                             utilization >= 70 ? "bg-emerald-500/20 text-emerald-300" :
                             "bg-indigo-500/20 text-indigo-300"
                           }`}>
-                            {utilization}%
+                            {assigned}/{capacity} ({utilization}%)
                           </span>
                         </div>
                         <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
