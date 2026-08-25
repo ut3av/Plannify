@@ -278,6 +278,12 @@ def get_faculty(faculty_id: str) -> Optional[dict]:
         (faculty_id,)
     )
     row = cursor.fetchone()
+    if not row:
+        cursor.execute(
+            "SELECT f.*, d.name as department_name FROM faculty_profiles f LEFT JOIN departments d ON f.department_id = d.id WHERE f.employee_id = ? OR LOWER(TRIM(f.teacher_name)) = LOWER(TRIM(?))",
+            (faculty_id, faculty_id)
+        )
+        row = cursor.fetchone()
     conn.close()
     if not row:
         return None

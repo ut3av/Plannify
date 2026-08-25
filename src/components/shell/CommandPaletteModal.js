@@ -16,21 +16,26 @@ const PAGE_ROUTE_MAP = {
   sections: "/academic/sections",
   rooms: "/academic/rooms",
   slots: "/academic/slots",
-  reschedule: "/operations/reschedule",
+  ingest: "/operations/ingest",
   integrations: "/operations/integrations",
-  history: "/operations/history",
   settings: "/operations/settings",
-  reports: "/reports",
+  "public-portal": "/public/timetable",
+  reports: "/analytics",
 };
 
 const QUICK_ACTIONS = [
   { type: "action", label: "Open Timetable Workspace", page: "timetable", path: "/timetable", icon: "grid" },
   { type: "action", label: "View Faculty Directory", page: "faculty", path: "/faculty", icon: "users" },
+  { type: "action", label: "Data Ingestion & OCR Intelligence", page: "ingest", path: "/operations/ingest", icon: "file-text" },
+  { type: "action", label: "Academic Setup: Subjects Catalog", page: "subjects", path: "/academic/subjects", icon: "book-open" },
+  { type: "action", label: "Academic Setup: Sections & Classes", page: "sections", path: "/academic/sections", icon: "layers" },
+  { type: "action", label: "Academic Setup: Classrooms & Labs", page: "rooms", path: "/academic/rooms", icon: "building" },
+  { type: "action", label: "Academic Setup: Time Slots", page: "slots", path: "/academic/slots", icon: "timer" },
+  { type: "action", label: "Leave Applications & Management", page: "leave", path: "/leave", icon: "calendar" },
+  { type: "action", label: "Substitution & Proxy Center", page: "substitutions", path: "/substitutions", icon: "user-check" },
   { type: "action", label: "Open Attendance Dashboard", page: "attendance", path: "/attendance", icon: "clock" },
-  { type: "action", label: "View Operational Analytics", page: "analytics", path: "/analytics", icon: "bar-chart" },
-  { type: "action", label: "Academic Setup: Subjects", page: "subjects", path: "/academic/subjects", icon: "book-open" },
-  { type: "action", label: "Academic Setup: Classrooms", page: "rooms", path: "/academic/rooms", icon: "building" },
-  { type: "action", label: "Open Reports Hub", page: "reports", path: "/reports", icon: "file-text" },
+  { type: "action", label: "View Operational Analytics 360°", page: "analytics", path: "/analytics", icon: "bar-chart" },
+  { type: "action", label: "System & Institution Settings", page: "settings", path: "/operations/settings", icon: "settings" },
 ];
 
 export default function CommandPaletteModal({ isOpen, onClose, onNavigate }) {
