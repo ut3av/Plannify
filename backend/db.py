@@ -33,10 +33,22 @@ def init_db():
         CREATE TABLE IF NOT EXISTS departments (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
+            institution_id TEXT,
+            code TEXT,
             hod_faculty_id TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    try:
+        cursor.execute("ALTER TABLE departments ADD COLUMN institution_id TEXT")
+    except Exception:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE departments ADD COLUMN code TEXT")
+    except Exception:
+        pass
 
     # Faculty profiles table
     cursor.execute("""
@@ -206,6 +218,216 @@ def init_db():
             CONSTRAINT uq_teacher_slot UNIQUE (timetable_id, day, slot, teacher_name),
             CONSTRAINT uq_room_slot UNIQUE (timetable_id, day, slot, room_name),
             CONSTRAINT uq_section_slot UNIQUE (timetable_id, day, slot, section_name)
+        )
+    """)
+
+    # Institutions table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS institutions (
+            id TEXT PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            code TEXT UNIQUE NOT NULL,
+            city TEXT DEFAULT 'Bhopal',
+            state TEXT DEFAULT 'Madhya Pradesh',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Seed default institution
+    cursor.execute("""
+        INSERT OR IGNORE INTO institutions (id, name, code, city, state)
+        VALUES ('inst-lnct-01', 'Lakshmi Narain College of Technology', 'LNCT', 'Bhopal', 'Madhya Pradesh')
+    """)
+
+    # Buildings table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS buildings (
+            id TEXT PRIMARY KEY,
+            institution_id TEXT,
+            name TEXT NOT NULL,
+            code TEXT NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (institution_id) REFERENCES institutions(id)
+        )
+    """)
+
+    # Rooms & Labs table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS rooms (
+            id TEXT PRIMARY KEY,
+            institution_id TEXT,
+            building_id TEXT,
+            room_number TEXT NOT NULL,
+            room_type TEXT DEFAULT 'CLASSROOM',
+            capacity INTEGER DEFAULT 60,
+            has_projector INTEGER DEFAULT 0,
+            has_smart_board INTEGER DEFAULT 0,
+            capabilities TEXT DEFAULT '[]',
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (institution_id) REFERENCES institutions(id),
+            FOREIGN KEY (building_id) REFERENCES buildings(id)
+        )
+    """)
+
+    # Academic Sessions table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS academic_sessions (
+            id TEXT PRIMARY KEY,
+            institution_id TEXT,
+            name TEXT NOT NULL,
+            academic_year TEXT DEFAULT '2026-27',
+            is_current INTEGER DEFAULT 0,
+            start_date TEXT,
+            end_date TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (institution_id) REFERENCES institutions(id)
+        )
+    """)
+
+    # Programs table (UG/PG, BCA, MCA, B.Tech)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS programs (
+            id TEXT PRIMARY KEY,
+            institution_id TEXT,
+            department_id TEXT,
+            name TEXT NOT NULL,
+            code TEXT NOT NULL,
+            level TEXT NOT NULL,
+            duration_semesters INTEGER DEFAULT 6,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (institution_id) REFERENCES institutions(id),
+            FOREIGN KEY (department_id) REFERENCES departments(id)
+        )
+    """)
+
+    # Semesters table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS semesters (
+            id TEXT PRIMARY KEY,
+            program_id TEXT NOT NULL,
+            semester_number INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (program_id) REFERENCES programs(id)
+        )
+    """)
+
+    # Sections table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS sections (
+            id TEXT PRIMARY KEY,
+            program_id TEXT NOT NULL,
+            semester_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            specialization TEXT,
+            full_name TEXT NOT NULL,
+            default_room_id TEXT,
+            default_lab_room_id TEXT,
+            mentor_faculty_id TEXT,
+            mentor_name TEXT,
+            mentor_phone TEXT,
+            capacity INTEGER DEFAULT 60,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (program_id) REFERENCES programs(id),
+            FOREIGN KEY (semester_id) REFERENCES semesters(id),
+            FOREIGN KEY (default_room_id) REFERENCES rooms(id),
+            FOREIGN KEY (default_lab_room_id) REFERENCES rooms(id),
+            FOREIGN KEY (mentor_faculty_id) REFERENCES faculty_profiles(id)
+        )
+    """)
+
+    # Subjects table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS subjects (
+            id TEXT PRIMARY KEY,
+            program_id TEXT NOT NULL,
+            semester_id TEXT,
+            code TEXT NOT NULL,
+            name TEXT NOT NULL,
+            short_name TEXT,
+            credit_hours REAL DEFAULT 4.0,
+            lecture_hours INTEGER DEFAULT 4,
+            lab_hours INTEGER DEFAULT 0,
+            is_lab INTEGER DEFAULT 0,
+            color_index INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (program_id) REFERENCES programs(id),
+            FOREIGN KEY (semester_id) REFERENCES semesters(id)
+        )
+    """)
+
+    # Faculty-Subject Allocations table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS faculty_subject_allocations (
+            id TEXT PRIMARY KEY,
+            faculty_id TEXT NOT NULL,
+            faculty_name TEXT NOT NULL,
+            subject_id TEXT NOT NULL,
+            subject_code TEXT NOT NULL,
+            subject_name TEXT NOT NULL,
+            program_id TEXT NOT NULL,
+            semester_id TEXT NOT NULL,
+            section_id TEXT NOT NULL,
+            academic_session_id TEXT,
+            academic_term TEXT DEFAULT 'July-Dec 2026',
+            weekly_load INTEGER DEFAULT 4,
+            is_lab INTEGER DEFAULT 0,
+            preferred_room_id TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (faculty_id) REFERENCES faculty_profiles(id),
+            FOREIGN KEY (subject_id) REFERENCES subjects(id),
+            FOREIGN KEY (program_id) REFERENCES programs(id),
+            FOREIGN KEY (semester_id) REFERENCES semesters(id),
+            FOREIGN KEY (section_id) REFERENCES sections(id)
+        )
+    """)
+
+    # Import Audit Logs table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS import_audit_logs (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            imported_by_name TEXT DEFAULT 'Administrator',
+            filename TEXT NOT NULL,
+            file_hash TEXT NOT NULL,
+            file_type TEXT NOT NULL,
+            file_size_bytes INTEGER NOT NULL,
+            status TEXT DEFAULT 'analyzed',
+            records_detected TEXT DEFAULT '{}',
+            records_inserted TEXT DEFAULT '{}',
+            records_updated TEXT DEFAULT '{}',
+            records_skipped TEXT DEFAULT '{}',
+            conflicts_detected TEXT DEFAULT '[]',
+            error_message TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Document Extractions staging table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS document_extractions (
+            id TEXT PRIMARY KEY,
+            import_log_id TEXT NOT NULL,
+            entity_type TEXT NOT NULL,
+            source_location TEXT,
+            raw_payload TEXT NOT NULL,
+            normalized_payload TEXT NOT NULL,
+            confidence REAL DEFAULT 1.00,
+            validation_status TEXT DEFAULT 'valid',
+            validation_notes TEXT DEFAULT '[]',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (import_log_id) REFERENCES import_audit_logs(id)
         )
     """)
 

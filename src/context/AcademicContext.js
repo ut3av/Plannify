@@ -249,6 +249,8 @@ export function AcademicProvider({ children }) {
         setLoading(false);
       }
     };
+
+    window.__planify_refresh_state = loadCloudState;
     loadCloudState();
 
     // 1. Supabase Realtime channel subscription for timetable_state (Classrooms, Labs, Sections, Subjects)
@@ -840,6 +842,11 @@ export function AcademicProvider({ children }) {
     validationReport,
     setValidationReport,
     facultyWorkloadAudit,
+    refreshAcademicState: () => {
+      if (typeof window !== 'undefined' && window.__planify_refresh_state) {
+        window.__planify_refresh_state();
+      }
+    },
     handleLogout
   };
 

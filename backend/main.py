@@ -50,6 +50,8 @@ from leave_routes import router as leave_router
 from attendance_routes import router as attendance_router
 from substitution_routes import router as substitution_router
 from analytics_routes import router as analytics_router
+from ingest_routes import router as ingest_router
+from academic_routes import router as academic_router
 from services.timetable_validator import TimetableValidator
 try:
     from .faculty_db import get_supabase
@@ -758,3 +760,5 @@ app.include_router(leave_router)
 app.include_router(attendance_router)
 app.include_router(substitution_router)
 app.include_router(analytics_router)
+app.include_router(ingest_router)
+app.include_router(academic_router)

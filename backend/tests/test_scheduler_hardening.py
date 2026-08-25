@@ -521,10 +521,12 @@ def test_production_seed_endpoints_strictly_rejected():
             os.environ.pop("APP_ENV", None)
 
 
-def test_simulate_influx_zero_faculty_safe():
+def test_simulate_influx_zero_faculty_safe(monkeypatch):
     """Verifies that biometric simulation on an empty database does NOT automatically seed fake faculty."""
     from attendance_routes import simulate_influx
+    import attendance_routes
     
+    monkeypatch.setattr(attendance_routes, "list_faculty", lambda **kwargs: [])
     res = simulate_influx()
     assert res.simulated_count == 0
     assert "no active faculty" in res.message.lower()

@@ -27,6 +27,7 @@ export const NAV_GROUPS = [
   {
     title: "OPERATIONS",
     items: [
+      { id: "ingest", path: "/operations/ingest", label: "Data Ingestion & OCR", icon: "file-text", badge: "AI" },
       { id: "integrations", path: "/operations/integrations", label: "Automation & Broadcast", icon: "zap", badge: "Live" },
       { id: "settings", path: "/operations/settings", label: "System Settings", icon: "settings", badge: null },
     ],

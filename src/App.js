@@ -34,6 +34,7 @@ const IntegrationsSection = lazyWithRetry(() => import("./components/Integration
 const SystemSettings = lazyWithRetry(() => import("./components/settings/SystemSettings"), "SystemSettings");
 const AIChatBot = lazyWithRetry(() => import("./components/AIChatBot"), "AIChatBot");
 const PublicTimetablePortal = lazyWithRetry(() => import("./components/public/PublicTimetablePortal"), "PublicTimetablePortal");
+const DataIngestCenter = lazyWithRetry(() => import("./components/ingest/DataIngestCenter"), "DataIngestCenter");
 
 function ModuleLoadingFallback() {
   return (
@@ -116,6 +117,7 @@ const getBreadcrumbsForPath = (pathname) => {
   if (pathname === "/academic/sections") return ["Academic Setup", "Sections & Classes"];
   if (pathname === "/academic/rooms") return ["Academic Setup", "Classrooms & Labs"];
   if (pathname === "/academic/slots") return ["Academic Setup", "Time Slots"];
+  if (pathname === "/operations/ingest" || pathname === "/ingest" || pathname === "/import") return ["Operations", "Data Ingestion & OCR Intelligence"];
   if (pathname === "/operations/reschedule") return ["Operations", "Reschedule Engine"];
   if (pathname === "/operations/history") return ["Operations", "History & Audit Logs"];
   if (pathname === "/operations/integrations") return ["Operations", "Automation & Broadcast"];
@@ -456,20 +458,15 @@ function AdminLayout() {
           />
           <Route path="/rooms" element={<Navigate to="/academic/rooms" replace />} />
           
-          <Route
-            path="/academic/slots"
-            element={
-              <TimeSlotsSection
-                timeSlots={timeSlots}
-                onChange={(updated) => {
-                  setTimeSlots(updated);
-                  saveToCloud(true, { timeSlots: updated });
-                }}
-              />
-            }
-          />
+          <Route path="/academic/slots" element={<TimeSlotsSection timeSlots={timeSlots} onChange={(updated) => { setTimeSlots(updated); saveToCloud(true, { timeSlots: updated }); }} />} />
           <Route path="/slots" element={<Navigate to="/academic/slots" replace />} />
           
+          {/* Operations & Data Ingestion Center */}
+          <Route path="/operations/ingest" element={<DataIngestCenter />} />
+          <Route path="/ingest" element={<Navigate to="/operations/ingest" replace />} />
+          <Route path="/import" element={<Navigate to="/operations/ingest" replace />} />
+          <Route path="/ocr" element={<Navigate to="/operations/ingest" replace />} />
+
           {/* Operations Routes & Clean Redirects */}
           <Route path="/operations/reschedule" element={<Navigate to="/timetable" replace />} />
           <Route path="/reschedule" element={<Navigate to="/timetable" replace />} />
