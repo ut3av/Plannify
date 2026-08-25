@@ -797,13 +797,14 @@ export function AcademicProvider({ children }) {
     }
     try {
       const live = activeStateRef.current;
-      const stateToSave = overrideState || {
+      const stateToSave = {
         teachers: live.teachers,
         sections: live.sections,
         subjects: live.subjects,
         rooms: live.rooms,
         timeSlots: live.timeSlots,
-        result: live.result
+        result: live.result,
+        ...(overrideState || {})
       };
 
       // Always save to localStorage first so client state is resilient
@@ -862,6 +863,39 @@ export function AcademicProvider({ children }) {
               };
             });
             await supabase.from('rooms').upsert(roomRows, { onConflict: 'room_number' }).catch(() => null);
+          } catch {}
+        }
+
+        // Also sync sections table
+        if (Array.isArray(stateToSave.sections) && stateToSave.sections.length > 0) {
+          try {
+            const sectionRows = stateToSave.sections.map(s => ({
+              name: typeof s === 'string' ? s : s?.name,
+              room: typeof s === 'object' ? (s.room || null) : null,
+              lab_room: typeof s === 'object' ? (s.lab_room || null) : null,
+              updated_at: new Date().toISOString()
+            })).filter(s => Boolean(s.name));
+            if (sectionRows.length > 0) {
+              await supabase.from('sections').upsert(sectionRows, { onConflict: 'name' }).catch(() => null);
+            }
+          } catch {}
+        }
+
+        // Also sync subjects & faculty_subject_allocations
+        if (Array.isArray(stateToSave.subjects) && stateToSave.subjects.length > 0) {
+          try {
+            const allocRows = stateToSave.subjects.map(sub => ({
+              subject_name: sub.name,
+              subject_code: sub.code || '',
+              faculty_name: sub.teacher || '',
+              section_name: sub.section || (Array.isArray(sub.sections) ? sub.sections.join(', ') : ''),
+              is_lab: Boolean(sub.is_lab),
+              weekly_load: sub.required_slots || 4,
+              updated_at: new Date().toISOString()
+            })).filter(a => Boolean(a.subject_name));
+            if (allocRows.length > 0) {
+              await supabase.from('faculty_subject_allocations').upsert(allocRows, { onConflict: 'subject_name,faculty_name,section_name' }).catch(() => null);
+            }
           } catch {}
         }
 
