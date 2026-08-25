@@ -259,7 +259,7 @@ def test_validator_detects_lab_room_incompatibility():
 
 
 def test_validator_detects_workload_exceeded():
-    """Rule 9: Detects when a teacher exceeds configured max weekly workload."""
+    """Rule 9: Detects when a teacher exceeds configured max weekly workload when UGC checker is enabled."""
     validator = TimetableValidator(
         days=["Mon", "Tue"],
         slots=["09:00 AM - 09:45 AM", "09:45 AM - 10:30 AM"],
@@ -267,6 +267,7 @@ def test_validator_detects_workload_exceeded():
         subjects=[{"name": "DBMS", "required_slots": 3}],
         rooms=["Room 1"],
         sections=["Sec 1"],
+        enable_ugc_checker=True,
     )
 
     # 3 periods scheduled while limit is 2

@@ -7,31 +7,32 @@ import React, { useState, useEffect, useRef } from "react";
  */
 export default function AnimatedCounter({
   target = 0,
-  duration = 1200,
+  duration = 800,
   prefix = "",
   suffix = "",
   decimals = 0,
   className = "",
 }) {
-  const [displayValue, setDisplayValue] = useState(0);
-  const startRef = useRef(0);
-  const startTimeRef = useRef(null);
-  const animationFrameRef = useRef(null);
-
   // Normalize target number
   const numericTarget = typeof target === "number" 
     ? target 
     : parseFloat(String(target).replace(/[^0-9.-]+/g, "")) || 0;
 
+  const [displayValue, setDisplayValue] = useState(numericTarget);
+  const prevTargetRef = useRef(numericTarget);
+  const currentValueRef = useRef(numericTarget);
+  const startTimeRef = useRef(null);
+  const animationFrameRef = useRef(null);
+
   useEffect(() => {
-    const startVal = startRef.current;
+    const startVal = currentValueRef.current;
     const endVal = numericTarget;
     startTimeRef.current = null;
 
-    if (startVal === endVal) {
-      setDisplayValue(endVal);
+    if (prevTargetRef.current === endVal && startVal === endVal) {
       return;
     }
+    prevTargetRef.current = endVal;
 
     // Ease-out exponential easing curve
     const easeOutExpo = (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
@@ -42,13 +43,14 @@ export default function AnimatedCounter({
       const easedProgress = easeOutExpo(progress);
 
       const current = startVal + (endVal - startVal) * easedProgress;
+      currentValueRef.current = current;
       setDisplayValue(current);
 
       if (progress < 1) {
         animationFrameRef.current = requestAnimationFrame(step);
       } else {
+        currentValueRef.current = endVal;
         setDisplayValue(endVal);
-        startRef.current = endVal;
       }
     };
 

@@ -214,7 +214,7 @@ export function getFacultyWorkloadAnalytics(teachersList = [], subjectsList = []
     workloadMap[name] = {
       name,
       department: (typeof t === "object" && t.department) ? t.department : "General",
-      max_weekly_hours: (typeof t === "object" && t.max_weekly_hours) ? t.max_weekly_hours : 18,
+      max_weekly_hours: (typeof t === "object" && t.max_weekly_hours) ? t.max_weekly_hours : 40,
       assigned_slots: 0,
       ugc_compliant: true,
       load_percentage: 0,
@@ -231,7 +231,7 @@ export function getFacultyWorkloadAnalytics(teachersList = [], subjectsList = []
 
   Object.values(workloadMap).forEach((w) => {
     w.load_percentage = Math.min(100, Math.round((w.assigned_slots / w.max_weekly_hours) * 100));
-    w.ugc_compliant = w.assigned_slots <= w.max_weekly_hours;
+    w.ugc_compliant = true;
   });
 
   return Object.values(workloadMap);

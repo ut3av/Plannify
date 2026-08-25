@@ -31,7 +31,7 @@ export default function FacultyDashboardStats() {
     }
   };
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[1,2,3,4].map(i => (

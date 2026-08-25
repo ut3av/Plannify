@@ -14,27 +14,27 @@ export default function InstitutionalDashboard({
 }) {
   const [stats, setStats] = useState(null);
   const [insights, setInsights] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const fetchDashboardData = useCallback(async (isSilent = false) => {
+  const fetchDashboardData = useCallback(async (isSilent = true) => {
     try {
-      if (!isSilent && !stats) setLoading(true);
+      if (!isSilent) setLoading(true);
       const [statsRes, insightsRes] = await Promise.all([
         axios.get(`${API}/faculty/dashboard-stats`).catch(() => ({ data: null })),
         axios.get(`${API}/analytics/insights`).catch(() => ({ data: [] })),
       ]);
-      setStats(statsRes.data);
-      setInsights(insightsRes.data || []);
+      if (statsRes?.data) setStats(statsRes.data);
+      if (insightsRes?.data) setInsights(insightsRes.data);
     } catch (e) {
-      console.error("Failed to load dashboard data:", e);
+      console.warn("Failed to load dashboard data:", e);
     } finally {
       setLoading(false);
     }
-  }, [stats]);
+  }, []);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [teachersCount, sectionsCount, subjectsCount, roomsCount, fetchDashboardData]);
+    fetchDashboardData(false);
+  }, [fetchDashboardData]);
 
   useEffect(() => {
     const handleSync = () => {

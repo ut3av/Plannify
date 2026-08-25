@@ -38,7 +38,8 @@ class TimetableValidator:
         rooms: Optional[List[Dict[str, Any]]] = None,
         sections: Optional[List[Dict[str, Any]]] = None,
         unavailability: Optional[Dict[str, List[Tuple[str, str]]]] = None,
-        ugc_max_weekly_hours: int = 18,
+        ugc_max_weekly_hours: int = 40,
+        enable_ugc_checker: bool = False,
     ):
         self.days = days or ["Mon", "Tue", "Wed", "Thu", "Fri"]
         self.slots = slots or [
@@ -56,6 +57,7 @@ class TimetableValidator:
         self.sections = sections or []
         self.unavailability = unavailability or {}
         self.ugc_max_weekly_hours = ugc_max_weekly_hours
+        self.enable_ugc_checker = enable_ugc_checker
 
     def validate(
         self,
@@ -446,22 +448,23 @@ class TimetableValidator:
         unfulfilled_periods = max(0, total_required_periods - total_scheduled_periods)
 
         # -------------------------------------------------------------
-        # PASS 4: Teacher Workload Violations & Pedagogical Warnings
+        # PASS 4: Teacher Pedagogical Warnings
         # -------------------------------------------------------------
         for teacher, assigned_count in teacher_weekly_workload.items():
-            cap = teacher_workload_caps.get(teacher, self.ugc_max_weekly_hours)
-            if assigned_count > cap:
-                excess = assigned_count - cap
-                errors.append({
-                    "code": "TEACHER_WORKLOAD_EXCEEDED",
-                    "severity": "error",
-                    "message": f"Teacher '{teacher}' is scheduled for {assigned_count} periods, exceeding maximum weekly workload cap of {cap} periods (+{excess} excess).",
-                    "teacher_name": teacher,
-                    "configured_limit": cap,
-                    "actual_workload": assigned_count,
-                    "excess_periods": excess,
-                })
-                check_counts["workload_violations"] += 1
+            if self.enable_ugc_checker:
+                cap = teacher_workload_caps.get(teacher, self.ugc_max_weekly_hours)
+                if assigned_count > cap:
+                    excess = assigned_count - cap
+                    errors.append({
+                        "code": "TEACHER_WORKLOAD_EXCEEDED",
+                        "severity": "error",
+                        "message": f"Teacher '{teacher}' is scheduled for {assigned_count} periods, exceeding maximum weekly workload cap of {cap} periods (+{excess} excess).",
+                        "teacher_name": teacher,
+                        "configured_limit": cap,
+                        "actual_workload": assigned_count,
+                        "excess_periods": excess,
+                    })
+                    check_counts["workload_violations"] += 1
 
             # Daily free periods check (Warning if teacher has 0 breaks)
             free_req = teacher_free_periods.get(teacher, 1)

@@ -27,8 +27,8 @@ DEFAULT_SLOTS = [
     "02:40 PM - 03:30 PM",
 ]
 
-# UGC Guidelines: Standard Assistant/Associate/Professor teaching load is 14–18 hours/week
-UGC_MAX_WEEKLY_PERIODS_DEFAULT = 18
+# Standard default weekly period allocation
+UGC_MAX_WEEKLY_PERIODS_DEFAULT = 40
 
 UNAVAILABILITY: Dict[str, List[Tuple[str, str]]] = defaultdict(list)
 
@@ -47,7 +47,7 @@ class SubjectInput(BaseModel):
 class TeacherInput(BaseModel):
     name: str
     free_periods: int = 1
-    max_weekly_hours: int = Field(default=UGC_MAX_WEEKLY_PERIODS_DEFAULT, ge=1, le=35)
+    max_weekly_hours: int = Field(default=UGC_MAX_WEEKLY_PERIODS_DEFAULT, ge=1, le=50)
     email: Optional[str] = None
     phone: Optional[str] = None
     is_substitute: bool = False

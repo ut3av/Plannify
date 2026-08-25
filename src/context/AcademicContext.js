@@ -312,6 +312,71 @@ export function AcademicProvider({ children }) {
           console.warn("Faculty profiles fetch notice:", e);
         }
 
+        // 3. Fetch Live Relational Sections from Supabase and merge
+        try {
+          const { data: supaSections } = await supabase
+            .from('sections')
+            .select('*, classrooms(room_number)')
+            .order('name');
+          if (Array.isArray(supaSections) && supaSections.length > 0) {
+            setSections(prev => {
+              const current = Array.isArray(prev) ? prev : [];
+              const secNames = new Set(current.map(s => (typeof s === 'string' ? s : s?.name || '').toLowerCase().trim()));
+              const merged = [...current];
+              supaSections.forEach(s => {
+                const sName = (s.full_name || s.name || '').trim();
+                if (sName && !secNames.has(sName.toLowerCase())) {
+                  secNames.add(sName.toLowerCase());
+                  merged.push({
+                    id: s.id,
+                    name: sName,
+                    room: s.classrooms?.room_number || s.room_number || s.room || '',
+                    lab_rooms: s.lab_rooms || [],
+                    preferred_faculty: s.preferred_faculty || [],
+                    capacity: s.student_count || 60,
+                  });
+                }
+              });
+              return merged;
+            });
+          }
+        } catch {}
+
+        // 4. Fetch Live Relational Allocations / Subjects from Supabase and merge
+        try {
+          const { data: supaAllocations } = await supabase
+            .from('faculty_subject_allocations')
+            .select('*')
+            .order('subject_name');
+          if (Array.isArray(supaAllocations) && supaAllocations.length > 0) {
+            setSubjects(prev => {
+              const current = Array.isArray(prev) ? prev : [];
+              const subKeys = new Set(current.map(s => `${(s.code || s.name || '').toLowerCase()}_${(s.section || '').toLowerCase()}`));
+              const merged = [...current];
+              supaAllocations.forEach(a => {
+                const sName = a.subject_name || '';
+                const sCode = a.subject_code || '';
+                const sSec = a.section_name || a.section || '';
+                const key = `${(sCode || sName).toLowerCase()}_${sSec.toLowerCase()}`;
+                if ((sCode || sName) && !subKeys.has(key)) {
+                  subKeys.add(key);
+                  merged.push({
+                    id: a.id,
+                    code: sCode,
+                    name: sName,
+                    teacher: a.faculty_name || '',
+                    section: sSec,
+                    sections: sSec ? [sSec] : [],
+                    is_lab: a.is_lab || false,
+                    required_slots: a.weekly_load || (a.is_lab ? 2 : 4),
+                  });
+                }
+              });
+              return merged;
+            });
+          }
+        } catch {}
+
       } catch (e) {
         console.warn("Supabase fetch failed. Ensure .env is set and table exists.", e);
       } finally {
