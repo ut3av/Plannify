@@ -56,13 +56,20 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
   
   const effectiveTeachers = useMemo(() => {
     const raw = (teachers && teachers.length > 0) ? teachers : (contextTeachers || []);
-    return raw.map(t => {
+    const unique = new Map();
+    raw.forEach(t => {
       const name = typeof t === 'string' ? t : (t?.name || t?.teacher_name);
-      return {
-        ...(typeof t === 'object' ? t : {}),
-        name: (name || "").trim()
-      };
-    }).filter(t => t.name && !isTestOrMockFaculty(t.name));
+      const cleanName = (name || "").trim();
+      if (cleanName && !isTestOrMockFaculty(cleanName) && !unique.has(cleanName.toLowerCase())) {
+        unique.set(cleanName.toLowerCase(), {
+          ...(typeof t === 'object' ? t : {}),
+          name: cleanName,
+          teacher_name: cleanName,
+          department: typeof t === 'object' ? (t?.department || t?.department_name || "") : ""
+        });
+      }
+    });
+    return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [teachers, contextTeachers]);
 
   const [code, setCode] = useState("");

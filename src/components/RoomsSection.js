@@ -8,9 +8,11 @@ export default function RoomsSection({ rooms = [], onChange, result, timeSlots =
   const [batchStart, setBatchStart] = useState(101);
   const [batchCount, setBatchCount] = useState(6);
 
+  const getRoomName = (r) => typeof r === "string" ? r : (r?.room_number || r?.name || "");
+
   const addRoom = () => {
     const name = input.trim();
-    if (name && !rooms.includes(name)) {
+    if (name && !rooms.some(r => getRoomName(r).toLowerCase() === name.toLowerCase())) {
       onChange([...rooms, name]);
       setInput("");
     }
@@ -35,7 +37,7 @@ export default function RoomsSection({ rooms = [], onChange, result, timeSlots =
     const newRooms = [...rooms];
     for (let i = 0; i < batchCount; i++) {
       const roomName = `${batchPrefix}${batchStart + i}`;
-      if (!newRooms.includes(roomName)) {
+      if (!newRooms.some(r => getRoomName(r).toLowerCase() === roomName.toLowerCase())) {
         newRooms.push(roomName);
       }
     }
@@ -43,9 +45,12 @@ export default function RoomsSection({ rooms = [], onChange, result, timeSlots =
     setShowBatchModal(false);
   };
 
-  const getType = (name) => {
+  const getType = (roomOrName) => {
+    const name = getRoomName(roomOrName);
     const l = name.toLowerCase();
-    if (l.includes("lab") || l.includes("006") || l.includes("007") || l.includes("002") || l.includes("003")) {
+    const isLab = (typeof roomOrName === "object" && (roomOrName?.is_lab || roomOrName?.room_type === "LAB")) ||
+      l.includes("lab") || l.includes("006") || l.includes("007") || l.includes("002") || l.includes("003");
+    if (isLab) {
       return { label: "Laboratory", type: "lab", color: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10" };
     }
     if (l.includes("hall") || l.includes("aud") || l.includes("seminar")) {
@@ -59,7 +64,8 @@ export default function RoomsSection({ rooms = [], onChange, result, timeSlots =
   const slotCount = (result?.time_slots || timeSlots || ["Slot 1", "Slot 2", "Slot 3", "Slot 4", "Slot 5"]).length;
   const totalWeeklySlots = Math.max(1, daysCount * slotCount);
 
-  const getRoomUtilization = (roomName) => {
+  const getRoomUtilization = (roomOrName) => {
+    const roomName = getRoomName(roomOrName);
     if (!assignments || assignments.length === 0) return { percentage: 0, occupied: 0, level: "low", label: "Available", pillClass: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30", barColor: "#10b981" };
     const occupied = assignments.filter(
       a => (a.room || "").trim().toLowerCase() === (roomName || "").trim().toLowerCase()
@@ -239,9 +245,10 @@ export default function RoomsSection({ rooms = [], onChange, result, timeSlots =
             const type = getType(room);
             const util = getRoomUtilization(room);
 
+            const rName = getRoomName(room);
             return (
               <div
-                key={room}
+                key={typeof room === 'string' ? room : (room?.id || room?.room_number || rName || originalIndex)}
                 className="card p-5 bg-slate-900/90 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 transition-all flex flex-col justify-between gap-4 group"
               >
                 <div>
@@ -261,7 +268,7 @@ export default function RoomsSection({ rooms = [], onChange, result, timeSlots =
 
                   {/* Room Name */}
                   <h3 className="text-lg font-black text-white group-hover:text-indigo-300 transition-colors">
-                    {room}
+                    {rName}
                   </h3>
 
                   {/* Facilities Badges */}

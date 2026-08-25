@@ -34,20 +34,31 @@ export default function SectionsManagement({
 
   // Extract clean teacher names from teachers prop / faculty directory
   const teacherList = useMemo(() => {
-    return (teachers || []).map(t => {
+    const unique = new Map();
+    (teachers || []).forEach(t => {
       const name = typeof t === 'string' ? t : (t?.name || t?.teacher_name);
-      const dept = typeof t === 'object' ? (t?.department || t?.department_name || "") : "";
-      return { name: (name || "").trim(), department: dept };
-    }).filter(t => Boolean(t.name) && !isTestOrMockFaculty(t.name));
+      const cleanName = (name || "").trim();
+      if (cleanName && !isTestOrMockFaculty(cleanName) && !unique.has(cleanName.toLowerCase())) {
+        const dept = typeof t === 'object' ? (t?.department || t?.department_name || "") : "";
+        unique.set(cleanName.toLowerCase(), { name: cleanName, department: dept });
+      }
+    });
+    return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [teachers]);
 
-  // Extract clean rooms list
+  // Extract clean rooms list (handles room_number, name, objects, strings)
   const roomList = useMemo(() => {
-    return (rooms || []).map(r => {
-      const name = typeof r === 'string' ? r : r?.name;
-      const isLab = typeof r === 'object' ? Boolean(r?.is_lab) : (name && name.toLowerCase().includes('lab'));
-      return { name, isLab };
-    }).filter(r => Boolean(r.name));
+    const unique = new Map();
+    (rooms || []).forEach(r => {
+      const name = (typeof r === 'string' ? r : (r?.room_number || r?.name || '')).trim();
+      if (name && !unique.has(name.toLowerCase())) {
+        const isLab = typeof r === 'object'
+          ? (Boolean(r?.is_lab) || (r?.room_type && r.room_type.toUpperCase().includes('LAB')) || name.toLowerCase().includes('lab'))
+          : name.toLowerCase().includes('lab');
+        unique.set(name.toLowerCase(), { name, isLab });
+      }
+    });
+    return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [rooms]);
 
   const openAddModal = () => {
