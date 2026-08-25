@@ -18,7 +18,7 @@ export default function FacultyDirectory({
   onBatchImport,
   onTeachersChange,
 }) {
-  const { handleBatchImportData: contextBatchImport, sections: contextSections, deleteFacultyProfile, deleteMultipleFacultyProfiles } = useAcademic() || {};
+  const { handleBatchImportData: contextBatchImport, sections: contextSections, deleteFacultyProfile, deleteMultipleFacultyProfiles, teacherWorkloadMap } = useAcademic() || {};
   const [faculty, setFaculty] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +36,7 @@ export default function FacultyDirectory({
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isBatchDeleting, setIsBatchDeleting] = useState(false);
   const [dispatchTeacher, setDispatchTeacher] = useState(null);
+  const [selectedWorkloadFaculty, setSelectedWorkloadFaculty] = useState(null);
   const [importingExcel, setImportingExcel] = useState(false);
   const [importProgress, setImportProgress] = useState("");
   const [importSummary, setImportSummary] = useState(null);
@@ -46,6 +47,7 @@ export default function FacultyDirectory({
     employee_id: "",
     department_id: "",
     designation: "Assistant Professor",
+    weekly_workload_capacity: 16,
     qualification: "",
     employment_type: "full-time",
     joining_date: new Date().toISOString().split("T")[0],
@@ -387,6 +389,7 @@ export default function FacultyDirectory({
     const teacherPhone = form.phone.trim() || "+91-9876543210";
     const initialPassword = form.accountPassword || "Plannify@2026";
     const generatedId = `fac_${Date.now()}`;
+    const workloadCap = Number(form.weekly_workload_capacity) || 16;
 
     // 1. Immediately create and register new teacher object in client state
     const newTeacherObj = {
@@ -397,6 +400,8 @@ export default function FacultyDirectory({
       phone: teacherPhone,
       employee_id: empId,
       designation: form.designation || "Assistant Professor",
+      weekly_workload_capacity: workloadCap,
+      max_weekly_hours: workloadCap,
       qualification: form.qualification.trim() || "M.Tech / Ph.D",
       employment_type: form.employment_type || "full-time",
       joining_date: form.joining_date || new Date().toISOString().split("T")[0],
@@ -422,6 +427,8 @@ export default function FacultyDirectory({
         employee_id: empId,
         department_name: deptName,
         designation: newTeacherObj.designation,
+        weekly_workload_capacity: workloadCap,
+        max_weekly_hours: workloadCap,
         qualification: newTeacherObj.qualification,
         employment_type: newTeacherObj.employment_type,
         joining_date: newTeacherObj.joining_date,
@@ -874,10 +881,67 @@ export default function FacultyDirectory({
               <select
                 className="input cursor-pointer"
                 value={form.designation}
-                onChange={e => setForm({ ...form, designation: e.target.value })}
+                onChange={e => {
+                  const desig = e.target.value;
+                  const defaultCap = (desig.includes("Professor") && !desig.includes("Assistant")) ? 14 : (desig.includes("Lecturer") ? 18 : 16);
+                  setForm({ ...form, designation: desig, weekly_workload_capacity: defaultCap });
+                }}
               >
                 {["Professor", "Associate Professor", "Assistant Professor", "Lecturer", "Lab Instructor", "Visiting Faculty"].map(d => <option key={d} value={d}>{d}</option>)}
               </select>
+            </div>
+            <div>
+              <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Workload Capacity *</span>
+                <span className="text-[10px] text-indigo-400 font-normal">UGC/AICTE</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="40"
+                  className="input font-bold text-center w-24 text-white bg-slate-800"
+                  value={form.weekly_workload_capacity}
+                  onChange={e => setForm({ ...form, weekly_workload_capacity: parseInt(e.target.value, 10) || 16 })}
+                  required
+                />
+                <span className="text-xs text-slate-400 font-semibold">Hours / Week</span>
+              </div>
+              <div className="flex items-center gap-1.5 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, weekly_workload_capacity: 14 })}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                    form.weekly_workload_capacity === 14
+                      ? "bg-indigo-600 text-white border-indigo-500"
+                      : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
+                  }`}
+                >
+                  14h (Prof)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, weekly_workload_capacity: 16 })}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                    form.weekly_workload_capacity === 16
+                      ? "bg-indigo-600 text-white border-indigo-500"
+                      : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
+                  }`}
+                >
+                  16h (Asst Prof)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, weekly_workload_capacity: 18 })}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                    form.weekly_workload_capacity === 18
+                      ? "bg-indigo-600 text-white border-indigo-500"
+                      : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
+                  }`}
+                >
+                  18h (Lecturer)
+                </button>
+              </div>
             </div>
             <div>
               <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Employment Type</label>
@@ -1123,20 +1187,75 @@ export default function FacultyDirectory({
                         )}
                       </div>
 
+                      {/* Workload Consumption Meter */}
+                      {(() => {
+                        const teacherName = (f.teacher_name || f.name || "").toLowerCase().trim();
+                        const workloadInfo = teacherWorkloadMap?.[teacherName] || {
+                          capacity: Number(f.weekly_workload_capacity || f.max_weekly_hours || 16),
+                          assignedSlots: (subjects || []).filter(s => (s.teacher || "").toLowerCase().trim() === teacherName).reduce((acc, curr) => acc + (curr.required_slots || 4), 0),
+                          subjects: []
+                        };
+                        const capacity = workloadInfo.capacity || 16;
+                        const assigned = workloadInfo.assignedSlots;
+                        const utilization = Math.round((assigned / capacity) * 100);
+
+                        return (
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedWorkloadFaculty({ ...f, capacity, assigned, workloadInfo });
+                            }}
+                            className="mt-3 p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800/80 hover:border-indigo-500/40 transition-all cursor-pointer group/meter"
+                            title="Click to view full course workload breakdown"
+                          >
+                            <div className="flex items-center justify-between text-[11px] mb-1.5">
+                              <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1">
+                                <svg className="w-3 h-3 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Weekly Workload
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                                utilization > 100 ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" :
+                                utilization >= 70 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
+                                "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                              }`}>
+                                {assigned} / {capacity} hrs ({utilization}%)
+                              </span>
+                            </div>
+                            
+                            {/* Progress Bar */}
+                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${
+                                  utilization > 100 ? "bg-rose-500" :
+                                  utilization >= 70 ? "bg-emerald-500" :
+                                  "bg-indigo-500"
+                                }`}
+                                style={{ width: `${Math.min(100, utilization)}%` }}
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+                              <span>{utilization > 100 ? "⚠️ Over capacity" : (capacity - assigned) + " hrs free"}</span>
+                              <span className="text-indigo-400 group-hover/meter:underline font-semibold">Breakdown →</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       {/* Assigned Courses & Subjects Badges */}
                       {(() => {
                         const teacherName = (f.teacher_name || f.name || "").toLowerCase().trim();
                         const assigned = (subjects || []).filter(s => (s.teacher || "").toLowerCase().trim() === teacherName);
                         if (assigned.length === 0) {
                           return (
-                            <div className="mt-3 py-1.5 px-2.5 rounded-xl bg-slate-950/40 border border-slate-800/60 text-[11px] text-slate-500 flex items-center justify-between">
+                            <div className="mt-2.5 py-1 px-2.5 rounded-xl bg-slate-950/40 border border-slate-800/60 text-[10px] text-slate-500 flex items-center justify-between">
                               <span>No subjects assigned</span>
                               <span className="text-[10px] text-indigo-400 font-semibold">Assign in Subjects →</span>
                             </div>
                           );
                         }
                         return (
-                          <div className="mt-3 space-y-1.5">
+                          <div className="mt-2.5 space-y-1.5">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                               Assigned Courses ({assigned.length})
                             </p>
@@ -1216,6 +1335,7 @@ export default function FacultyDirectory({
                 <th>Faculty Name</th>
                 <th>Employee ID</th>
                 <th>Designation</th>
+                <th>Weekly Workload</th>
                 <th>Assigned Subjects</th>
                 <th>Email Address</th>
                 <th>Status</th>
@@ -1227,7 +1347,16 @@ export default function FacultyDirectory({
                 const key = getFacultyKey(f);
                 const isSelected = selectedIds.has(key);
                 const teacherName = (f.teacher_name || f.name || "").toLowerCase().trim();
-                const assigned = (subjects || []).filter(s => (s.teacher || "").toLowerCase().trim() === teacherName);
+                const workloadInfo = teacherWorkloadMap?.[teacherName] || {
+                  capacity: Number(f.weekly_workload_capacity || f.max_weekly_hours || 16),
+                  assignedSlots: (subjects || []).filter(s => (s.teacher || "").toLowerCase().trim() === teacherName).reduce((acc, curr) => acc + (curr.required_slots || 4), 0),
+                  subjects: []
+                };
+                const capacity = workloadInfo.capacity || 16;
+                const assigned = workloadInfo.assignedSlots;
+                const utilization = Math.round((assigned / capacity) * 100);
+                const assignedSubs = (subjects || []).filter(s => (s.teacher || "").toLowerCase().trim() === teacherName);
+
                 return (
                   <tr
                     key={key}
@@ -1258,10 +1387,37 @@ export default function FacultyDirectory({
                     </td>
                     <td><span className="font-mono text-xs text-indigo-300">{f.employee_id}</span></td>
                     <td><span className="font-medium text-slate-300">{f.designation}</span></td>
+                    <td onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedWorkloadFaculty({ ...f, capacity, assigned, workloadInfo });
+                    }}>
+                      <div className="space-y-1 min-w-[130px] p-1 rounded-lg hover:bg-slate-800/80 transition-colors">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="font-mono text-slate-300 font-bold">{assigned} / {capacity} hrs</span>
+                          <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                            utilization > 100 ? "bg-rose-500/20 text-rose-300" :
+                            utilization >= 70 ? "bg-emerald-500/20 text-emerald-300" :
+                            "bg-indigo-500/20 text-indigo-300"
+                          }`}>
+                            {utilization}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              utilization > 100 ? "bg-rose-500" :
+                              utilization >= 70 ? "bg-emerald-500" :
+                              "bg-indigo-500"
+                            }`}
+                            style={{ width: `${Math.min(100, utilization)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
                     <td>
-                      {assigned.length > 0 ? (
+                      {assignedSubs.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {assigned.map((sub, sIdx) => (
+                          {assignedSubs.map((sub, sIdx) => (
                             <span key={sIdx} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
                               {sub.code || sub.name}
                             </span>
@@ -1353,6 +1509,105 @@ export default function FacultyDirectory({
                 </>
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Faculty Workload Breakdown Modal */}
+      {selectedWorkloadFaculty && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 space-y-5 text-white animate-scale-up">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-black text-base">
+                  {getInitials(selectedWorkloadFaculty.teacher_name)}
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">{selectedWorkloadFaculty.teacher_name}</h3>
+                  <p className="text-xs text-slate-400">{selectedWorkloadFaculty.designation} • {selectedWorkloadFaculty.department_name}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedWorkloadFaculty(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Capacity Metrics Cards */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 text-center">
+                <p className="text-[10px] uppercase font-bold text-slate-400">Total Capacity</p>
+                <p className="text-xl font-black text-indigo-400 mt-0.5">{selectedWorkloadFaculty.capacity} hrs</p>
+                <p className="text-[9px] text-slate-500 mt-0.5">UGC Authorized</p>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 text-center">
+                <p className="text-[10px] uppercase font-bold text-slate-400">Assigned Load</p>
+                <p className="text-xl font-black text-emerald-400 mt-0.5">{selectedWorkloadFaculty.assigned} hrs</p>
+                <p className="text-[9px] text-slate-500 mt-0.5">{selectedWorkloadFaculty.workloadInfo?.subjects?.length || 0} Courses</p>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 text-center">
+                <p className="text-[10px] uppercase font-bold text-slate-400">Remaining</p>
+                <p className={`text-xl font-black mt-0.5 ${
+                  selectedWorkloadFaculty.capacity - selectedWorkloadFaculty.assigned < 0 ? "text-rose-400" : "text-amber-400"
+                }`}>
+                  {selectedWorkloadFaculty.capacity - selectedWorkloadFaculty.assigned} hrs
+                </p>
+                <p className="text-[9px] text-slate-500 mt-0.5">
+                  {selectedWorkloadFaculty.capacity - selectedWorkloadFaculty.assigned < 0 ? "Overload" : "Available"}
+                </p>
+              </div>
+            </div>
+
+            {/* Course Allocations List */}
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center justify-between">
+                <span>Active Course Assignments Across Cohorts</span>
+                <span className="text-indigo-400 font-mono text-[11px] font-bold">
+                  {selectedWorkloadFaculty.workloadInfo?.subjects?.length || 0} Modules
+                </span>
+              </h4>
+
+              {(!selectedWorkloadFaculty.workloadInfo?.subjects || selectedWorkloadFaculty.workloadInfo.subjects.length === 0) ? (
+                <div className="p-6 rounded-2xl bg-slate-950/50 border border-slate-800 text-center text-slate-500 text-xs">
+                  No courses are currently assigned to this faculty member. Assign courses in the <strong>Subjects</strong> module.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {selectedWorkloadFaculty.workloadInfo.subjects.map((sub, idx) => (
+                    <div key={idx} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-3 text-xs">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          {sub.code && (
+                            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                              {sub.code}
+                            </span>
+                          )}
+                          <span className="font-bold text-white">{sub.name}</span>
+                          {sub.is_lab && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">Lab</span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Section: <strong className="text-slate-300">{sub.section}</strong></p>
+                      </div>
+                      <span className="font-mono font-bold text-indigo-400 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 text-xs shrink-0">
+                        {sub.slots} hrs/wk
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setSelectedWorkloadFaculty(null)}
+                className="btn-primary text-xs py-2 px-5"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}

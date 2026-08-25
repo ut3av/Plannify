@@ -76,7 +76,6 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
   const [name, setName] = useState("");
   const [teacher, setTeacher] = useState(effectiveTeachers[0]?.name || "");
   const [selectedSections, setSelectedSections] = useState([]);
-  const [slots, setSlots] = useState(4);
   const [isLab, setIsLab] = useState(false);
   const [colorIndex, setColorIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,6 +117,8 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
     const trimmedCode = code.trim();
     const trimmedName = name.trim();
     if (trimmedName && teacher) {
+      // Dynamic slot allocation: 4 periods/week for theory, 4 periods/week (2x2 continuous) for laboratory
+      const dynamicSlots = 4;
       const newSubject = {
         code: trimmedCode,
         name: trimmedName,
@@ -125,14 +126,13 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
         sections: selectedSections.length > 0 ? selectedSections : undefined,
         section: selectedSections.length === 1 ? selectedSections[0] : undefined,
         is_lab: isLab,
-        required_slots: isLab && slots % 2 !== 0 ? slots + 1 : slots,
+        required_slots: dynamicSlots,
         colorIndex
       };
 
       onChange([...subjects, newSubject]);
       setCode("");
       setName("");
-      setSlots(4);
       setIsLab(false);
       setSelectedSections([]);
       setColorIndex((colorIndex + 1) % SUBJECT_COLORS.length);
@@ -152,19 +152,6 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
       colorIndex: (sub.colorIndex + 1) % SUBJECT_COLORS.length
     };
     onChange([...subjects, dup]);
-  };
-
-  const updateSubjectSlots = (index, delta) => {
-    const newSubjects = [...subjects];
-    const subject = { ...newSubjects[index] };
-    const step = subject.is_lab ? 2 : 1;
-    const minSlots = subject.is_lab ? 2 : 1;
-    const newSlots = Math.max(minSlots, subject.required_slots + (delta * step));
-    if (newSlots !== subject.required_slots) {
-      subject.required_slots = newSlots;
-      newSubjects[index] = subject;
-      onChange(newSubjects);
-    }
   };
 
   // Drag and drop re-order
@@ -331,7 +318,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
           </div>
 
           {/* Teacher */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Assigned Teacher *</label>
             <select
               className="input-premium w-full text-xs bg-slate-800 border-slate-700 text-white cursor-pointer"
@@ -358,28 +345,6 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
             </select>
           </div>
 
-          {/* Weekly Slots Stepper */}
-          <div className="lg:col-span-1">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Periods / Week</label>
-            <div className="flex items-center bg-slate-800 border border-slate-700 rounded-xl p-0.5">
-              <button
-                type="button"
-                onClick={() => setSlots(Math.max(isLab ? 2 : 1, slots - (isLab ? 2 : 1)))}
-                className="w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs"
-              >
-                -
-              </button>
-              <span className="flex-1 text-center font-bold text-white text-xs">{slots}</span>
-              <button
-                type="button"
-                onClick={() => setSlots(slots + (isLab ? 2 : 1))}
-                className="w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
           {/* Add Action Button */}
           <div className="lg:col-span-1">
             <button
@@ -387,7 +352,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
               disabled={!name.trim()}
               className="btn-primary w-full py-2.5 text-xs font-bold shadow-lg gap-1.5"
             >
-              <span>+</span> Add
+              <span>+</span> Add Course
             </button>
           </div>
         </div>
@@ -399,14 +364,10 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
               type="checkbox"
               className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500/30"
               checked={isLab}
-              onChange={(e) => {
-                const nextLab = e.target.checked;
-                setIsLab(nextLab);
-                if (nextLab && slots % 2 !== 0) setSlots(slots + 1);
-              }}
+              onChange={(e) => setIsLab(e.target.checked)}
             />
             <span className="text-xs font-bold text-slate-200">
-              Laboratory Course (Schedules continuous 2-period lab blocks in dedicated lab room)
+              Laboratory Course (Automates continuous 2-period lab blocks in dedicated lab room)
             </span>
           </label>
 
@@ -678,27 +639,13 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
                   </p>
                 </div>
 
-                {/* Footer Controls: Slots Stepper */}
+                {/* Footer Controls: Automated Dynamic Load & Curriculum Metadata */}
                 <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-semibold">Weekly Load:</span>
-                  <div className="flex items-center bg-slate-800 border border-slate-700 rounded-xl p-0.5">
-                    <button
-                      onClick={() => updateSubjectSlots(originalIndex, -1)}
-                      className="w-6 h-6 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold text-white flex items-center justify-center text-xs"
-                      title="Decrease weekly classes"
-                    >
-                      -
-                    </button>
-                    <span className="px-2.5 font-black text-white text-xs">
-                      {sub.required_slots} slots
+                  <span className="text-[11px] text-slate-400 font-semibold">Institutional Load:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-xs font-black">
+                      {sub.is_lab ? "4 Periods (2x2 Lab Block)" : "4 Periods / Week"}
                     </span>
-                    <button
-                      onClick={() => updateSubjectSlots(originalIndex, 1)}
-                      className="w-6 h-6 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold text-white flex items-center justify-center text-xs"
-                      title="Increase weekly classes"
-                    >
-                      +
-                    </button>
                   </div>
                 </div>
               </div>

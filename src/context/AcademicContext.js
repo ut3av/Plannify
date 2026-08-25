@@ -1489,6 +1489,51 @@ export function AcademicProvider({ children }) {
     }
   }, []);
 
+  const teacherWorkloadMap = useMemo(() => {
+    const map = {};
+    (teachers || []).forEach(t => {
+      const name = typeof t === 'string' ? t : (t?.name || t?.teacher_name);
+      if (!name) return;
+      const cleanName = name.trim().toLowerCase();
+      const capacity = Number(t?.weekly_workload_capacity || t?.max_weekly_hours || 16);
+      map[cleanName] = {
+        name: typeof t === 'string' ? t : (t?.name || t?.teacher_name),
+        capacity,
+        assignedSlots: 0,
+        subjects: [],
+        sections: new Set(),
+      };
+    });
+
+    (subjects || []).forEach(sub => {
+      const tName = (sub.teacher || "").trim().toLowerCase();
+      if (!tName) return;
+      const slots = sub.required_slots && sub.required_slots > 0 ? sub.required_slots : 4;
+      if (!map[tName]) {
+        map[tName] = {
+          name: sub.teacher,
+          capacity: 16,
+          assignedSlots: 0,
+          subjects: [],
+          sections: new Set(),
+        };
+      }
+      map[tName].assignedSlots += slots;
+      const secStr = sub.section || (sub.sections && sub.sections.length > 0 ? sub.sections.join(', ') : 'All');
+      map[tName].subjects.push({
+        code: sub.code,
+        name: sub.name,
+        section: secStr,
+        slots,
+        is_lab: sub.is_lab
+      });
+      if (sub.section) map[tName].sections.add(sub.section);
+      if (Array.isArray(sub.sections)) sub.sections.forEach(s => map[tName].sections.add(s));
+    });
+
+    return map;
+  }, [teachers, subjects]);
+
   const value = {
     user,
     setUser,
@@ -1543,6 +1588,7 @@ export function AcademicProvider({ children }) {
     validationReport,
     setValidationReport,
     facultyWorkloadAudit,
+    teacherWorkloadMap,
     refreshAcademicState: () => {
       if (typeof window !== 'undefined' && window.__planify_refresh_state) {
         window.__planify_refresh_state();

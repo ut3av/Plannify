@@ -40,7 +40,7 @@ class SubjectInput(BaseModel):
     section: Optional[str] = None
     sections: List[str] = []
     is_lab: bool = False
-    required_slots: int = Field(default=3, ge=1, le=20)
+    required_slots: int = Field(default=4, ge=1, le=20)
     room: Optional[str] = None
 
 
@@ -48,6 +48,7 @@ class TeacherInput(BaseModel):
     name: str
     free_periods: int = 1
     max_weekly_hours: int = Field(default=UGC_MAX_WEEKLY_PERIODS_DEFAULT, ge=1, le=50)
+    weekly_workload_capacity: Optional[int] = None
     email: Optional[str] = None
     phone: Optional[str] = None
     is_substitute: bool = False
@@ -108,21 +109,37 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
             cleaned_rooms.append(val)
     rooms = cleaned_rooms
     slots = [clean_name(s) for s in request.time_slots if clean_name(s)]
-    teachers = [TeacherInput(name=clean_name(t.name), free_periods=t.free_periods, max_weekly_hours=t.max_weekly_hours or UGC_MAX_WEEKLY_PERIODS_DEFAULT, email=t.email, phone=t.phone, is_substitute=t.is_substitute) for t in request.teachers if clean_name(t.name)]
-    subjects = [
-        SubjectInput(
-            code=clean_name(s.code),
-            name=clean_name(s.name),
-            teacher=clean_name(s.teacher),
-            section=clean_name(s.section) if s.section else None,
-            sections=[clean_name(sec) for sec in s.sections if clean_name(sec)],
-            is_lab=s.is_lab,
-            required_slots=s.required_slots,
-            room=clean_name(s.room) if s.room else None,
+    teachers = [
+        TeacherInput(
+            name=clean_name(t.name),
+            free_periods=t.free_periods,
+            max_weekly_hours=t.weekly_workload_capacity or t.max_weekly_hours or UGC_MAX_WEEKLY_PERIODS_DEFAULT,
+            weekly_workload_capacity=t.weekly_workload_capacity or t.max_weekly_hours or UGC_MAX_WEEKLY_PERIODS_DEFAULT,
+            email=t.email,
+            phone=t.phone,
+            is_substitute=t.is_substitute
         )
-        for s in request.subjects
-        if clean_name(s.name) and clean_name(s.teacher)
+        for t in request.teachers if clean_name(t.name)
     ]
+    subjects = []
+    for s in request.subjects:
+        if not clean_name(s.name) or not clean_name(s.teacher):
+            continue
+        req_slots = s.required_slots if (s.required_slots and s.required_slots > 0) else 4
+        if s.is_lab and req_slots % 2 != 0:
+            req_slots += 1
+        subjects.append(
+            SubjectInput(
+                code=clean_name(s.code),
+                name=clean_name(s.name),
+                teacher=clean_name(s.teacher),
+                section=clean_name(s.section) if s.section else None,
+                sections=[clean_name(sec) for sec in s.sections if clean_name(sec)],
+                is_lab=s.is_lab,
+                required_slots=req_slots,
+                room=clean_name(s.room) if s.room else None,
+            )
+        )
     sections = []
     for sec in request.sections:
         if not clean_name(sec.name):

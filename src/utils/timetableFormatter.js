@@ -13,16 +13,31 @@ export function buildApiPayload(data) {
         designation: clean.startsWith("Dr") ? "Associate Professor" : (clean.startsWith("Prof") ? "Professor" : "Assistant Professor"),
         email: `${clean.toLowerCase().replace(/[^a-z0-9]/g, '.')}@university.edu`,
         phone: "+91-9876543210",
-        free_periods: 1
+        free_periods: 1,
+        max_weekly_hours: 16,
+        weekly_workload_capacity: 16
       };
     }
     const cleanName = (t?.name || "Faculty Member").trim();
+    const capacity = t?.weekly_workload_capacity || t?.max_weekly_hours || 16;
     return {
       ...t,
       name: cleanName,
       free_periods: t?.free_periods !== undefined ? t.free_periods : 1,
+      max_weekly_hours: capacity,
+      weekly_workload_capacity: capacity,
       email: (t?.email || "").trim() || `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '.')}@university.edu`,
       phone: (t?.phone || "").trim() || "+91-9876543210",
+    };
+  });
+
+  const formattedSubjects = (data.subjects || []).map(sub => {
+    const isLab = Boolean(sub.is_lab || (sub.name && sub.name.toLowerCase().includes("lab")));
+    const slots = sub.required_slots && sub.required_slots > 0 ? sub.required_slots : 4;
+    return {
+      ...sub,
+      is_lab: isLab,
+      required_slots: isLab && slots % 2 !== 0 ? slots + 1 : slots
     };
   });
 
@@ -44,7 +59,7 @@ export function buildApiPayload(data) {
 
   return {
     teachers: formattedTeachers,
-    subjects: data.subjects || [],
+    subjects: formattedSubjects,
     rooms: data.rooms || [],
     sections: formattedSections,
     time_slots: data.timeSlots || [],
