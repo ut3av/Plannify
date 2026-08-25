@@ -45,6 +45,22 @@ const readCloudState = (data) => ({
   result: parseCloudJson(data.result, null),
 });
 
+export const isTestOrMockFaculty = (name) => {
+  if (!name) return true;
+  const n = name.trim().toLowerCase();
+  const testNames = [
+    "test a", "test b", "test c", "test teacher", "test faculty", "test",
+    "dr. sanjana singh", "sanjana singh",
+    "dr. amit patel", "amit patel",
+    "prof. rajesh verma", "rajesh verma",
+    "prof. neha gupta", "neha gupta",
+    "dr. vikram joshi", "vikram joshi",
+    "prof. suresh kumar", "suresh kumar",
+    "demo teacher", "demo faculty", "demo user"
+  ];
+  return testNames.includes(n) || n.startsWith("test ") || n.startsWith("demo ") || n === "teacher 1" || n === "teacher 2";
+};
+
 
 function getErrorMessage(error) {
   const detail = error?.response?.data?.detail;
@@ -76,10 +92,57 @@ function getErrorMessage(error) {
   };
 }
 
+export const parseAcademicMeta = (strOrObj) => {
+  const str = typeof strOrObj === 'string' ? strOrObj : (strOrObj?.name || strOrObj?.code || strOrObj?.section || strOrObj?.program_code || '');
+  const s = str.toUpperCase();
+
+  let program_level = 'UG';
+  let program_code = 'BCA';
+  let semester_number = 1;
+
+  if (s.includes('MCA') || s.includes('PG') || s.includes('M.TECH') || s.includes('MBA') || s.includes('M.SC')) {
+    program_level = 'PG';
+    program_code = 'MCA';
+  } else if (s.includes('B.TECH') || s.includes('BTECH') || s.includes('BE')) {
+    program_level = 'UG';
+    program_code = 'B.Tech';
+  } else if (s.includes('BCA') || s.includes('BAI') || s.includes('UG') || s.includes('B.SC')) {
+    program_level = 'UG';
+    program_code = 'BCA';
+  }
+
+  // Detect Semester number (1 to 8 or Roman numerals)
+  const semMatch = s.match(/(?:SEM|SEMESTER|SEM\.|-)\s*([1-8]|I|II|III|IV|V|VI|VII|VIII)/i) || s.match(/([1-8])(?:ST|ND|RD|TH)?\s*SEM/i);
+  if (semMatch) {
+    const rawSem = semMatch[1].toUpperCase();
+    const romanMap = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8 };
+    semester_number = romanMap[rawSem] || parseInt(rawSem, 10) || 1;
+  } else if (s.includes('-1') || s.includes('-I') || s.includes('1A') || s.includes('1B')) {
+    semester_number = 1;
+  } else if (s.includes('-2') || s.includes('-II') || s.includes('2A') || s.includes('2B')) {
+    semester_number = 2;
+  } else if (s.includes('-3') || s.includes('-III') || s.includes('3A') || s.includes('3B')) {
+    semester_number = 3;
+  } else if (s.includes('-4') || s.includes('-IV') || s.includes('4A') || s.includes('4B')) {
+    semester_number = 4;
+  } else if (s.includes('-5') || s.includes('-V') || s.includes('5A') || s.includes('5B')) {
+    semester_number = 5;
+  } else if (s.includes('-6') || s.includes('-VI') || s.includes('6A') || s.includes('6B')) {
+    semester_number = 6;
+  }
+
+  return { program_level, program_code, semester_number };
+};
+
 export function AcademicProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState("Admin");
   const [selectedFaculty, setSelectedFaculty] = useState(null);
+
+  // Program Level (ALL | UG | PG), Program (ALL | BCA | MCA | B.Tech), and Semester (ALL | 1..8) Filter
+  const [academicLevel, setAcademicLevel] = useState("ALL"); // ALL | UG | PG
+  const [selectedProgram, setSelectedProgram] = useState("ALL"); // ALL | BCA | MCA | B.Tech
+  const [selectedSemester, setSelectedSemester] = useState("ALL"); // ALL | 1 | 2 | 3 | 4 | 5 | 6
 
   // Clean initial state: Demo data is NOT loaded automatically
   const [teachers, setTeachers] = useState([]);
@@ -169,22 +232,6 @@ export function AcademicProvider({ children }) {
 
     return () => subscription.unsubscribe();
   }, []);
-
-export const isTestOrMockFaculty = (name) => {
-  if (!name) return true;
-  const n = name.trim().toLowerCase();
-  const testNames = [
-    "test a", "test b", "test c", "test teacher", "test faculty", "test",
-    "dr. sanjana singh", "sanjana singh",
-    "dr. amit patel", "amit patel",
-    "prof. rajesh verma", "rajesh verma",
-    "prof. neha gupta", "neha gupta",
-    "dr. vikram joshi", "vikram joshi",
-    "prof. suresh kumar", "suresh kumar",
-    "demo teacher", "demo faculty", "demo user"
-  ];
-  return testNames.includes(n) || n.startsWith("test ") || n.startsWith("demo ") || n === "teacher 1" || n === "teacher 2";
-};
 
   // Load from Supabase on mount & subscribe to Real-Time cloud state changes
   useEffect(() => {
@@ -930,6 +977,13 @@ export const isTestOrMockFaculty = (name) => {
     handleTeachersChange,
     assignProxy,
     rescheduleTimetable,
+    academicLevel,
+    setAcademicLevel,
+    selectedProgram,
+    setSelectedProgram,
+    selectedSemester,
+    setSelectedSemester,
+    parseAcademicMeta,
     validationReport,
     setValidationReport,
     facultyWorkloadAudit,

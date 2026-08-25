@@ -6,7 +6,7 @@ import { useAcademic } from "../../context/AcademicContext";
 import { API_BASE_URL as API } from "../../apiConfig";
 
 export default function FacultyProfile({ faculty, onBack, onUpdate }) {
-  const { deleteFacultyProfile } = useAcademic() || {};
+  const { deleteFacultyProfile, subjects: contextSubjects } = useAcademic() || {};
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [detail, setDetail] = useState(null);
@@ -245,8 +245,44 @@ export default function FacultyProfile({ faculty, onBack, onUpdate }) {
           )}
         </div>
 
-        {/* Sidebar: Leave Balances + Attendance */}
+        {/* Sidebar: Assigned Courses + Leave Balances + Attendance */}
         <div className="space-y-6">
+          {/* Assigned Courses & Lecture Load */}
+          {(() => {
+            const tName = (detail.teacher_name || detail.name || "").toLowerCase().trim();
+            const assignedCourses = (contextSubjects || []).filter(s => (s.teacher || "").toLowerCase().trim() === tName);
+            return (
+              <div className="card p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Assigned Courses</h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300">
+                    {assignedCourses.length} Courses
+                  </span>
+                </div>
+                {assignedCourses.length > 0 ? (
+                  <div className="space-y-2">
+                    {assignedCourses.map((sub, sIdx) => (
+                      <div key={sIdx} className="p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/80 flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs font-bold text-indigo-400">{sub.code || "SUB"}</span>
+                            {sub.is_lab && <span className="text-[9px] text-emerald-400 bg-emerald-500/20 px-1 rounded font-bold">Lab</span>}
+                          </div>
+                          <p className="text-xs font-medium text-slate-200 truncate mt-0.5">{sub.name}</p>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300 shrink-0">
+                          {sub.required_slots || 4} periods
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">No courses assigned to this faculty member.</p>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Leave Balances */}
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Leave Balance</h3>

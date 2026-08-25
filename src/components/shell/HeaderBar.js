@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
 import NotificationCenter from '../common/NotificationCenter';
 import { getLeaveApplications, subscribeToTable } from '../../services/realtimeFacultyService';
+import { useAcademic } from '../../context/AcademicContext';
 
 const PAGE_ROUTE_MAP = {
   dashboard: "/dashboard",
@@ -48,6 +49,14 @@ export default function HeaderBar({
   teachers = [],
 }) {
   const navigate = useNavigate();
+  const {
+    academicLevel = "ALL",
+    setAcademicLevel,
+    selectedProgram = "ALL",
+    setSelectedProgram,
+    selectedSemester = "ALL",
+    setSelectedSemester,
+  } = useAcademic();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [liveUnreadCount, setLiveUnreadCount] = useState(unreadNotificationsCount);
@@ -153,6 +162,84 @@ export default function HeaderBar({
             </React.Fragment>
           ))}
         </nav>
+      </div>
+
+      {/* CENTER: Institutional Program & Semester Filter Scope Selector */}
+      <div className="hidden md:flex items-center gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-xs shadow-sm">
+        {/* Level Toggle: ALL | UG | PG */}
+        <div className="flex items-center bg-white dark:bg-slate-900 rounded-xl p-0.5 border border-slate-200/80 dark:border-slate-800">
+          {["ALL", "UG", "PG"].map((lvl) => (
+            <button
+              key={lvl}
+              onClick={() => {
+                setAcademicLevel && setAcademicLevel(lvl);
+                if (lvl === "UG" && selectedProgram === "MCA") {
+                  setSelectedProgram && setSelectedProgram("BCA");
+                } else if (lvl === "PG" && (selectedProgram === "BCA" || selectedProgram === "B.Tech")) {
+                  setSelectedProgram && setSelectedProgram("MCA");
+                }
+              }}
+              className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all ${
+                academicLevel === lvl
+                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/20"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+              title={`Filter by ${lvl === 'ALL' ? 'All Degrees' : lvl === 'UG' ? 'Undergraduate (UG)' : 'Postgraduate (PG)'}`}
+            >
+              {lvl}
+            </button>
+          ))}
+        </div>
+
+        {/* Program Selector */}
+        <select
+          value={selectedProgram}
+          onChange={(e) => {
+            const p = e.target.value;
+            setSelectedProgram && setSelectedProgram(p);
+            if (p === "MCA") setAcademicLevel && setAcademicLevel("PG");
+            if (p === "BCA" || p === "B.Tech") setAcademicLevel && setAcademicLevel("UG");
+          }}
+          className="input-premium py-1 px-2.5 text-xs bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white cursor-pointer rounded-xl font-bold"
+          title="Filter by Academic Program"
+        >
+          <option value="ALL">All Programs</option>
+          {(academicLevel === "ALL" || academicLevel === "UG") && (
+            <option value="BCA">🎓 BCA (UG)</option>
+          )}
+          {(academicLevel === "ALL" || academicLevel === "PG") && (
+            <option value="MCA">🎓 MCA (PG)</option>
+          )}
+          {(academicLevel === "ALL" || academicLevel === "UG") && (
+            <option value="B.Tech">🎓 B.Tech (UG)</option>
+          )}
+        </select>
+
+        {/* Semester Selector */}
+        <select
+          value={selectedSemester}
+          onChange={(e) => setSelectedSemester && setSelectedSemester(e.target.value)}
+          className="input-premium py-1 px-2.5 text-xs bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white cursor-pointer rounded-xl font-bold"
+          title="Filter by Semester"
+        >
+          <option value="ALL">All Semesters</option>
+          <option value="1">Sem 1 (I)</option>
+          <option value="2">Sem 2 (II)</option>
+          <option value="3">Sem 3 (III)</option>
+          <option value="4">Sem 4 (IV)</option>
+          {selectedProgram !== "MCA" && (
+            <>
+              <option value="5">Sem 5 (V)</option>
+              <option value="6">Sem 6 (VI)</option>
+            </>
+          )}
+          {selectedProgram === "B.Tech" && (
+            <>
+              <option value="7">Sem 7 (VII)</option>
+              <option value="8">Sem 8 (VIII)</option>
+            </>
+          )}
+        </select>
       </div>
 
       {/* RIGHT: Theme Toggle, Search, Cloud Sync, Notifications, Profile */}

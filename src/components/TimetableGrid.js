@@ -126,7 +126,18 @@ export default function TimetableGrid({
   onSaveDb,
   onNavigateToReschedule,
 }) {
-  const { assignProxy, validationReport, sections: contextSections } = useAcademic();
+  const {
+    assignProxy,
+    validationReport,
+    sections: contextSections,
+    academicLevel = "ALL",
+    setAcademicLevel,
+    selectedProgram = "ALL",
+    setSelectedProgram,
+    selectedSemester = "ALL",
+    setSelectedSemester,
+    parseAcademicMeta,
+  } = useAcademic() || {};
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSectionFilter, setSelectedSectionFilter] = useState("ALL");
   const [selectedTeacherFilter, setSelectedTeacherFilter] = useState("ALL");
@@ -136,21 +147,19 @@ export default function TimetableGrid({
   const [proxyReason, setProxyReason] = useState("Faculty Leave Substitution");
   const [proxySuccessMsg, setProxySuccessMsg] = useState("");
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const handleQuickProxySubmit = async (e) => {
     e.preventDefault();
     if (!selectedClassForProxy || !selectedProxyTeacher) return;
     try {
-      await assignProxy({
-        teacher: selectedClassForProxy.teacher,
-        proxy_teacher: selectedProxyTeacher,
-        day: selectedClassForProxy.day,
-        slots: [selectedClassForProxy.slot],
-        reason: proxyReason,
-      });
+      if (assignProxy) {
+        await assignProxy({
+          teacher: selectedClassForProxy.teacher,
+          proxy_teacher: selectedProxyTeacher,
+          day: selectedClassForProxy.day,
+          slots: [selectedClassForProxy.slot],
+          reason: proxyReason,
+        });
+      }
       setProxySuccessMsg(`Assigned ${selectedProxyTeacher} as proxy for ${selectedClassForProxy.teacher}!`);
       setTimeout(() => {
         setProxySuccessMsg("");
@@ -161,29 +170,45 @@ export default function TimetableGrid({
     }
   };
 
-  const result = propResult || timetableData;
-  if (!result || (!result.assignments && !result.timetable)) {
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const rawResult = propResult || timetableData;
+  const result = rawResult?.result || rawResult;
+
+  if (loading) {
+    return <ShimmerGrid />;
+  }
+
+  if (!result || !result.assignments || result.assignments.length === 0) {
     return <EmptyState loading={loading} />;
   }
 
-  const days = result.days || ["Mon", "Tue", "Wed", "Thu", "Fri"];
-  const timeSlots = result.time_slots || [
-    "09:00 AM - 09:45 AM",
-    "09:45 AM - 10:30 AM",
-    "10:30 AM - 11:20 AM",
-    "11:20 AM - 12:10 PM",
-    "01:00 PM - 01:50 PM",
-    "01:50 PM - 02:40 PM",
-    "02:40 PM - 03:30 PM",
-  ];
+  const days = result.days || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  const timeSlots = result.time_slots || ["Slot 1", "Slot 2", "Slot 3", "Slot 4", "Slot 5"];
   const assignments = result.assignments || [];
 
   // Extract unique sections and teachers for filtering
   const allSectionsList = Array.from(new Set(assignments.map(a => a.section).filter(Boolean))).sort();
   const allTeachersList = Array.from(new Set(assignments.map(a => a.teacher).filter(Boolean))).sort();
 
-  // Filter assignments based on search query, section filter, and teacher filter
+  // Filter assignments based on UG/PG level, program, semester, section, teacher, and search query
   const filteredAssignments = assignments.filter(item => {
+    // Academic Scope Filter (Level, Program, Semester)
+    if (academicLevel !== "ALL" || selectedProgram !== "ALL" || selectedSemester !== "ALL") {
+      const meta = parseAcademicMeta ? parseAcademicMeta(item.section || item.code || item.subject || "") : {};
+      if (academicLevel !== "ALL" && meta.program_level !== academicLevel) {
+        return false;
+      }
+      if (selectedProgram !== "ALL" && meta.program_code !== selectedProgram) {
+        return false;
+      }
+      if (selectedSemester !== "ALL" && String(meta.semester_number) !== String(selectedSemester)) {
+        return false;
+      }
+    }
+
     if (selectedSectionFilter !== "ALL" && item.section !== selectedSectionFilter) {
       return false;
     }
@@ -373,44 +398,124 @@ export default function TimetableGrid({
           </div>
         </div>
 
-        {/* ── Section & Teacher Filter Selector Bar ── */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-200 dark:border-slate-800/80 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Filter Section:</span>
-            <select
-              value={selectedSectionFilter}
-              onChange={(e) => setSelectedSectionFilter(e.target.value)}
-              className="input-premium text-xs py-1 px-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer rounded-lg"
-            >
-              <option value="ALL">All Sections (Master Matrix)</option>
-              {allSectionsList.map(sec => (
-                <option key={sec} value={sec}>{sec}</option>
+        {/* ── Section, Program & Teacher Filter Selector Bar ── */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800/80 text-xs">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Level Toggle: ALL | UG | PG */}
+            <div className="flex items-center bg-white dark:bg-slate-800 rounded-xl p-0.5 border border-slate-200 dark:border-slate-700">
+              {["ALL", "UG", "PG"].map((lvl) => (
+                <button
+                  key={lvl}
+                  onClick={() => {
+                    setAcademicLevel && setAcademicLevel(lvl);
+                    if (lvl === "UG" && selectedProgram === "MCA") {
+                      setSelectedProgram && setSelectedProgram("BCA");
+                    } else if (lvl === "PG" && (selectedProgram === "BCA" || selectedProgram === "B.Tech")) {
+                      setSelectedProgram && setSelectedProgram("MCA");
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all ${
+                    academicLevel === lvl
+                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/20"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                  title={`View ${lvl === 'ALL' ? 'All Degrees' : lvl === 'UG' ? 'Undergraduate (UG)' : 'Postgraduate (PG)'}`}
+                >
+                  {lvl}
+                </button>
               ))}
-            </select>
+            </div>
+
+            {/* Program Selector */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Program:</span>
+              <select
+                value={selectedProgram}
+                onChange={(e) => {
+                  const p = e.target.value;
+                  setSelectedProgram && setSelectedProgram(p);
+                  if (p === "MCA") setAcademicLevel && setAcademicLevel("PG");
+                  if (p === "BCA" || p === "B.Tech") setAcademicLevel && setAcademicLevel("UG");
+                }}
+                className="input-premium text-xs py-1 px-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer rounded-lg font-bold"
+              >
+                <option value="ALL">All Programs</option>
+                {(academicLevel === "ALL" || academicLevel === "UG") && <option value="BCA">BCA (UG)</option>}
+                {(academicLevel === "ALL" || academicLevel === "PG") && <option value="MCA">MCA (PG)</option>}
+                {(academicLevel === "ALL" || academicLevel === "UG") && <option value="B.Tech">B.Tech (UG)</option>}
+              </select>
+            </div>
+
+            {/* Semester Selector */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Semester:</span>
+              <select
+                value={selectedSemester}
+                onChange={(e) => setSelectedSemester && setSelectedSemester(e.target.value)}
+                className="input-premium text-xs py-1 px-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer rounded-lg font-bold"
+              >
+                <option value="ALL">All Semesters</option>
+                <option value="1">Sem 1 (I)</option>
+                <option value="2">Sem 2 (II)</option>
+                <option value="3">Sem 3 (III)</option>
+                <option value="4">Sem 4 (IV)</option>
+                {selectedProgram !== "MCA" && (
+                  <>
+                    <option value="5">Sem 5 (V)</option>
+                    <option value="6">Sem 6 (VI)</option>
+                  </>
+                )}
+                {selectedProgram === "B.Tech" && (
+                  <>
+                    <option value="7">Sem 7 (VII)</option>
+                    <option value="8">Sem 8 (VIII)</option>
+                  </>
+                )}
+              </select>
+            </div>
+
+            {/* Filter Section */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Section:</span>
+              <select
+                value={selectedSectionFilter}
+                onChange={(e) => setSelectedSectionFilter(e.target.value)}
+                className="input-premium text-xs py-1 px-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer rounded-lg max-w-[170px]"
+              >
+                <option value="ALL">All Sections</option>
+                {allSectionsList.map(sec => (
+                  <option key={sec} value={sec}>{sec}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filter Faculty */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Faculty:</span>
+              <select
+                value={selectedTeacherFilter}
+                onChange={(e) => setSelectedTeacherFilter(e.target.value)}
+                className="input-premium text-xs py-1 px-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer rounded-lg max-w-[170px]"
+              >
+                <option value="ALL">All Faculty</option>
+                {allTeachersList.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Filter Faculty:</span>
-            <select
-              value={selectedTeacherFilter}
-              onChange={(e) => setSelectedTeacherFilter(e.target.value)}
-              className="input-premium text-xs py-1 px-2.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer rounded-lg max-w-[220px]"
-            >
-              <option value="ALL">All Faculty Members</option>
-              {allTeachersList.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-
-          {(selectedSectionFilter !== "ALL" || selectedTeacherFilter !== "ALL" || searchQuery) && (
+          {(academicLevel !== "ALL" || selectedProgram !== "ALL" || selectedSemester !== "ALL" || selectedSectionFilter !== "ALL" || selectedTeacherFilter !== "ALL" || searchQuery) && (
             <button
               onClick={() => {
+                setAcademicLevel && setAcademicLevel("ALL");
+                setSelectedProgram && setSelectedProgram("ALL");
+                setSelectedSemester && setSelectedSemester("ALL");
                 setSelectedSectionFilter("ALL");
                 setSelectedTeacherFilter("ALL");
                 setSearchQuery("");
               }}
-              className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold ml-auto"
+              className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold whitespace-nowrap"
             >
               Reset Filters
             </button>

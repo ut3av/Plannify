@@ -1041,6 +1041,41 @@ export default function FacultyDirectory({
                         </p>
                       )}
                     </div>
+
+                    {/* Assigned Courses & Subjects Badges */}
+                    {(() => {
+                      const teacherName = (f.teacher_name || f.name || "").toLowerCase().trim();
+                      const assigned = (subjects || []).filter(s => (s.teacher || "").toLowerCase().trim() === teacherName);
+                      if (assigned.length === 0) {
+                        return (
+                          <div className="mt-3 py-1.5 px-2.5 rounded-xl bg-slate-950/40 border border-slate-800/60 text-[11px] text-slate-500 flex items-center justify-between">
+                            <span>No subjects assigned</span>
+                            <span className="text-[10px] text-indigo-400 font-semibold">Assign in Subjects →</span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="mt-3 space-y-1.5">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Assigned Courses ({assigned.length})
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {assigned.map((sub, sIdx) => (
+                              <span
+                                key={sIdx}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30"
+                                title={`${sub.name} (${sub.required_slots || 4} weekly periods)`}
+                              >
+                                <span>{sub.code || sub.name}</span>
+                                {sub.is_lab && (
+                                  <span className="text-[9px] text-emerald-400 bg-emerald-500/20 px-1 rounded">Lab</span>
+                                )}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -1090,63 +1125,79 @@ export default function FacultyDirectory({
                 <th>Faculty Name</th>
                 <th>Employee ID</th>
                 <th>Designation</th>
+                <th>Assigned Subjects</th>
                 <th>Email Address</th>
-                <th>Phone Number</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map(f => (
-                <tr key={f.id || f.teacher_name} className="cursor-pointer hover:bg-slate-800/40 transition-colors" onClick={() => onSelectFaculty && onSelectFaculty(f)}>
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0">
-                        {getInitials(f.teacher_name)}
+              {filtered.map(f => {
+                const teacherName = (f.teacher_name || f.name || "").toLowerCase().trim();
+                const assigned = (subjects || []).filter(s => (s.teacher || "").toLowerCase().trim() === teacherName);
+                return (
+                  <tr key={f.id || f.teacher_name} className="cursor-pointer hover:bg-slate-800/40 transition-colors" onClick={() => onSelectFaculty && onSelectFaculty(f)}>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0">
+                          {getInitials(f.teacher_name)}
+                        </div>
+                        <div>
+                          <span className="font-bold text-white block">{f.teacher_name}</span>
+                          {(f.has_account || f.user_id || f.email) && (
+                            <span className="text-[10px] font-semibold text-emerald-400">Account Active</span>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-bold text-white block">{f.teacher_name}</span>
-                        {(f.has_account || f.user_id || f.email) && (
-                          <span className="text-[10px] font-semibold text-emerald-400">Account Active</span>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td><span className="font-mono text-xs text-indigo-300">{f.employee_id}</span></td>
-                  <td><span className="font-medium text-slate-300">{f.designation}</span></td>
-                  <td><span className="text-slate-400 font-mono text-xs">{f.email || "—"}</span></td>
-                  <td><span className="text-slate-400 text-xs">{f.phone || "—"}</span></td>
-                  <td><span className={`badge ${statusColor(f.status)}`}>{f.status}</span></td>
-                  <td>
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        title="Dispatch Schedule via Email/WhatsApp"
-                        onClick={() => setDispatchTeacher(f)}
-                        className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 transition-colors flex items-center gap-1.5"
-                      >
-                        <svg className="w-3 h-3 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        Dispatch
-                      </button>
-                      {f.status !== "active" && (
-                        <button
-                          title="Reinstate to Active"
-                          onClick={(e) => handleActivate(e, f)}
-                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 transition-colors"
-                        >
-                          Activate
-                        </button>
+                    </td>
+                    <td><span className="font-mono text-xs text-indigo-300">{f.employee_id}</span></td>
+                    <td><span className="font-medium text-slate-300">{f.designation}</span></td>
+                    <td>
+                      {assigned.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {assigned.map((sub, sIdx) => (
+                            <span key={sIdx} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                              {sub.code || sub.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-500 text-xs italic">None</span>
                       )}
-                      <button 
-                        title="Remove Faculty Member" 
-                        onClick={(e) => handleDelete(e, f)}
-                        className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-colors"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td><span className="text-slate-400 font-mono text-xs">{f.email || "—"}</span></td>
+                    <td><span className={`badge ${statusColor(f.status)}`}>{f.status}</span></td>
+                    <td>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          title="Dispatch Schedule via Email/WhatsApp"
+                          onClick={() => setDispatchTeacher(f)}
+                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 transition-colors flex items-center gap-1.5"
+                        >
+                          <svg className="w-3 h-3 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                          Dispatch
+                        </button>
+                        {f.status !== "active" && (
+                          <button
+                            title="Reinstate to Active"
+                            onClick={(e) => handleActivate(e, f)}
+                            className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 transition-colors"
+                          >
+                            Activate
+                          </button>
+                        )}
+                        <button 
+                          title="Remove Faculty Member" 
+                          onClick={(e) => handleDelete(e, f)}
+                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useAcademic, isTestOrMockFaculty } from "../context/AcademicContext";
 
 /* Theme-Adaptive Professional Color Palettes for Subject Badges */
 export const SUBJECT_PALETTES = {
@@ -42,9 +43,31 @@ export function getSubjectColor(colorIndex = 0, isLight = true) {
 }
 
 export default function SubjectsSection({ subjects = [], teachers = [], sections = [], rooms = [], onChange }) {
+  const {
+    teachers: contextTeachers,
+    academicLevel = "ALL",
+    setAcademicLevel,
+    selectedProgram = "ALL",
+    setSelectedProgram,
+    selectedSemester = "ALL",
+    setSelectedSemester,
+    parseAcademicMeta,
+  } = useAcademic() || {};
+  
+  const effectiveTeachers = useMemo(() => {
+    const raw = (teachers && teachers.length > 0) ? teachers : (contextTeachers || []);
+    return raw.map(t => {
+      const name = typeof t === 'string' ? t : (t?.name || t?.teacher_name);
+      return {
+        ...(typeof t === 'object' ? t : {}),
+        name: (name || "").trim()
+      };
+    }).filter(t => t.name && !isTestOrMockFaculty(t.name));
+  }, [teachers, contextTeachers]);
+
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
-  const [teacher, setTeacher] = useState(teachers[0]?.name || "");
+  const [teacher, setTeacher] = useState(effectiveTeachers[0]?.name || "");
   const [selectedSections, setSelectedSections] = useState([]);
   const [slots, setSlots] = useState(4);
   const [isLab, setIsLab] = useState(false);
@@ -53,6 +76,12 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
   const [filterType, setFilterType] = useState("all"); // "all" | "theory" | "lab"
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [isSectionOpen, setIsSectionOpen] = useState(false);
+
+  useEffect(() => {
+    if (!teacher && effectiveTeachers.length > 0) {
+      setTeacher(effectiveTeachers[0].name);
+    }
+  }, [effectiveTeachers, teacher]);
 
   const { preferredTeachers, otherTeachers } = useMemo(() => {
     const prefSet = new Set();
@@ -65,17 +94,17 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
 
     const pref = [];
     const other = [];
-    teachers.forEach(t => {
-      const tName = typeof t === 'string' ? t : t.name;
+    effectiveTeachers.forEach(t => {
+      const tName = t.name;
       if (prefSet.has(tName)) {
-        pref.push(typeof t === 'string' ? { name: t } : t);
+        pref.push(t);
       } else {
-        other.push(typeof t === 'string' ? { name: t } : t);
+        other.push(t);
       }
     });
 
     return { preferredTeachers: pref, otherTeachers: other };
-  }, [sections, selectedSections, teachers]);
+  }, [sections, selectedSections, effectiveTeachers]);
 
   const addSubject = (e) => {
     e && e.preventDefault();
@@ -170,6 +199,21 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
 
   const filteredSubjects = useMemo(() => {
     return subjects.filter(sub => {
+      // Academic Scope Filter (UG / PG / Program / Semester)
+      if (academicLevel !== "ALL" || selectedProgram !== "ALL" || selectedSemester !== "ALL") {
+        const secDisplay = sub.sections && sub.sections.length > 0 ? sub.sections.join(" ") : (sub.section || "");
+        const meta = parseAcademicMeta ? parseAcademicMeta(`${sub.code || ""} ${sub.name || ""} ${secDisplay}`) : {};
+        if (academicLevel !== "ALL" && meta.program_level !== academicLevel) {
+          return false;
+        }
+        if (selectedProgram !== "ALL" && meta.program_code !== selectedProgram) {
+          return false;
+        }
+        if (selectedSemester !== "ALL" && String(meta.semester_number) !== String(selectedSemester)) {
+          return false;
+        }
+      }
+
       // Type Filter
       if (filterType === "theory" && sub.is_lab) return false;
       if (filterType === "lab" && !sub.is_lab) return false;
@@ -183,7 +227,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
       const matchSection = (sub.section || (sub.sections || []).join(" ")).toLowerCase().includes(q);
       return matchName || matchCode || matchTeacher || matchSection;
     });
-  }, [subjects, filterType, searchQuery]);
+  }, [subjects, filterType, searchQuery, academicLevel, selectedProgram, selectedSemester, parseAcademicMeta]);
 
   const totalSlotsSum = subjects.reduce((sum, s) => sum + (s.required_slots || 0), 0);
   const labCount = subjects.filter(s => s.is_lab).length;
@@ -412,7 +456,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
       </form>
 
       {/* ── FILTER & SEARCH TOOLBAR ── */}
-      <div className="card p-5 bg-slate-900 border border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <div className="card p-5 bg-slate-900 border border-slate-800 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
         {/* Search */}
         <div className="relative flex-1">
           <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -427,12 +471,83 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
           />
         </div>
 
+        {/* Academic Level & Program Scope Pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Level Toggle */}
+          <div className="flex items-center bg-slate-800 rounded-xl p-0.5 border border-slate-700">
+            {["ALL", "UG", "PG"].map((lvl) => (
+              <button
+                key={lvl}
+                type="button"
+                onClick={() => {
+                  setAcademicLevel && setAcademicLevel(lvl);
+                  if (lvl === "UG" && selectedProgram === "MCA") {
+                    setSelectedProgram && setSelectedProgram("BCA");
+                  } else if (lvl === "PG" && (selectedProgram === "BCA" || selectedProgram === "B.Tech")) {
+                    setSelectedProgram && setSelectedProgram("MCA");
+                  }
+                }}
+                className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all ${
+                  academicLevel === lvl
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/20"
+                    : "text-slate-400 hover:text-white"
+                }`}
+                title={`Filter by ${lvl}`}
+              >
+                {lvl}
+              </button>
+            ))}
+          </div>
+
+          {/* Program Selector */}
+          <select
+            value={selectedProgram}
+            onChange={(e) => {
+              const p = e.target.value;
+              setSelectedProgram && setSelectedProgram(p);
+              if (p === "MCA") setAcademicLevel && setAcademicLevel("PG");
+              if (p === "BCA" || p === "B.Tech") setAcademicLevel && setAcademicLevel("UG");
+            }}
+            className="input-premium text-xs py-1.5 px-2.5 bg-slate-800 border-slate-700 text-white cursor-pointer rounded-xl font-bold"
+          >
+            <option value="ALL">All Programs</option>
+            {(academicLevel === "ALL" || academicLevel === "UG") && <option value="BCA">BCA (UG)</option>}
+            {(academicLevel === "ALL" || academicLevel === "PG") && <option value="MCA">MCA (PG)</option>}
+            {(academicLevel === "ALL" || academicLevel === "UG") && <option value="B.Tech">B.Tech (UG)</option>}
+          </select>
+
+          {/* Semester Selector */}
+          <select
+            value={selectedSemester}
+            onChange={(e) => setSelectedSemester && setSelectedSemester(e.target.value)}
+            className="input-premium text-xs py-1.5 px-2.5 bg-slate-800 border-slate-700 text-white cursor-pointer rounded-xl font-bold"
+          >
+            <option value="ALL">All Semesters</option>
+            <option value="1">Sem 1 (I)</option>
+            <option value="2">Sem 2 (II)</option>
+            <option value="3">Sem 3 (III)</option>
+            <option value="4">Sem 4 (IV)</option>
+            {selectedProgram !== "MCA" && (
+              <>
+                <option value="5">Sem 5 (V)</option>
+                <option value="6">Sem 6 (VI)</option>
+              </>
+            )}
+            {selectedProgram === "B.Tech" && (
+              <>
+                <option value="7">Sem 7 (VII)</option>
+                <option value="8">Sem 8 (VIII)</option>
+              </>
+            )}
+          </select>
+        </div>
+
         {/* Type Filter */}
         <div className="flex items-center gap-1.5 shrink-0">
           {[
-            { id: "all", label: `All (${subjects.length})` },
-            { id: "theory", label: `Theory (${theoryCount})` },
-            { id: "lab", label: `Labs (${labCount})` },
+            { id: "all", label: `All (${filteredSubjects.length})` },
+            { id: "theory", label: `Theory (${filteredSubjects.filter(s => !s.is_lab).length})` },
+            { id: "lab", label: `Labs (${filteredSubjects.filter(s => s.is_lab).length})` },
           ].map(f => (
             <button
               key={f.id}
@@ -519,12 +634,34 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
                     {sub.name}
                   </h3>
 
-                  {/* Assigned Teacher */}
-                  <div className="flex items-center gap-2 mt-2 text-xs text-slate-300">
-                    <span className="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px]">
-                      <svg className="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </span>
-                    <span className="font-semibold truncate">{sub.teacher}</span>
+                  {/* Assigned Teacher with Interactive Quick-Reassignment */}
+                  <div className="mt-2.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                      Assigned Faculty
+                    </label>
+                    <div className="flex items-center gap-1.5 bg-slate-950/60 p-1.5 rounded-xl border border-slate-800">
+                      <span className="w-6 h-6 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-[10px] text-indigo-400 shrink-0">
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      </span>
+                      <select
+                        value={sub.teacher || ""}
+                        onChange={(e) => {
+                          const newTeacher = e.target.value;
+                          const updated = [...subjects];
+                          updated[originalIndex] = { ...sub, teacher: newTeacher };
+                          onChange(updated);
+                        }}
+                        className="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer flex-1 truncate w-full"
+                        title="Change assigned faculty member"
+                      >
+                        <option value="" disabled className="bg-slate-900 text-slate-500">-- Select Faculty --</option>
+                        {effectiveTeachers.map((t) => (
+                          <option key={`card-${t.name}`} value={t.name} className="bg-slate-900 text-white">
+                            {t.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   {/* Section Badge */}

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { isTestOrMockFaculty, useAcademic } from '../../context/AcademicContext';
 
 export default function SectionsManagement({
   sections = [],
@@ -8,6 +9,16 @@ export default function SectionsManagement({
   onChange,
   onNavigate
 }) {
+  const {
+    academicLevel = "ALL",
+    setAcademicLevel,
+    selectedProgram = "ALL",
+    setSelectedProgram,
+    selectedSemester = "ALL",
+    setSelectedSemester,
+    parseAcademicMeta,
+  } = useAcademic();
+
   const [showModal, setShowModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [facultySearch, setFacultySearch] = useState("");
@@ -26,8 +37,8 @@ export default function SectionsManagement({
     return (teachers || []).map(t => {
       const name = typeof t === 'string' ? t : (t?.name || t?.teacher_name);
       const dept = typeof t === 'object' ? (t?.department || t?.department_name || "") : "";
-      return { name, department: dept };
-    }).filter(t => Boolean(t.name));
+      return { name: (name || "").trim(), department: dept };
+    }).filter(t => Boolean(t.name) && !isTestOrMockFaculty(t.name));
   }, [teachers]);
 
   // Extract clean rooms list
@@ -138,6 +149,26 @@ export default function SectionsManagement({
     return { linkedSubs, teacherNames };
   };
 
+  // Filter sections by UG/PG Level, Program, and Semester
+  const filteredSections = useMemo(() => {
+    return sections.filter(sec => {
+      const sName = sec.name || sec;
+      if (academicLevel !== "ALL" || selectedProgram !== "ALL" || selectedSemester !== "ALL") {
+        const meta = parseAcademicMeta ? parseAcademicMeta(sName) : {};
+        if (academicLevel !== "ALL" && meta.program_level !== academicLevel) {
+          return false;
+        }
+        if (selectedProgram !== "ALL" && meta.program_code !== selectedProgram) {
+          return false;
+        }
+        if (selectedSemester !== "ALL" && String(meta.semester_number) !== String(selectedSemester)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [sections, academicLevel, selectedProgram, selectedSemester, parseAcademicMeta]);
+
   return (
     <div className="space-y-6 animate-fade-in text-slate-100">
       {/* Module Header */}
@@ -162,16 +193,86 @@ export default function SectionsManagement({
         </div>
       </div>
 
-      {/* Sections Table */}
+      {/* Sections Table with Scope Filter Toolbar */}
       <div className="card p-6 bg-slate-900/90 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-800">
           <div>
-            <h2 className="text-base font-bold text-white">Registered Classes & Cohorts ({sections.length})</h2>
+            <h2 className="text-base font-bold text-white">Registered Classes & Cohorts ({filteredSections.length} of {sections.length})</h2>
             <p className="text-xs text-slate-400">Classrooms, multi-lab room allocation, and preferred faculty pool</p>
+          </div>
+
+          {/* Academic Scope Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Level Toggle */}
+            <div className="flex items-center bg-slate-800 rounded-xl p-0.5 border border-slate-700">
+              {["ALL", "UG", "PG"].map((lvl) => (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => {
+                    setAcademicLevel && setAcademicLevel(lvl);
+                    if (lvl === "UG" && selectedProgram === "MCA") {
+                      setSelectedProgram && setSelectedProgram("BCA");
+                    } else if (lvl === "PG" && (selectedProgram === "BCA" || selectedProgram === "B.Tech")) {
+                      setSelectedProgram && setSelectedProgram("MCA");
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-black text-[11px] transition-all ${
+                    academicLevel === lvl
+                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/20"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {lvl}
+                </button>
+              ))}
+            </div>
+
+            {/* Program Selector */}
+            <select
+              value={selectedProgram}
+              onChange={(e) => {
+                const p = e.target.value;
+                setSelectedProgram && setSelectedProgram(p);
+                if (p === "MCA") setAcademicLevel && setAcademicLevel("PG");
+                if (p === "BCA" || p === "B.Tech") setAcademicLevel && setAcademicLevel("UG");
+              }}
+              className="input-premium text-xs py-1.5 px-2.5 bg-slate-800 border-slate-700 text-white cursor-pointer rounded-xl font-bold"
+            >
+              <option value="ALL">All Programs</option>
+              {(academicLevel === "ALL" || academicLevel === "UG") && <option value="BCA">BCA (UG)</option>}
+              {(academicLevel === "ALL" || academicLevel === "PG") && <option value="MCA">MCA (PG)</option>}
+              {(academicLevel === "ALL" || academicLevel === "UG") && <option value="B.Tech">B.Tech (UG)</option>}
+            </select>
+
+            {/* Semester Selector */}
+            <select
+              value={selectedSemester}
+              onChange={(e) => setSelectedSemester && setSelectedSemester(e.target.value)}
+              className="input-premium text-xs py-1.5 px-2.5 bg-slate-800 border-slate-700 text-white cursor-pointer rounded-xl font-bold"
+            >
+              <option value="ALL">All Semesters</option>
+              <option value="1">Sem 1 (I)</option>
+              <option value="2">Sem 2 (II)</option>
+              <option value="3">Sem 3 (III)</option>
+              <option value="4">Sem 4 (IV)</option>
+              {selectedProgram !== "MCA" && (
+                <>
+                  <option value="5">Sem 5 (V)</option>
+                  <option value="6">Sem 6 (VI)</option>
+                </>
+              )}
+              {selectedProgram === "B.Tech" && (
+                <>
+                  <option value="7">Sem 7 (VII)</option>
+                  <option value="8">Sem 8 (VIII)</option>
+                </>
+              )}
+            </select>
           </div>
         </div>
 
-        {sections.length > 0 ? (
+        {filteredSections.length > 0 ? (
           <div className="overflow-x-auto border border-slate-800 rounded-xl">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-800/80 text-slate-400 font-bold uppercase">
@@ -185,7 +286,7 @@ export default function SectionsManagement({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800 text-slate-300">
-                {sections.map((sec, i) => {
+                {filteredSections.map((sec, i) => {
                   const { linkedSubs } = getLinkedData(sec.name);
                   const assignedLabs = sec.lab_rooms && Array.isArray(sec.lab_rooms) && sec.lab_rooms.length > 0
                     ? sec.lab_rooms
