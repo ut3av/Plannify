@@ -37,10 +37,10 @@ export default function SubstitutionPanel() {
     date: new Date().toISOString().split("T")[0],
   });
 
-  // 1. Fetch Substitutions
-  const fetchSubstitutions = useCallback(async () => {
+  // 1. Fetch Substitutions (Silent on background sync)
+  const fetchSubstitutions = useCallback(async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent && substitutions.length === 0) setLoading(true);
       const data = await getSubstitutionLogs();
       setSubstitutions(data || []);
     } catch (e) {
@@ -48,7 +48,7 @@ export default function SubstitutionPanel() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [substitutions.length]);
 
   // 2. Fetch Leaves needing substitution
   const fetchLeaveNeeds = useCallback(async () => {
@@ -66,18 +66,18 @@ export default function SubstitutionPanel() {
   }, []);
 
   useEffect(() => {
-    fetchSubstitutions();
+    fetchSubstitutions(false);
     fetchLeaveNeeds();
 
     const unsubSubs = subscribeToTable("substitution_log", () => {
-      fetchSubstitutions();
+      fetchSubstitutions(true);
     });
     const unsubLeaves = subscribeToTable("leave_applications", () => {
       fetchLeaveNeeds();
     });
 
     const interval = setInterval(() => {
-      fetchSubstitutions();
+      fetchSubstitutions(true);
       fetchLeaveNeeds();
     }, 10000);
 

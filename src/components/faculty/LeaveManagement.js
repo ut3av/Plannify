@@ -77,9 +77,9 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
     setImpactMap(map);
   }, []);
 
-  const fetchLeaves = useCallback(async () => {
+  const fetchLeaves = useCallback(async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent && leaves.length === 0) setLoading(true);
       const data = await getLeaveApplications({
         facultyId: !isAdmin && facultyId ? facultyId : null,
       });
@@ -90,7 +90,7 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
     } finally {
       setLoading(false);
     }
-  }, [facultyId, isAdmin, fetchImpacts]);
+  }, [facultyId, isAdmin, fetchImpacts, leaves.length]);
 
   const fetchTypes = useCallback(async () => {
     try {
@@ -118,71 +118,52 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
 
     // 1. Try Supabase
     try {
-      if (supabase) {
-        const { data, error } = await supabase
-          .from("faculty_profiles")
-          .select("id, user_id, teacher_name, employee_id, designation, department, email")
-          .order("teacher_name");
-        if (!error && Array.isArray(data)) {
-          data.forEach((f) => {
-            if (f.id) map.set(f.id, f);
-            if (f.teacher_name) map.set(f.teacher_name.toLowerCase().trim(), f);
-          });
-        }
+      const { data, error } = await supabase
+        .from("faculty_profiles")
+        .select("id, teacher_name, employee_id, designation, department_id, email, phone, is_substitute")
+        .eq("status", "active")
+        .order("teacher_name");
+      if (!error && Array.isArray(data)) {
+        data.forEach((f) => map.set(f.id, f));
       }
-    } catch {
-      // Fallback
+    } catch (e) {
+      console.warn("Supabase fetch failed in LeaveManagement:", e);
     }
 
-    // 2. Try Backend API
-    try {
-      const res = await axios.get(`${API}/faculty`, { timeout: 4000 });
-      if (res.data && Array.isArray(res.data)) {
-        res.data.forEach((f) => {
-          const item = {
-            id: f.id,
-            user_id: f.user_id || f.id,
-            teacher_name: f.teacher_name || f.name,
-            employee_id: f.employee_id || "",
-            designation: f.designation || "Assistant Professor",
-            department: f.department_name || f.department || "Computer Applications",
-          };
-          if (item.id) map.set(item.id, item);
-          if (item.teacher_name) map.set(item.teacher_name.toLowerCase().trim(), item);
+    // 2. Try FastAPI backend
+    if (map.size === 0) {
+      try {
+        const res = await axios.get(`${API}/faculty`, { timeout: 4000 });
+        if (Array.isArray(res.data)) {
+          res.data.forEach((f) => map.set(f.id || f.teacher_name, f));
+        }
+      } catch (e) {
+        console.warn("FastAPI fetch failed in LeaveManagement:", e);
+      }
+    }
+
+    // 3. Fallback to active timetable context teachers
+    if (map.size === 0 && Array.isArray(contextTeachers)) {
+      contextTeachers.forEach((t, idx) => {
+        const tName = typeof t === "string" ? t : t.name || `Faculty ${idx + 1}`;
+        map.set(tName, {
+          id: tName,
+          teacher_name: tName,
+          employee_id: `EMP-${100 + idx}`,
+          designation: "Assistant Professor",
+          email: `${tName.toLowerCase().replace(/[^a-z0-9]/g, ".")}@lnctu.ac.in`,
+          phone: "+91-9893000000",
         });
-      }
-    } catch {
-      // Fallback
-    }
-
-    // 3. Fallback from contextTeachers
-    if (Array.isArray(contextTeachers)) {
-      contextTeachers.forEach((t) => {
-        const name = typeof t === "string" ? t : t?.name || t?.teacher_name;
-        if (name) {
-          const item = {
-            id: t.id || name,
-            teacher_name: name,
-            employee_id: t.employee_id || `EMP-LNCT-${Math.abs(name.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 9000) + 1000}`,
-            designation: t.designation || "Faculty Member",
-            department: t.department || "Computer Applications",
-          };
-          if (t.id) map.set(t.id, item);
-          if (!map.has(name.toLowerCase().trim())) {
-            map.set(name.toLowerCase().trim(), item);
-          }
-        }
       });
     }
 
-    const uniqueList = Array.from(new Set(map.values()));
-    setFaculty(uniqueList);
+    setFacultyList(Array.from(map.values()));
   }, [contextTeachers]);
 
   // Initial fetch
   useEffect(() => {
     fetchAllFacultyProfiles().catch(() => {});
-    fetchLeaves();
+    fetchLeaves(false);
     fetchTypes();
     fetchFaculty();
     if (facultyId) {
@@ -190,10 +171,10 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
     }
   }, [facultyId, fetchLeaves, fetchTypes, fetchFaculty, fetchBalances]);
 
-  // Real-Time Subscriptions on Supabase Tables
+  // Real-Time Subscriptions on Supabase Tables (Silent updates)
   useEffect(() => {
     const unsubLeaves = subscribeToTable("leave_applications", () => {
-      fetchLeaves();
+      fetchLeaves(true);
       const currentFid = applyForm.faculty_id || facultyId;
       if (currentFid) fetchBalances(currentFid);
     });
@@ -204,12 +185,12 @@ export default function LeaveManagement({ facultyId, facultyName: propFacultyNam
     });
 
     const unsubSubs = subscribeToTable("substitution_log", () => {
-      fetchLeaves();
+      fetchLeaves(true);
     });
 
-    // Fallback periodic poll (every 10 seconds)
+    // Fallback periodic poll (every 10 seconds, silent)
     const interval = setInterval(() => {
-      fetchLeaves();
+      fetchLeaves(true);
       const currentFid = applyForm.faculty_id || facultyId;
       if (currentFid) fetchBalances(currentFid);
     }, 10000);

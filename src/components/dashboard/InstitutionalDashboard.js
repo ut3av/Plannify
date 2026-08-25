@@ -22,7 +22,7 @@ export default function InstitutionalDashboard({
 
   useEffect(() => {
     const handleSync = () => {
-      fetchDashboardData();
+      fetchDashboardData(true);
     };
     window.addEventListener("planify_attendance_updated", handleSync);
     window.addEventListener("planify_leave_updated", handleSync);
@@ -34,9 +34,9 @@ export default function InstitutionalDashboard({
     };
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent && !stats) setLoading(true);
       const [statsRes, insightsRes] = await Promise.all([
         axios.get(`${API}/faculty/dashboard-stats`).catch(() => ({ data: null })),
         axios.get(`${API}/analytics/insights`).catch(() => ({ data: [] })),

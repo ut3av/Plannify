@@ -54,9 +54,9 @@ export default function AttendanceDashboard({ facultyId, isTeacherView = false }
     }
   }, []);
 
-  const fetchDailyRecords = useCallback(async () => {
+  const fetchDailyRecords = useCallback(async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent && records.length === 0) setLoading(true);
       const data = await getAttendanceRecords({
         date: viewDate,
         facultyId: isTeacherView && facultyId ? facultyId : null,
@@ -67,11 +67,11 @@ export default function AttendanceDashboard({ facultyId, isTeacherView = false }
     } finally {
       setLoading(false);
     }
-  }, [viewDate, facultyId, isTeacherView]);
+  }, [viewDate, facultyId, isTeacherView, records.length]);
 
-  const fetchMonthlyRecords = useCallback(async () => {
+  const fetchMonthlyRecords = useCallback(async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent && records.length === 0) setLoading(true);
       const data = await getAttendanceRecords({
         month: selectedMonth,
         year: selectedYear,
@@ -83,32 +83,32 @@ export default function AttendanceDashboard({ facultyId, isTeacherView = false }
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth, selectedYear, facultyId, isTeacherView]);
+  }, [selectedMonth, selectedYear, facultyId, isTeacherView, records.length]);
 
   useEffect(() => {
     fetchFaculty();
   }, [fetchFaculty]);
 
   useEffect(() => {
-    if (viewMode === "daily") fetchDailyRecords();
-    else fetchMonthlyRecords();
-  }, [viewMode, fetchDailyRecords, fetchMonthlyRecords]);
+    if (viewMode === "daily") fetchDailyRecords(records.length > 0);
+    else fetchMonthlyRecords(records.length > 0);
+  }, [viewMode, fetchDailyRecords, fetchMonthlyRecords, records.length]);
 
-  // Real-Time Supabase Subscription
+  // Real-Time Supabase Subscription — Silent Background Sync
   useEffect(() => {
     const unsubAttendance = subscribeToTable("attendance_records", () => {
-      if (viewMode === "daily") fetchDailyRecords();
-      else fetchMonthlyRecords();
+      if (viewMode === "daily") fetchDailyRecords(true);
+      else fetchMonthlyRecords(true);
     });
 
     const unsubFaculty = subscribeToTable("faculty_profiles", () => {
       fetchFaculty();
     });
 
-    // 10s fallback interval
+    // 10s fallback interval (silent)
     const interval = setInterval(() => {
-      if (viewMode === "daily") fetchDailyRecords();
-      else fetchMonthlyRecords();
+      if (viewMode === "daily") fetchDailyRecords(true);
+      else fetchMonthlyRecords(true);
     }, 10000);
 
     return () => {

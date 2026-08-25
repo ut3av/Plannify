@@ -44,9 +44,9 @@ export default function FacultyDirectory({
     accountPassword: "Plannify@2026",
   });
 
-  const fetchFaculty = async () => {
+  const fetchFaculty = async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent && faculty.length === 0) setLoading(true);
       const res = await axios.get(`${API}/faculty`, { timeout: 4000 });
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setFaculty(res.data);
@@ -98,19 +98,19 @@ export default function FacultyDirectory({
   };
 
   useEffect(() => {
-    fetchFaculty();
+    fetchFaculty(false);
     fetchDepartments();
 
-    // Supabase real-time subscriptions
+    // Supabase real-time subscriptions — Silent Background Sync
     const unsubFaculty = subscribeToTable('faculty_profiles', () => {
-      fetchFaculty();
+      fetchFaculty(true);
     });
     const unsubDept = subscribeToTable('departments', () => {
       fetchDepartments();
     });
 
     const interval = setInterval(() => {
-      fetchFaculty();
+      fetchFaculty(true);
     }, 12000);
 
     return () => {
