@@ -10,6 +10,7 @@ export default function SectionsManagement({
   onNavigate
 }) {
   const {
+    teachers: contextTeachers,
     academicLevel = "ALL",
     setAcademicLevel,
     selectedProgram = "ALL",
@@ -17,7 +18,7 @@ export default function SectionsManagement({
     selectedSemester = "ALL",
     setSelectedSemester,
     parseAcademicMeta,
-  } = useAcademic();
+  } = useAcademic() || {};
 
   const [showModal, setShowModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
@@ -34,8 +35,9 @@ export default function SectionsManagement({
 
   // Extract clean teacher names from teachers prop / faculty directory
   const teacherList = useMemo(() => {
+    const raw = (teachers && teachers.length > 0) ? teachers : (contextTeachers || []);
     const unique = new Map();
-    (teachers || []).forEach(t => {
+    raw.forEach(t => {
       const name = typeof t === 'string' ? t : (t?.name || t?.teacher_name);
       const cleanName = (name || "").trim();
       if (cleanName && !isTestOrMockFaculty(cleanName) && !unique.has(cleanName.toLowerCase())) {
@@ -44,7 +46,7 @@ export default function SectionsManagement({
       }
     });
     return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [teachers]);
+  }, [teachers, contextTeachers]);
 
   // Extract clean rooms list (handles room_number, name, objects, strings)
   const roomList = useMemo(() => {
@@ -138,11 +140,19 @@ export default function SectionsManagement({
   };
 
   const togglePreferredFaculty = (facultyName) => {
+    const cleanName = (facultyName || "").trim();
+    if (!cleanName) return;
     setForm(prev => {
-      const exists = prev.preferred_faculty.includes(facultyName);
+      const exists = prev.preferred_faculty.some(pf => {
+        const pfName = typeof pf === 'string' ? pf : (pf?.name || pf?.teacher_name || "");
+        return pfName.toLowerCase().trim() === cleanName.toLowerCase();
+      });
       const nextFaculty = exists
-        ? prev.preferred_faculty.filter(f => f !== facultyName)
-        : [...prev.preferred_faculty, facultyName];
+        ? prev.preferred_faculty.filter(pf => {
+            const pfName = typeof pf === 'string' ? pf : (pf?.name || pf?.teacher_name || "");
+            return pfName.toLowerCase().trim() !== cleanName.toLowerCase();
+          })
+        : [...prev.preferred_faculty, cleanName];
       return {
         ...prev,
         preferred_faculty: nextFaculty
@@ -302,7 +312,9 @@ export default function SectionsManagement({
                   const assignedLabs = sec.lab_rooms && Array.isArray(sec.lab_rooms) && sec.lab_rooms.length > 0
                     ? sec.lab_rooms
                     : (sec.lab_room ? [sec.lab_room] : []);
-                  const assignedFaculty = Array.isArray(sec.preferred_faculty) ? sec.preferred_faculty : [];
+                  const explicitFaculty = Array.isArray(sec.preferred_faculty) ? sec.preferred_faculty : [];
+                  const autoLinkedFaculty = [...new Set((linkedSubs || []).map(s => s.teacher).filter(Boolean))];
+                  const assignedFaculty = explicitFaculty.length > 0 ? explicitFaculty : autoLinkedFaculty;
 
                   return (
                     <tr key={i} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">

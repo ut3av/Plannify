@@ -121,41 +121,56 @@ def validate_request(request: GenerateRequest) -> GenerateRequest:
         )
         for t in request.teachers if clean_name(t.name)
     ]
+    sections = []
+    section_pref_map = {}
+    for sec in request.sections:
+        s_name = clean_name(sec.name)
+        if not s_name:
+            continue
+        cleaned_lab_rooms = [clean_name(lr) for lr in sec.lab_rooms if clean_name(lr)]
+        if not cleaned_lab_rooms and sec.lab_room and clean_name(sec.lab_room):
+            cleaned_lab_rooms = [clean_name(sec.lab_room)]
+        cleaned_preferred_faculty = [clean_name(pf) for pf in sec.preferred_faculty if clean_name(pf)]
+        if cleaned_preferred_faculty:
+            section_pref_map[s_name.lower()] = cleaned_preferred_faculty
+        
+        sections.append(
+            SectionInput(
+                name=s_name,
+                room=clean_name(sec.room) if sec.room else None,
+                lab_room=cleaned_lab_rooms[0] if cleaned_lab_rooms else (clean_name(sec.lab_room) if sec.lab_room else None),
+                lab_rooms=cleaned_lab_rooms,
+                preferred_faculty=cleaned_preferred_faculty,
+            )
+        )
+
     subjects = []
     for s in request.subjects:
-        if not clean_name(s.name) or not clean_name(s.teacher):
+        s_name = clean_name(s.name)
+        if not s_name:
             continue
+        teacher_name = clean_name(s.teacher)
+        s_sec = clean_name(s.section) if s.section else (clean_name(s.sections[0]) if (s.sections and clean_name(s.sections[0])) else None)
+        
+        # Fallback to preferred faculty of section if teacher not assigned
+        if not teacher_name and s_sec and s_sec.lower() in section_pref_map:
+            teacher_name = section_pref_map[s_sec.lower()][0]
+        if not teacher_name and teachers:
+            teacher_name = teachers[0].name
+
         req_slots = s.required_slots if (s.required_slots and s.required_slots > 0) else 4
         if s.is_lab and req_slots % 2 != 0:
             req_slots += 1
         subjects.append(
             SubjectInput(
                 code=clean_name(s.code),
-                name=clean_name(s.name),
-                teacher=clean_name(s.teacher),
-                section=clean_name(s.section) if s.section else None,
+                name=s_name,
+                teacher=teacher_name,
+                section=s_sec,
                 sections=[clean_name(sec) for sec in s.sections if clean_name(sec)],
                 is_lab=s.is_lab,
                 required_slots=req_slots,
                 room=clean_name(s.room) if s.room else None,
-            )
-        )
-    sections = []
-    for sec in request.sections:
-        if not clean_name(sec.name):
-            continue
-        cleaned_lab_rooms = [clean_name(lr) for lr in sec.lab_rooms if clean_name(lr)]
-        if not cleaned_lab_rooms and sec.lab_room and clean_name(sec.lab_room):
-            cleaned_lab_rooms = [clean_name(sec.lab_room)]
-        cleaned_preferred_faculty = [clean_name(pf) for pf in sec.preferred_faculty if clean_name(pf)]
-        
-        sections.append(
-            SectionInput(
-                name=clean_name(sec.name),
-                room=clean_name(sec.room) if sec.room else None,
-                lab_room=cleaned_lab_rooms[0] if cleaned_lab_rooms else (clean_name(sec.lab_room) if sec.lab_room else None),
-                lab_rooms=cleaned_lab_rooms,
-                preferred_faculty=cleaned_preferred_faculty,
             )
         )
 

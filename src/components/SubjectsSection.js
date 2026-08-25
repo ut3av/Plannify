@@ -92,16 +92,19 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
   const { preferredTeachers, otherTeachers } = useMemo(() => {
     const prefSet = new Set();
     selectedSections.forEach(secName => {
-      const secObj = sections.find(s => (s.name || s) === secName);
+      const secObj = (sections || []).find(s => (s.name || s) === secName);
       if (secObj && Array.isArray(secObj.preferred_faculty)) {
-        secObj.preferred_faculty.forEach(f => prefSet.add(f));
+        secObj.preferred_faculty.forEach(f => {
+          const fn = typeof f === 'string' ? f : (f?.name || f?.teacher_name || "");
+          if (fn.trim()) prefSet.add(fn.toLowerCase().trim());
+        });
       }
     });
 
     const pref = [];
     const other = [];
     effectiveTeachers.forEach(t => {
-      const tName = t.name;
+      const tName = (t.name || t.teacher_name || "").toLowerCase().trim();
       if (prefSet.has(tName)) {
         pref.push(t);
       } else {
