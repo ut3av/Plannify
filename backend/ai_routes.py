@@ -372,13 +372,17 @@ def generate_fallback_nlp_response(user_msg: str, ctx: dict, has_image: bool = F
 
 
 def handle_vision_ocr(image_base64: str, prompt_text: str, ctx: dict) -> Dict[str, Any]:
-    """Processes images of physical paper timetables or faculty lists using Gemini or Groq Vision."""
+    """Processes images (PNG, JPG, WEBP) and PDF documents of timetables or faculty lists using Gemini / Groq."""
     gemini_key = os.getenv("GEMINI_API_KEY")
     groq_key = os.getenv("GROQ_API_KEY")
 
+    is_pdf = "application/pdf" in image_base64
+    mime_type = "application/pdf" if is_pdf else "image/jpeg"
+    clean_b64 = re.sub(r"^data:(image\/[a-zA-Z]+|application\/pdf);base64,", "", image_base64)
+
     ocr_system_prompt = (
         "You are an expert OCR & Academic Document Extraction system for the Planify.exe Academic Operations Platform.\n"
-        "You analyze photos, document scans, spreadsheets, or physical paper timetables.\n"
+        "You analyze photos, document scans, PDF schedules, spreadsheets, or physical paper timetables.\n"
         "Your task: Extract ALL teachers, subjects, sections, classrooms, emails, phones, and schedule assignments.\n\n"
         "YOU MUST RETURN A FRIENDLY SUMMARY FOLLOWED BY A STRICT JSON BLOCK in ```json ... ``` with this exact structure:\n"
         "{\n"
@@ -397,18 +401,17 @@ def handle_vision_ocr(image_base64: str, prompt_text: str, ctx: dict) -> Dict[st
         "Be extremely accurate with teacher names, subject codes, contact numbers, and room allocations."
     )
 
-    # 1. Try Google Gemini Vision
+    # 1. Try Google Gemini Vision (natively handles both images and multi-page PDFs)
     if gemini_key and genai:
         try:
             genai.configure(api_key=gemini_key)
             model = genai.GenerativeModel("gemini-1.5-flash")
             
-            clean_b64 = re.sub(r"^data:image\/[a-zA-Z]+;base64,", "", image_base64)
             img_bytes = base64.b64decode(clean_b64)
 
             response = model.generate_content([
                 ocr_system_prompt + "\n\nUser request: " + (prompt_text or "Extract all faculty and timetable records from this document."),
-                {"mime_type": "image/jpeg", "data": img_bytes}
+                {"mime_type": mime_type, "data": img_bytes}
             ])
             text_out = response.text
             extracted = extract_json_block(text_out)
@@ -421,11 +424,10 @@ def handle_vision_ocr(image_base64: str, prompt_text: str, ctx: dict) -> Dict[st
         except Exception as e:
             print(f"[AI Vision] Gemini error: {e}. Falling back to Groq Vision...")
 
-    # 2. Try Groq Vision
-    if groq_key and Groq:
+    # 2. Try Groq Vision (for images)
+    if groq_key and Groq and not is_pdf:
         try:
             client = Groq(api_key=groq_key)
-            clean_b64 = re.sub(r"^data:image\/[a-zA-Z]+;base64,", "", image_base64)
             data_url = f"data:image/jpeg;base64,{clean_b64}"
 
             messages = [

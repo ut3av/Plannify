@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import * as XLSX from 'xlsx';
 import BrandLogo, { PlannifyIconMark } from './common/BrandLogo';
 import { API_BASE_URL } from '../apiConfig';
 
@@ -88,8 +89,7 @@ export default function AIChatBot({
     }
   ]);
   const [input, setInput] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [attachedFile, setAttachedFile] = useState(null); // { type: 'image'|'pdf'|'excel', name, previewUrl, base64, textContent, rowCount, autoExtracted }
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
@@ -102,21 +102,104 @@ export default function AIChatBot({
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      try {
-        const compressed = await compressImage(file, 1200, 0.82);
-        setPreviewUrl(compressed.dataUrl);
-        setSelectedImage(compressed.base64);
-      } catch (err) {
-        console.warn("Fallback image loading:", err);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreviewUrl(reader.result);
-          const base64String = reader.result.replace(/^data:image\/(png|jpg|jpeg|webp);base64,/, "");
-          setSelectedImage(base64String);
-        };
-        reader.readAsDataURL(file);
-      }
+    if (!file) return;
+
+    const fileName = file.name.toLowerCase();
+    const isPdf = file.type === "application/pdf" || fileName.endsWith(".pdf");
+    const isExcel = fileName.endsWith(".xlsx") || fileName.endsWith(".xls") || fileName.endsWith(".csv");
+
+    // 1. SPREADSHEET (EXCEL / CSV) PARSING VIA SHEETJS
+    if (isExcel) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          let extractedText = `### 📊 SPREADSHEET INGESTION (${file.name}):\n\n`;
+          let totalRows = 0;
+          let parsedTeachers = [];
+
+          workbook.SheetNames.forEach((sheetName) => {
+            const sheet = workbook.Sheets[sheetName];
+            const rawJson = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+            totalRows += rawJson.length;
+            const csvContent = XLSX.utils.sheet_to_csv(sheet);
+            extractedText += `#### Sheet: ${sheetName} (${rawJson.length} rows)\n\`\`\`csv\n${csvContent}\n\`\`\`\n\n`;
+
+            // Auto-detect faculty rows in spreadsheet
+            rawJson.forEach((row) => {
+              const nameKey = Object.keys(row).find(k => /name|faculty|teacher|professor|instructor/i.test(k));
+              const emailKey = Object.keys(row).find(k => /email|mail/i.test(k));
+              const phoneKey = Object.keys(row).find(k => /phone|mobile|contact|cell/i.test(k));
+              const deptKey = Object.keys(row).find(k => /dept|department|branch/i.test(k));
+              const desigKey = Object.keys(row).find(k => /designation|role|post|rank/i.test(k));
+
+              if (nameKey && row[nameKey] && String(row[nameKey]).trim().length > 2) {
+                parsedTeachers.push({
+                  name: String(row[nameKey]).trim(),
+                  email: emailKey && row[emailKey] ? String(row[emailKey]).trim() : `${String(row[nameKey]).toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
+                  phone: phoneKey && row[phoneKey] ? String(row[phoneKey]).trim() : "+91-9893000000",
+                  department: deptKey && row[deptKey] ? String(row[deptKey]).trim() : "Computer Applications",
+                  designation: desigKey && row[desigKey] ? String(row[desigKey]).trim() : "Assistant Professor",
+                  free_periods: 1
+                });
+              }
+            });
+          });
+
+          setAttachedFile({
+            type: 'excel',
+            name: file.name,
+            textContent: extractedText,
+            rowCount: totalRows,
+            autoExtracted: parsedTeachers.length > 0 ? { teachers: parsedTeachers } : null
+          });
+        } catch (err) {
+          console.error("Spreadsheet parse error:", err);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    // 2. PDF DOCUMENT PARSING
+    if (isPdf) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = String(reader.result).replace(/^data:application\/pdf;base64,/, "");
+        setAttachedFile({
+          type: 'pdf',
+          name: file.name,
+          previewUrl: null,
+          dataUrl: reader.result,
+          base64: base64
+        });
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // 3. IMAGE PARSING (PNG / JPG / WEBP)
+    try {
+      const compressed = await compressImage(file, 1200, 0.82);
+      setAttachedFile({
+        type: 'image',
+        name: file.name,
+        previewUrl: compressed.dataUrl,
+        base64: compressed.base64
+      });
+    } catch (err) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = String(reader.result).replace(/^data:image\/(png|jpg|jpeg|webp);base64,/, "");
+        setAttachedFile({
+          type: 'image',
+          name: file.name,
+          previewUrl: reader.result,
+          base64: base64String
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -320,30 +403,60 @@ export default function AIChatBot({
 
   const handleSend = async (customPrompt) => {
     const textToSend = customPrompt || input;
-    if (!textToSend.trim() && !selectedImage) return;
+    if (!textToSend.trim() && !attachedFile) return;
 
-    const userText = textToSend || "Please extract timetable schedule from this image.";
+    let userText = textToSend;
+    if (!userText.trim()) {
+      if (attachedFile?.type === 'excel') {
+        userText = `Please extract faculty roster and timetable assignments from spreadsheet ${attachedFile.name}.`;
+      } else if (attachedFile?.type === 'pdf') {
+        userText = `Please extract faculty and timetable schedule from PDF document ${attachedFile.name}.`;
+      } else {
+        userText = "Please extract timetable schedule and faculty from this image.";
+      }
+    }
+
+    const currentFile = attachedFile;
     const userMsg = {
       id: Date.now().toString(),
       text: userText,
-      image: previewUrl,
+      attachment: currentFile ? {
+        type: currentFile.type,
+        name: currentFile.name,
+        previewUrl: currentFile.previewUrl,
+        rowCount: currentFile.rowCount
+      } : null,
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInput("");
-    const currentBase64 = selectedImage;
-    setSelectedImage(null);
-    setPreviewUrl(null);
+    setAttachedFile(null);
     setIsLoading(true);
 
     const currentContext = { teachers, subjects, sections, rooms, timeSlots, result };
 
+    // If excel was uploaded with auto-detected faculty, also feed locally
+    if (currentFile?.autoExtracted && onExtractedData) {
+      onExtractedData(currentFile.autoExtracted);
+    }
+
     try {
+      let imagePayload = null;
+      let promptToSend = userText;
+
+      if (currentFile?.type === 'image') {
+        imagePayload = currentFile.base64;
+      } else if (currentFile?.type === 'pdf') {
+        imagePayload = 'data:application/pdf;base64,' + currentFile.base64;
+      } else if (currentFile?.type === 'excel') {
+        promptToSend = `${userText}\n\n${currentFile.textContent}`;
+      }
+
       const payload = {
-        prompt: userText,
-        image: currentBase64,
+        prompt: promptToSend,
+        image: imagePayload,
         context: {
           active_teachers: teachers.map(t => t.name || t),
           active_subjects: subjects.map(s => s.name || s),
@@ -380,7 +493,7 @@ export default function AIChatBot({
     } catch (err) {
       console.warn("Cloud AI endpoint asleep or unreachable. Activating local NLP engine:", err);
       
-      const localResult = generateClientSideAIResponse(userText, currentContext);
+      const localResult = generateClientSideAIResponse(promptToSend || userText, currentContext);
       
       setTimeout(() => {
         setMessages(prev => [
@@ -417,8 +530,10 @@ export default function AIChatBot({
   const handleResetChat = () => {
     setMessages([
       {
-        id: "welcome-reset",
-        text: "**Chat history reset.** How can I assist with your academic timetable, faculty, or institutional operations?",
+        id: "welcome",
+        text: isTeacherView
+          ? `**Welcome ${teacherName || "Faculty Member"}!**\n\nI am your academic assistant. I can help review your weekly schedule, check free periods, find proxy substitutes, and answer timetable queries.\n\n*How can I assist you today?*`
+          : "**Welcome to Plannify Academic Co-Pilot.**\n\nI specialize in timetable constraint solving, faculty workload balancing, substitution management, and multi-format document/OCR extraction (Photo, PDF, Excel).\n\n*How can I assist your institution today?*",
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
@@ -441,46 +556,46 @@ export default function AIChatBot({
 
   return (
     <>
-      {/* Floating Co-Pilot Action Button */}
+      {/* Floating Action Trigger Button */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2 group animate-fade-in">
-          <button
-            onClick={() => setIsOpen(true)}
-            className="flex items-center gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#502ce8] via-[#5c2ee8] to-[#7924e9] text-white font-bold shadow-[0_10px_30px_rgba(92,46,232,0.4)] hover:shadow-[0_14px_36px_rgba(92,46,232,0.55)] hover:scale-105 transition-all duration-300 border border-white/20 relative overflow-hidden select-none"
-            title={isTeacherView ? "Open Teaching & Performance Co-Pilot" : "Open AI Timetable Co-Pilot"}
-          >
-            <div className="w-9 h-9 rounded-xl bg-[#1d1b38]/90 border border-white/10 flex items-center justify-center p-1 shadow-inner shrink-0">
-              <BrandLogo onlyIcon size="xs" isWarm={false} />
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white shadow-2xl hover:shadow-indigo-500/40 hover:scale-105 active:scale-95 transition-all duration-300 border border-indigo-400/30 group"
+          title="Open Plannify AI Co-Pilot"
+        >
+          <div className="relative">
+            <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center p-1 border border-white/30">
+              <PlannifyIconMark size={18} isWarm={false} />
             </div>
-            <div className="text-left pr-1">
-              <div className="flex items-center gap-2 leading-none">
-                <span className="text-[13px] font-black tracking-wider uppercase font-display text-white drop-shadow-sm">
-                  {isTeacherView ? "Faculty AI" : "PLANNIFY AI"}
-                </span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#2dd4bf] shadow-[0_0_8px_#2dd4bf]" />
-              </div>
-              <p className="text-[11px] text-purple-200/90 font-medium mt-0.5">
-                {isTeacherView ? "Teaching Assistant" : "Assistant Active"}
-              </p>
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-indigo-700 rounded-full animate-pulse" />
+          </div>
+
+          <div className="text-left pr-1">
+            <div className="text-xs font-black tracking-wide font-display flex items-center gap-1.5">
+              <span>{isTeacherView ? "Faculty AI" : "Plannify AI"}</span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-white/20 font-mono font-bold">OCR & Docs</span>
             </div>
-          </button>
-        </div>
+            <p className="text-[10px] text-indigo-100 font-medium">
+              {isTeacherView ? "Teaching & Schedule Co-Pilot" : "Photo, PDF & Excel Parser"}
+            </p>
+          </div>
+        </button>
       )}
 
-      {/* Main Co-Pilot Chat Interface */}
+      {/* Main Drawer / Chat Window */}
       {isOpen && (
         <div
-          className={`fixed z-50 transition-all duration-300 flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden ${
+          className={`fixed z-50 transition-all duration-300 ease-out flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden ${
             isExpanded
-              ? "inset-4 md:inset-10 rounded-3xl"
-              : "bottom-4 right-4 w-[95vw] sm:w-[420px] md:w-[460px] h-[620px] max-h-[90vh] rounded-3xl"
+              ? "inset-4 sm:inset-10 rounded-3xl"
+              : "bottom-6 right-6 w-[92vw] sm:w-[460px] h-[640px] max-h-[88vh] rounded-3xl"
           }`}
         >
-          {/* Rich Header Bar */}
-          <div className="px-5 py-4 bg-slate-50 dark:bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          {/* Header Bar */}
+          <div className="p-4 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800/80 dark:to-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#1d1b38] border border-indigo-500/30 flex items-center justify-center p-1.5 shadow-md shrink-0">
-                <BrandLogo onlyIcon size="sm" isWarm={false} />
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 p-1.5 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+                <PlannifyIconMark size={20} isWarm={false} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -489,11 +604,11 @@ export default function AIChatBot({
                   </h3>
                   <span className="px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 text-[9px] font-bold border border-indigo-500/30 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Llama 3.3 70B
+                    Llama 3.3 & Vision
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  {isTeacherView ? "Personal Schedule, Performance & Proxy Assistant" : "Constraint Solver & OCR Intelligence"}
+                  {isTeacherView ? "Personal Schedule, Performance & Proxy Assistant" : "Multi-Format (Photo, PDF, Excel) Intelligence"}
                 </p>
               </div>
             </div>
@@ -557,12 +672,26 @@ export default function AIChatBot({
                         : "bg-white dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-tl-none"
                     }`}
                   >
-                    {msg.image && (
-                      <div className="mb-2 overflow-hidden rounded-xl border border-white/20">
-                        <img src={msg.image} alt="Uploaded" className="max-h-48 w-full object-cover" />
-                        <div className="bg-slate-950/80 px-2 py-1 text-[10px] text-slate-300 flex items-center gap-1.5">
-                          <svg className="w-3 h-3 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                          Reference attached for AI
+                    {/* Attachment preview in message */}
+                    {msg.attachment && (
+                      <div className="mb-2.5 overflow-hidden rounded-xl border border-white/20 bg-slate-950/80 p-2 text-slate-200">
+                        {msg.attachment.type === 'image' && msg.attachment.previewUrl && (
+                          <img src={msg.attachment.previewUrl} alt="Uploaded" className="max-h-48 w-full object-cover rounded-lg mb-1" />
+                        )}
+                        <div className="flex items-center gap-2 text-[11px] font-bold">
+                          {msg.attachment.type === 'pdf' && (
+                            <span className="px-2 py-0.5 rounded-md bg-rose-500 text-white text-[9px]">PDF DOC</span>
+                          )}
+                          {msg.attachment.type === 'excel' && (
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-white text-[9px]">EXCEL / CSV</span>
+                          )}
+                          {msg.attachment.type === 'image' && (
+                            <span className="px-2 py-0.5 rounded-md bg-indigo-500 text-white text-[9px]">PHOTO</span>
+                          )}
+                          <span className="truncate">{msg.attachment.name}</span>
+                          {msg.attachment.rowCount > 0 && (
+                            <span className="text-[10px] text-slate-400 ml-auto">({msg.attachment.rowCount} rows)</span>
+                          )}
                         </div>
                       </div>
                     )}
@@ -604,7 +733,7 @@ export default function AIChatBot({
                   <div className="w-2 h-2 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: '150ms' }} />
                   <div className="w-2 h-2 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: '300ms' }} />
                   <span className="text-[11px] text-slate-500 ml-1 font-medium">
-                    {isTeacherView ? "Analyzing academic metrics..." : "Computing constraints..."}
+                    {isTeacherView ? "Analyzing academic metrics..." : "Processing document & constraints..."}
                   </span>
                 </div>
               </div>
@@ -649,18 +778,37 @@ export default function AIChatBot({
             </div>
           </div>
 
-          {/* Input & Image Attachment Footer */}
+          {/* Input & Multi-Format Attachment Footer */}
           <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 space-y-2">
-            {previewUrl && (
+            {attachedFile && (
               <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <img src={previewUrl} alt="Thumbnail preview" className="w-10 h-10 object-cover rounded-lg" />
+                {attachedFile.type === 'image' && attachedFile.previewUrl && (
+                  <img src={attachedFile.previewUrl} alt="Thumbnail preview" className="w-10 h-10 object-cover rounded-lg" />
+                )}
+                {attachedFile.type === 'pdf' && (
+                  <div className="w-10 h-10 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400 font-bold text-xs">
+                    PDF
+                  </div>
+                )}
+                {attachedFile.type === 'excel' && (
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                    XLS
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Image Attached</p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Ready for AI processing</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{attachedFile.name}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                    {attachedFile.type === 'excel'
+                      ? `Spreadsheet (${attachedFile.rowCount} rows ready)`
+                      : attachedFile.type === 'pdf'
+                      ? "PDF Document ready for OCR"
+                      : "Image ready for Vision OCR"}
+                  </p>
                 </div>
                 <button
-                  onClick={() => { setPreviewUrl(null); setSelectedImage(null); }}
+                  onClick={() => setAttachedFile(null)}
                   className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                  title="Remove attachment"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -670,7 +818,7 @@ export default function AIChatBot({
             <div className="flex items-center gap-2">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,.pdf,.xlsx,.xls,.csv"
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 className="hidden"
@@ -678,7 +826,7 @@ export default function AIChatBot({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors"
-                title={isTeacherView ? "Attach Lecture Note / Reference" : "Upload Timetable Image for OCR Extraction"}
+                title="Attach Photo, PDF Document, or Excel Spreadsheet"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               </button>
@@ -688,13 +836,13 @@ export default function AIChatBot({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={isTeacherView ? "Ask about your performance, today's schedule, substitute teachers..." : "Ask Plannify AI or attach timetable image..."}
+                placeholder={isTeacherView ? "Ask about your performance, today's schedule, substitute teachers..." : "Ask Plannify AI or attach Photo, PDF, Excel..."}
                 className="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
 
               <button
                 onClick={() => handleSend()}
-                disabled={isLoading || (!input.trim() && !selectedImage)}
+                disabled={isLoading || (!input.trim() && !attachedFile)}
                 className="p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white font-bold transition-all shadow-lg shadow-indigo-500/20"
                 title="Send Message"
               >
