@@ -7,7 +7,6 @@ import GooeyLoader from "../common/GooeyLoader";
 export default function DataIngestCenter() {
   const { refreshAcademicState } = useAcademic() || {};
 
-  const [file, setFile] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [preview, setPreview] = useState(null);
@@ -42,7 +41,6 @@ export default function DataIngestCenter() {
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const selected = e.target.files[0];
-      setFile(selected);
       analyzeFile(selected);
     }
   };
@@ -52,7 +50,6 @@ export default function DataIngestCenter() {
     setIsDragOver(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const dropped = e.dataTransfer.files[0];
-      setFile(dropped);
       analyzeFile(dropped);
     }
   };
@@ -133,7 +130,6 @@ export default function DataIngestCenter() {
   };
 
   const resetAll = () => {
-    setFile(null);
     setPreview(null);
     setCommitResult(null);
     setError(null);
