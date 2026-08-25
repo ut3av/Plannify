@@ -18,7 +18,7 @@ export default function FacultyDirectory({
   onBatchImport,
   onTeachersChange,
 }) {
-  const { handleBatchImportData: contextBatchImport, sections: contextSections, deleteFacultyProfile, deleteMultipleFacultyProfiles, teacherWorkloadMap } = useAcademic() || {};
+  const { handleBatchImportData: contextBatchImport, sections: contextSections, deleteFacultyProfile, deleteMultipleFacultyProfiles, teacherWorkloadMap, updateFacultyWorkloadCapacity } = useAcademic() || {};
   const [faculty, setFaculty] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -892,55 +892,36 @@ export default function FacultyDirectory({
             </div>
             <div>
               <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                <span>Workload Capacity *</span>
-                <span className="text-[10px] text-indigo-400 font-normal">UGC/AICTE</span>
+                <span>Workload Quota *</span>
+                <span className="text-[10px] text-indigo-400 font-normal">Slots / Week</span>
               </label>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
                   min="1"
-                  max="40"
+                  max="50"
                   className="input font-bold text-center w-24 text-white bg-slate-800"
                   value={form.weekly_workload_capacity}
                   onChange={e => setForm({ ...form, weekly_workload_capacity: parseInt(e.target.value, 10) || 16 })}
                   required
                 />
-                <span className="text-xs text-slate-400 font-semibold">Hours / Week</span>
+                <span className="text-xs text-slate-400 font-semibold">slots / week</span>
               </div>
-              <div className="flex items-center gap-1.5 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, weekly_workload_capacity: 14 })}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all ${
-                    form.weekly_workload_capacity === 14
-                      ? "bg-indigo-600 text-white border-indigo-500"
-                      : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
-                  }`}
-                >
-                  14h (Prof)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, weekly_workload_capacity: 16 })}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all ${
-                    form.weekly_workload_capacity === 16
-                      ? "bg-indigo-600 text-white border-indigo-500"
-                      : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
-                  }`}
-                >
-                  16h (Asst Prof)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, weekly_workload_capacity: 18 })}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all ${
-                    form.weekly_workload_capacity === 18
-                      ? "bg-indigo-600 text-white border-indigo-500"
-                      : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
-                  }`}
-                >
-                  18h (Lecturer)
-                </button>
+              <div className="flex flex-wrap items-center gap-1 mt-2">
+                {[8, 12, 14, 16, 18, 20, 24].map((slots) => (
+                  <button
+                    key={slots}
+                    type="button"
+                    onClick={() => setForm({ ...form, weekly_workload_capacity: slots })}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                      form.weekly_workload_capacity === slots
+                        ? "bg-indigo-600 text-white border-indigo-500"
+                        : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white"
+                    }`}
+                  >
+                    {slots}s
+                  </button>
+                ))}
               </div>
             </div>
             <div>
@@ -1513,7 +1494,7 @@ export default function FacultyDirectory({
         </div>
       )}
 
-      {/* Faculty Workload Breakdown Modal */}
+      {/* Faculty Workload Breakdown & Custom Capacity Modal */}
       {selectedWorkloadFaculty && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
           <div className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 space-y-5 text-white animate-scale-up">
@@ -1535,16 +1516,101 @@ export default function FacultyDirectory({
               </button>
             </div>
 
+            {/* Custom Workload Capacity Adjuster */}
+            <div className="p-4 rounded-2xl bg-slate-950/80 border border-indigo-500/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Custom Workload Quota (Slots / Week)
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Explicitly set maximum weekly periods for this individual teacher</p>
+                </div>
+                <div className="flex items-center bg-slate-900 border border-slate-700 rounded-xl p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = Math.max(1, selectedWorkloadFaculty.capacity - 1);
+                      if (updateFacultyWorkloadCapacity) {
+                        updateFacultyWorkloadCapacity(selectedWorkloadFaculty.teacher_name, next);
+                      }
+                      setFaculty(prev => prev.map(item => (item.id === selectedWorkloadFaculty.id || item.teacher_name === selectedWorkloadFaculty.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
+                      setSelectedWorkloadFaculty(prev => ({ ...prev, capacity: next }));
+                    }}
+                    className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs"
+                    title="Decrease workload capacity"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={selectedWorkloadFaculty.capacity}
+                    onChange={(e) => {
+                      const next = Math.max(1, parseInt(e.target.value, 10) || 1);
+                      if (updateFacultyWorkloadCapacity) {
+                        updateFacultyWorkloadCapacity(selectedWorkloadFaculty.teacher_name, next);
+                      }
+                      setFaculty(prev => prev.map(item => (item.id === selectedWorkloadFaculty.id || item.teacher_name === selectedWorkloadFaculty.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
+                      setSelectedWorkloadFaculty(prev => ({ ...prev, capacity: next }));
+                    }}
+                    className="w-14 text-center font-black font-mono text-indigo-400 bg-transparent text-sm focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = selectedWorkloadFaculty.capacity + 1;
+                      if (updateFacultyWorkloadCapacity) {
+                        updateFacultyWorkloadCapacity(selectedWorkloadFaculty.teacher_name, next);
+                      }
+                      setFaculty(prev => prev.map(item => (item.id === selectedWorkloadFaculty.id || item.teacher_name === selectedWorkloadFaculty.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
+                      setSelectedWorkloadFaculty(prev => ({ ...prev, capacity: next }));
+                    }}
+                    className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs"
+                    title="Increase workload capacity"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Preset Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] font-bold text-slate-500 mr-1">Quick Set:</span>
+                {[8, 12, 14, 16, 18, 20, 24].map((hrs) => (
+                  <button
+                    key={hrs}
+                    type="button"
+                    onClick={() => {
+                      if (updateFacultyWorkloadCapacity) {
+                        updateFacultyWorkloadCapacity(selectedWorkloadFaculty.teacher_name, hrs);
+                      }
+                      setFaculty(prev => prev.map(item => (item.id === selectedWorkloadFaculty.id || item.teacher_name === selectedWorkloadFaculty.teacher_name) ? { ...item, weekly_workload_capacity: hrs, max_weekly_hours: hrs } : item));
+                      setSelectedWorkloadFaculty(prev => ({ ...prev, capacity: hrs }));
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                      selectedWorkloadFaculty.capacity === hrs
+                        ? "bg-indigo-600 text-white border-indigo-400 shadow-sm"
+                        : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800"
+                    }`}
+                  >
+                    {hrs} slots/wk
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Capacity Metrics Cards */}
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 text-center">
                 <p className="text-[10px] uppercase font-bold text-slate-400">Total Capacity</p>
-                <p className="text-xl font-black text-indigo-400 mt-0.5">{selectedWorkloadFaculty.capacity} hrs</p>
-                <p className="text-[9px] text-slate-500 mt-0.5">UGC Authorized</p>
+                <p className="text-xl font-black text-indigo-400 mt-0.5">{selectedWorkloadFaculty.capacity} slots</p>
+                <p className="text-[9px] text-slate-500 mt-0.5">Authorized Limit</p>
               </div>
               <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 text-center">
                 <p className="text-[10px] uppercase font-bold text-slate-400">Assigned Load</p>
-                <p className="text-xl font-black text-emerald-400 mt-0.5">{selectedWorkloadFaculty.assigned} hrs</p>
+                <p className="text-xl font-black text-emerald-400 mt-0.5">{selectedWorkloadFaculty.assigned} slots</p>
                 <p className="text-[9px] text-slate-500 mt-0.5">{selectedWorkloadFaculty.workloadInfo?.subjects?.length || 0} Courses</p>
               </div>
               <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 text-center">
@@ -1552,10 +1618,10 @@ export default function FacultyDirectory({
                 <p className={`text-xl font-black mt-0.5 ${
                   selectedWorkloadFaculty.capacity - selectedWorkloadFaculty.assigned < 0 ? "text-rose-400" : "text-amber-400"
                 }`}>
-                  {selectedWorkloadFaculty.capacity - selectedWorkloadFaculty.assigned} hrs
+                  {selectedWorkloadFaculty.capacity - selectedWorkloadFaculty.assigned} slots
                 </p>
                 <p className="text-[9px] text-slate-500 mt-0.5">
-                  {selectedWorkloadFaculty.capacity - selectedWorkloadFaculty.assigned < 0 ? "Overload" : "Available"}
+                  {selectedWorkloadFaculty.capacity - selectedWorkloadFaculty.assigned < 0 ? "Over capacity" : "Available to assign"}
                 </p>
               </div>
             </div>
@@ -1592,7 +1658,7 @@ export default function FacultyDirectory({
                         <p className="text-[11px] text-slate-400 mt-0.5">Section: <strong className="text-slate-300">{sub.section}</strong></p>
                       </div>
                       <span className="font-mono font-bold text-indigo-400 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 text-xs shrink-0">
-                        {sub.slots} hrs/wk
+                        {sub.slots} slots/wk
                       </span>
                     </div>
                   ))}

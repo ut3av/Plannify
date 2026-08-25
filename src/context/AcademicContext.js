@@ -1534,6 +1534,43 @@ export function AcademicProvider({ children }) {
     return map;
   }, [teachers, subjects]);
 
+  const updateFacultyWorkloadCapacity = useCallback(async (facultyIdentifier, newCapacity) => {
+    const capNum = Math.max(1, parseInt(newCapacity, 10) || 16);
+    const cleanId = String(facultyIdentifier || '').trim().toLowerCase();
+
+    // 1. Update in teachers context state immediately
+    setTeachers(prev => {
+      const current = Array.isArray(prev) ? prev : [];
+      return current.map(t => {
+        const tName = ((typeof t === 'string' ? t : t?.name || t?.teacher_name) || '').toLowerCase().trim();
+        const tId = String(typeof t === 'object' ? t?.id : '').toLowerCase().trim();
+        if (tName === cleanId || tId === cleanId) {
+          return {
+            ...(typeof t === 'object' ? t : { name: t }),
+            weekly_workload_capacity: capNum,
+            max_weekly_hours: capNum
+          };
+        }
+        return t;
+      });
+    });
+
+    // 2. Persist to Supabase faculty_profiles if connected
+    if (supabase) {
+      try {
+        await supabase
+          .from('faculty_profiles')
+          .update({
+            weekly_workload_capacity: capNum,
+            max_weekly_hours: capNum
+          })
+          .or(`id.eq.${facultyIdentifier},teacher_name.ilike.${facultyIdentifier}`);
+      } catch (err) {
+        console.warn("Supabase workload capacity update notice:", err);
+      }
+    }
+  }, []);
+
   const value = {
     user,
     setUser,
@@ -1589,6 +1626,7 @@ export function AcademicProvider({ children }) {
     setValidationReport,
     facultyWorkloadAudit,
     teacherWorkloadMap,
+    updateFacultyWorkloadCapacity,
     refreshAcademicState: () => {
       if (typeof window !== 'undefined' && window.__planify_refresh_state) {
         window.__planify_refresh_state();
