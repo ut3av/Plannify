@@ -175,23 +175,73 @@ export function AcademicProvider({ children }) {
     const loadCloudState = async () => {
       setLoading(true);
       try {
+        // 1. Fetch Draft Academic State (Classrooms, Labs, Sections, Subjects, Time Slots)
         const { data, error } = await supabase
           .from('timetable_state')
           .select('*')
           .eq('id', 'draft')
           .single();
         
+        let loadedTeachers = [];
         if (data && !error) {
           const cloudState = readCloudState(data);
-          if (Array.isArray(cloudState.teachers)) setTeachers(cloudState.teachers);
-          if (Array.isArray(cloudState.sections)) setSections(cloudState.sections);
-          if (Array.isArray(cloudState.subjects)) setSubjects(cloudState.subjects);
-          if (Array.isArray(cloudState.rooms)) setRooms(cloudState.rooms);
-          if (Array.isArray(cloudState.timeSlots) && cloudState.timeSlots.length > 0) setTimeSlots(cloudState.timeSlots);
+          if (Array.isArray(cloudState.teachers) && cloudState.teachers.length > 0) {
+            loadedTeachers = cloudState.teachers;
+            setTeachers(cloudState.teachers);
+          }
+          if (Array.isArray(cloudState.sections) && cloudState.sections.length > 0) {
+            setSections(cloudState.sections);
+          }
+          if (Array.isArray(cloudState.subjects) && cloudState.subjects.length > 0) {
+            setSubjects(cloudState.subjects);
+          }
+          if (Array.isArray(cloudState.rooms) && cloudState.rooms.length > 0) {
+            setRooms(cloudState.rooms);
+          }
+          if (Array.isArray(cloudState.timeSlots) && cloudState.timeSlots.length > 0) {
+            setTimeSlots(cloudState.timeSlots);
+          }
           if (cloudState.result) {
             setResult(cloudState.result.timetable ? cloudState.result : formatResult(cloudState.result));
           }
         }
+
+        // 2. Fetch Live Supabase Faculty Profiles and merge any newly added faculty
+        try {
+          const { data: supaProfiles, error: supaErr } = await supabase
+            .from('faculty_profiles')
+            .select('*, departments(name)');
+          
+          if (!supaErr && Array.isArray(supaProfiles) && supaProfiles.length > 0) {
+            setTeachers(prev => {
+              const current = Array.isArray(prev) && prev.length > 0 ? prev : loadedTeachers;
+              const names = new Set(current.map(t => ((typeof t === 'string' ? t : t?.name || t?.teacher_name) || '').toLowerCase().trim()));
+              const merged = [...current];
+              
+              supaProfiles.forEach(p => {
+                const name = (p.teacher_name || p.name || '').trim();
+                if (name && !names.has(name.toLowerCase())) {
+                  names.add(name.toLowerCase());
+                  merged.push({
+                    name,
+                    teacher_name: name,
+                    employee_id: p.employee_id || `EMP-${Date.now().toString().slice(-4)}`,
+                    department: p.departments?.name || p.department_name || p.department || "Computer Applications",
+                    designation: p.designation || "Assistant Professor",
+                    email: p.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
+                    phone: p.phone || "+91-9876543210",
+                    free_periods: 1,
+                    status: p.status || "active"
+                  });
+                }
+              });
+              return merged;
+            });
+          }
+        } catch (e) {
+          console.warn("Faculty profiles fetch notice:", e);
+        }
+
       } catch (e) {
         console.warn("Supabase fetch failed. Ensure .env is set and table exists.", e);
       } finally {
@@ -201,8 +251,8 @@ export function AcademicProvider({ children }) {
     };
     loadCloudState();
 
-    // Supabase Realtime channel subscription for live sync across devices/portals
-    const channel = supabase
+    // 1. Supabase Realtime channel subscription for timetable_state (Classrooms, Labs, Sections, Subjects)
+    const stateChannel = supabase
       .channel('realtime_timetable_state')
       .on(
         'postgres_changes',
@@ -210,10 +260,10 @@ export function AcademicProvider({ children }) {
         (payload) => {
           if (payload.new) {
             const cloudState = readCloudState(payload.new);
-            if (Array.isArray(cloudState.teachers)) setTeachers(cloudState.teachers);
-            if (Array.isArray(cloudState.sections)) setSections(cloudState.sections);
-            if (Array.isArray(cloudState.subjects)) setSubjects(cloudState.subjects);
-            if (Array.isArray(cloudState.rooms)) setRooms(cloudState.rooms);
+            if (Array.isArray(cloudState.teachers) && cloudState.teachers.length > 0) setTeachers(cloudState.teachers);
+            if (Array.isArray(cloudState.sections) && cloudState.sections.length > 0) setSections(cloudState.sections);
+            if (Array.isArray(cloudState.subjects) && cloudState.subjects.length > 0) setSubjects(cloudState.subjects);
+            if (Array.isArray(cloudState.rooms) && cloudState.rooms.length > 0) setRooms(cloudState.rooms);
             if (Array.isArray(cloudState.timeSlots) && cloudState.timeSlots.length > 0) setTimeSlots(cloudState.timeSlots);
             if (cloudState.result) {
               setResult(cloudState.result.timetable ? cloudState.result : formatResult(cloudState.result));
@@ -223,9 +273,46 @@ export function AcademicProvider({ children }) {
       )
       .subscribe();
 
+    // 2. Supabase Realtime channel subscription for faculty_profiles (Live Faculty Roster)
+    const facultyChannel = supabase
+      .channel('realtime_academic_faculty_profiles')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'faculty_profiles' },
+        (payload) => {
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const newF = payload.new;
+            const name = (newF.teacher_name || newF.name || '').trim();
+            if (name) {
+              setTeachers(prev => {
+                const current = Array.isArray(prev) ? prev : [];
+                const exists = current.some(t => ((typeof t === 'string' ? t : t?.name) || '').toLowerCase() === name.toLowerCase());
+                if (exists) return current;
+                return [
+                  ...current,
+                  {
+                    name,
+                    teacher_name: name,
+                    employee_id: newF.employee_id || `EMP-${Date.now().toString().slice(-4)}`,
+                    department: newF.department_name || newF.department || "Computer Applications",
+                    designation: newF.designation || "Assistant Professor",
+                    email: newF.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
+                    phone: newF.phone || "+91-9876543210",
+                    free_periods: 1,
+                    status: newF.status || "active"
+                  }
+                ];
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       try {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(stateChannel);
+        supabase.removeChannel(facultyChannel);
       } catch {
         // Cleanup
       }
