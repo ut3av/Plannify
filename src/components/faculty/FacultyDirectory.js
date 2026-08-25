@@ -63,28 +63,47 @@ export default function FacultyDirectory({
     try {
       if (!isSilent) setLoading(true);
 
-      // SINGLE SOURCE OF TRUTH: Supabase faculty_profiles only
-      const { data: supaData, error: supaErr } = await supabase
-        .from('faculty_profiles')
-        .select('*, departments(name)')
-        .order('teacher_name');
+      let profiles = [];
+
+      // 1. Query Supabase faculty_profiles directly (without ambiguous PostgREST joins)
+      if (supabase) {
+        try {
+          const { data: supaData, error: supaErr } = await supabase
+            .from('faculty_profiles')
+            .select('*')
+            .order('teacher_name');
+
+          if (!supaErr && Array.isArray(supaData)) {
+            profiles = supaData;
+          } else if (supaErr) {
+            console.warn("Supabase faculty fetch notice:", supaErr.message || supaErr);
+          }
+        } catch (e) {
+          console.warn("Supabase query exception:", e);
+        }
+      }
+
+      // 2. If Supabase returned nothing or errored, fetch from backend API
+      if (profiles.length === 0) {
+        try {
+          const res = await axios.get(`${API}/faculty`, { timeout: 3500 });
+          if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+            profiles = res.data;
+          }
+        } catch (e) {
+          // Backend offline or unreachable
+        }
+      }
 
       // If a newer fetch was initiated while this one was in-flight, discard this result
       if (fetchSequenceRef.current !== thisSequence) return;
 
-      if (supaErr) {
-        console.error("Supabase faculty fetch error:", supaErr);
-        // On error, do NOT overwrite state with stale/empty data — keep current state
-        return;
-      }
-
-      const profiles = (Array.isArray(supaData) ? supaData : []).map((f) => ({
+      const normalized = profiles.map((f) => ({
         ...f,
-        department_name: f.departments?.name || f.department_name || f.department || "Computer Applications",
+        department_name: f.department_name || f.department || "Computer Applications",
       }));
 
-      // Always set faculty — including empty array when database has 0 records
-      setFaculty(profiles);
+      setFaculty(normalized);
     } catch (err) {
       console.error("Failed to fetch faculty:", err);
     } finally {
