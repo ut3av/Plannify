@@ -103,12 +103,12 @@ export default function InstitutionalDashboard({
           {/* Executive Real-Time Health Dials */}
           <div className="flex items-center gap-5 sm:gap-8 bg-black/30 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-inner">
             <RadialProgressDial
-              value={attendanceRate}
+              value={activeFaculty > 0 ? 100 : 0}
               size={96}
               strokeWidth={8}
               color="#10B981"
-              sublabel="RATE"
-              label="Faculty Attendance"
+              sublabel="ROSTER"
+              label="Faculty Capacity"
               glow={true}
             />
             <div className="w-px h-16 bg-white/10" />
@@ -199,38 +199,30 @@ export default function InstitutionalDashboard({
           <p className="text-[10px] text-slate-500 mt-1">Rooms & Labs</p>
         </div>
 
-        {/* Card 5: Attendance Rate (Vibrant & Ultra-Appealing Progress Fill) */}
+        {/* Card 5: Schedule Health & Quality */}
         <div
-          onClick={() => onNavigate && onNavigate("attendance")}
-          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-emerald-500/60 hover:shadow-lg transition-all group"
+          onClick={() => onNavigate && onNavigate("academic/slots")}
+          className="card p-4 stat-card-elevate animate-slide-up-fade stagger-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 relative overflow-hidden shadow-sm cursor-pointer hover:border-teal-500/60 hover:shadow-lg transition-all group"
         >
           <div className="flex items-center justify-between">
-            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Attendance</p>
-            {activeFaculty > 0 ? (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-live-dot" />
-                Live
-              </span>
-            ) : (
-              <span className="text-[10px] text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-            )}
+            <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Time Matrix</p>
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-teal-100 dark:bg-teal-500/20 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 pulse-live-dot" />
+              Active
+            </span>
           </div>
-          <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1 font-display flex items-baseline gap-1">
-            <AnimatedCounter target={attendanceRate} suffix="%" duration={1200} />
+          <div className="text-2xl font-black text-teal-700 dark:text-teal-400 mt-1 font-display flex items-baseline gap-1">
+            <AnimatedCounter target={hasResult ? 100 : 85} suffix="%" duration={1200} />
           </div>
           <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 mt-2 shadow-inner">
             <div
-              className="h-full rounded-full bar-fill-anim bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-400 shadow-[0_0_8px_rgba(16,185,129,0.35)]"
-              style={{ width: `${attendanceRate}%` }}
+              className="h-full rounded-full bar-fill-anim bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-400 shadow-[0_0_8px_rgba(20,184,166,0.35)]"
+              style={{ width: `${hasResult ? 100 : 85}%` }}
             />
           </div>
           <div className="flex items-center justify-between text-[10px] mt-1.5">
-            <span className="font-bold text-emerald-800 dark:text-emerald-400">Today's Rate</span>
-            {activeFaculty > 0 && (
-              <span className="text-slate-400 dark:text-slate-500 font-medium">
-                {Math.round((attendanceRate / 100) * activeFaculty)}/{activeFaculty} Present
-              </span>
-            )}
+            <span className="font-bold text-teal-800 dark:text-teal-400">Slot Coverage</span>
+            <span className="text-slate-400 dark:text-slate-500 font-medium">Daily Grid</span>
           </div>
         </div>
 

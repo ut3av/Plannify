@@ -323,7 +323,7 @@ function AdminLayout() {
             dashboard: "/dashboard",
             timetable: "/timetable",
             faculty: "/faculty",
-            attendance: "/attendance",
+            attendance: "/dashboard",
             leave: "/leave",
             substitutions: "/substitutions",
             analytics: "/analytics",
@@ -393,15 +393,7 @@ function AdminLayout() {
           <Route path="/faculty" element={<FacultyDirectoryRoute />} />
           <Route path="/faculty/:facultyId" element={<FacultyProfileRoute />} />
           <Route path="/faculty-directory" element={<Navigate to="/faculty" replace />} />
-          <Route
-            path="/attendance"
-            element={
-              <div className="space-y-6">
-                <FacultyDashboardStats />
-                <AttendanceDashboard />
-              </div>
-            }
-          />
+          <Route path="/attendance" element={<Navigate to="/dashboard" replace />} />
           <Route path="/leave" element={<LeaveManagement isAdmin={true} />} />
           <Route path="/substitutions" element={<SubstitutionPanel />} />
           <Route path="/analytics" element={<FacultyAnalyticsModule />} />

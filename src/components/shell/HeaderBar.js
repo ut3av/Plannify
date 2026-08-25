@@ -9,7 +9,7 @@ const PAGE_ROUTE_MAP = {
   dashboard: "/dashboard",
   timetable: "/timetable",
   faculty: "/faculty",
-  attendance: "/attendance",
+  attendance: "/dashboard",
   leave: "/leave",
   substitutions: "/substitutions",
   analytics: "/analytics",

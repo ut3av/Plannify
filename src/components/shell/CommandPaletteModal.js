@@ -8,7 +8,6 @@ const PAGE_ROUTE_MAP = {
   dashboard: "/dashboard",
   timetable: "/timetable",
   faculty: "/faculty",
-  attendance: "/attendance",
   leave: "/leave",
   substitutions: "/substitutions",
   analytics: "/analytics",
@@ -33,7 +32,6 @@ const QUICK_ACTIONS = [
   { type: "action", label: "Academic Setup: Time Slots", page: "slots", path: "/academic/slots", icon: "timer" },
   { type: "action", label: "Leave Applications & Management", page: "leave", path: "/leave", icon: "calendar" },
   { type: "action", label: "Substitution & Proxy Center", page: "substitutions", path: "/substitutions", icon: "user-check" },
-  { type: "action", label: "Open Attendance Dashboard", page: "attendance", path: "/attendance", icon: "clock" },
   { type: "action", label: "View Operational Analytics 360°", page: "analytics", path: "/analytics", icon: "bar-chart" },
   { type: "action", label: "System & Institution Settings", page: "settings", path: "/operations/settings", icon: "settings" },
 ];

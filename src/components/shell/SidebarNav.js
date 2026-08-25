@@ -9,7 +9,6 @@ export const NAV_GROUPS = [
       { id: "dashboard", path: "/dashboard", label: "Dashboard", icon: "home", badge: null },
       { id: "timetable", path: "/timetable", label: "Timetable Workspace", icon: "grid", badge: "Primary" },
       { id: "faculty", path: "/faculty", label: "Faculty Directory", icon: "users", badge: null },
-      { id: "attendance", path: "/attendance", label: "Attendance", icon: "clock", badge: null },
       { id: "leave", path: "/leave", label: "Leave Management", icon: "calendar", badge: null },
       { id: "substitutions", path: "/substitutions", label: "Substitutions", icon: "user-check", badge: null },
       { id: "analytics", path: "/analytics", label: "Analytics 360°", icon: "bar-chart", badge: "ERP" },

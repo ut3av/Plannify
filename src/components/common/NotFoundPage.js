@@ -66,17 +66,17 @@ export default function NotFoundPage() {
       badge: "Directory"
     },
     {
-      to: "/attendance",
-      title: "Attendance Tracker",
-      desc: "Daily faculty attendance & biometric log records",
+      to: "/academic/rooms",
+      title: "Classrooms & Labs",
+      desc: "Smart theory venues, laboratories & capacity matrix",
       icon: (
         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
+          <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+          <path d="M9 22v-4h6v4" />
         </svg>
       ),
       color: "teal",
-      badge: "Biometric"
+      badge: "Venues"
     },
     {
       to: "/leave",
