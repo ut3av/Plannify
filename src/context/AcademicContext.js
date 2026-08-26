@@ -206,7 +206,9 @@ export function AcademicProvider({ children }) {
 
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        if (!supabase?.auth?.getSession) return;
+        const res = await supabase.auth.getSession();
+        const session = res?.data?.session;
         if (session?.user) {
           const normalized = normalizeUser(session.user);
           setUser(normalized);
@@ -217,6 +219,8 @@ export function AcademicProvider({ children }) {
         console.warn("Session check failed:", err);
       }
     };
+    checkSession();
+
     let authSubscription = null;
     if (supabase?.auth?.onAuthStateChange) {
       const authRes = supabase.auth.onAuthStateChange((_event, session) => {
