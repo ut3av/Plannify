@@ -191,6 +191,30 @@ export default function FacultyDirectory({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps: subscribe ONCE on mount, unsubscribe on unmount
 
+  // Synchronize faculty capacity updates dispatched from AcademicContext
+  useEffect(() => {
+    const handleFacultyUpdated = (e) => {
+      if (e.detail?.teacher) {
+        const t = e.detail.teacher;
+        setFaculty(prev => prev.map(item => {
+          const tName = ((typeof item === 'string' ? item : item.teacher_name || item.name) || '').toLowerCase().trim();
+          const targetName = ((typeof t === 'string' ? t : t.teacher_name || t.name) || '').toLowerCase().trim();
+          if ((t.id && item.id === t.id) || (targetName && tName === targetName)) {
+            const cap = Number(t.weekly_workload_capacity || t.max_weekly_hours || item.weekly_workload_capacity || 16);
+            return {
+              ...item,
+              weekly_workload_capacity: cap,
+              max_weekly_hours: cap
+            };
+          }
+          return item;
+        }));
+      }
+    };
+    window.addEventListener("planify_faculty_updated", handleFacultyUpdated);
+    return () => window.removeEventListener("planify_faculty_updated", handleFacultyUpdated);
+  }, []);
+
   const getFacultyKey = (f) => {
     if (!f) return "";
     return f.id ? String(f.id) : (f.teacher_name || f.name || "").trim().toLowerCase();
@@ -1225,7 +1249,7 @@ export default function FacultyDirectory({
                                   e.stopPropagation();
                                   const next = Math.max(1, capacity - 1);
                                   if (updateFacultyWorkloadCapacity) {
-                                    updateFacultyWorkloadCapacity(f.teacher_name, next);
+                                    updateFacultyWorkloadCapacity(f.teacher_name || f.name, next);
                                   }
                                   setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
                                 }}
@@ -1233,9 +1257,26 @@ export default function FacultyDirectory({
                               >
                                 -
                               </button>
-                              <span className="px-3 font-mono text-xs font-black text-indigo-300 select-none">
-                                {capacity} slots/week
-                              </span>
+                              <div className="flex items-center px-1.5">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="50"
+                                  value={capacity}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value, 10);
+                                    if (!isNaN(val) && val >= 1) {
+                                      if (updateFacultyWorkloadCapacity) {
+                                        updateFacultyWorkloadCapacity(f.teacher_name || f.name, val);
+                                      }
+                                      setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: val, max_weekly_hours: val } : item));
+                                    }
+                                  }}
+                                  className="w-10 bg-transparent text-center font-mono text-xs font-black text-indigo-300 focus:outline-none focus:bg-slate-800 rounded py-0.5"
+                                  title="Enter weekly slots quota"
+                                />
+                                <span className="text-[10px] font-bold text-slate-400 select-none">slots/wk</span>
+                              </div>
                               <button
                                 type="button"
                                 title="Increase weekly slots"
@@ -1243,7 +1284,7 @@ export default function FacultyDirectory({
                                   e.stopPropagation();
                                   const next = capacity + 1;
                                   if (updateFacultyWorkloadCapacity) {
-                                    updateFacultyWorkloadCapacity(f.teacher_name, next);
+                                    updateFacultyWorkloadCapacity(f.teacher_name || f.name, next);
                                   }
                                   setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
                                 }}
@@ -1405,7 +1446,7 @@ export default function FacultyDirectory({
                                 e.stopPropagation();
                                 const next = Math.max(1, capacity - 1);
                                 if (updateFacultyWorkloadCapacity) {
-                                  updateFacultyWorkloadCapacity(f.teacher_name, next);
+                                  updateFacultyWorkloadCapacity(f.teacher_name || f.name, next);
                                 }
                                 setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
                               }}
@@ -1413,9 +1454,26 @@ export default function FacultyDirectory({
                             >
                               -
                             </button>
-                            <span className="px-2.5 font-mono text-xs font-black text-indigo-300 select-none">
-                              {capacity} slots/wk
-                            </span>
+                            <div className="flex items-center px-1">
+                              <input
+                                type="number"
+                                min="1"
+                                max="50"
+                                value={capacity}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  if (!isNaN(val) && val >= 1) {
+                                    if (updateFacultyWorkloadCapacity) {
+                                      updateFacultyWorkloadCapacity(f.teacher_name || f.name, val);
+                                    }
+                                    setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: val, max_weekly_hours: val } : item));
+                                  }
+                                }}
+                                className="w-8 bg-transparent text-center font-mono text-xs font-black text-indigo-300 focus:outline-none focus:bg-slate-800 rounded py-0.5"
+                                title="Enter weekly slots quota"
+                              />
+                              <span className="text-[10px] font-bold text-slate-400 select-none">slots/wk</span>
+                            </div>
                             <button
                               type="button"
                               title="Increase weekly slots"
@@ -1423,7 +1481,7 @@ export default function FacultyDirectory({
                                 e.stopPropagation();
                                 const next = capacity + 1;
                                 if (updateFacultyWorkloadCapacity) {
-                                  updateFacultyWorkloadCapacity(f.teacher_name, next);
+                                  updateFacultyWorkloadCapacity(f.teacher_name || f.name, next);
                                 }
                                 setFaculty(prev => prev.map(item => (item.id === f.id || item.teacher_name === f.teacher_name) ? { ...item, weekly_workload_capacity: next, max_weekly_hours: next } : item));
                               }}

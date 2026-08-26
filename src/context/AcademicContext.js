@@ -336,6 +336,7 @@ export function AcademicProvider({ children }) {
                 const name = (p.teacher_name || p.name || '').trim();
                 if (name && !names.has(name.toLowerCase()) && !isTestOrMockFaculty(name)) {
                   names.add(name.toLowerCase());
+                  const cap = Number(p.weekly_workload_capacity || p.max_weekly_hours || 16);
                   merged.push({
                     id: p.id,
                     name,
@@ -345,6 +346,8 @@ export function AcademicProvider({ children }) {
                     designation: p.designation || "Assistant Professor",
                     email: p.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
                     phone: p.phone || "+91-9876543210",
+                    weekly_workload_capacity: cap,
+                    max_weekly_hours: cap,
                     free_periods: 1,
                     status: p.status || "active"
                   });
@@ -372,6 +375,7 @@ export function AcademicProvider({ children }) {
                 const name = (t.name || t.teacher_name || '').trim();
                 if (name && !names.has(name.toLowerCase()) && !isTestOrMockFaculty(name)) {
                   names.add(name.toLowerCase());
+                  const cap = Number(t.weekly_workload_capacity || t.max_weekly_hours || 16);
                   merged.push({
                     id: t.id,
                     name,
@@ -381,6 +385,8 @@ export function AcademicProvider({ children }) {
                     designation: t.designation || "Assistant Professor",
                     email: t.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
                     phone: t.phone || "+91-9876543210",
+                    weekly_workload_capacity: cap,
+                    max_weekly_hours: cap,
                     free_periods: t.free_periods || 1,
                     status: t.status || "active"
                   });
@@ -569,6 +575,7 @@ export function AcademicProvider({ children }) {
                 const current = Array.isArray(prev) ? prev : [];
                 const exists = current.some(t => ((typeof t === 'string' ? t : t?.name || t?.teacher_name) || '').toLowerCase().trim() === name.toLowerCase());
                 if (exists) return current;
+                const cap = Number(newF.weekly_workload_capacity || newF.max_weekly_hours || 16);
                 const newObj = {
                   id: newF.id,
                   name,
@@ -578,6 +585,8 @@ export function AcademicProvider({ children }) {
                   designation: newF.designation || "Assistant Professor",
                   email: newF.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@lnctu.ac.in`,
                   phone: newF.phone || "+91-9876543210",
+                  weekly_workload_capacity: cap,
+                  max_weekly_hours: cap,
                   free_periods: 1,
                   status: newF.status || "active"
                 };
@@ -597,12 +606,15 @@ export function AcademicProvider({ children }) {
                 return current.map(t => {
                   const tName = ((typeof t === 'string' ? t : t?.name || t?.teacher_name) || '').trim();
                   if (t?.id === updatedF.id || tName.toLowerCase() === name.toLowerCase()) {
+                    const cap = Number(updatedF.weekly_workload_capacity || updatedF.max_weekly_hours || (typeof t === 'object' ? t.weekly_workload_capacity : 16) || 16);
                     return {
                       ...t,
                       name,
                       teacher_name: name,
                       designation: updatedF.designation || t.designation || "Assistant Professor",
                       department: updatedF.department_name || updatedF.department || t.department || "Computer Applications",
+                      weekly_workload_capacity: cap,
+                      max_weekly_hours: cap,
                       status: updatedF.status || t.status || "active"
                     };
                   }
@@ -1640,21 +1652,32 @@ export function AcademicProvider({ children }) {
     const capNum = Math.max(1, parseInt(newCapacity, 10) || 16);
     const cleanId = String(facultyIdentifier || '').trim().toLowerCase();
 
+    let updatedObj = null;
+
     // 1. Update in teachers context state immediately
     setTeachers(prev => {
       const current = Array.isArray(prev) ? prev : [];
-      return current.map(t => {
+      const updated = current.map(t => {
         const tName = ((typeof t === 'string' ? t : t?.name || t?.teacher_name) || '').toLowerCase().trim();
         const tId = String(typeof t === 'object' ? t?.id : '').toLowerCase().trim();
         if (tName === cleanId || tId === cleanId) {
-          return {
+          const mod = {
             ...(typeof t === 'object' ? t : { name: t }),
             weekly_workload_capacity: capNum,
             max_weekly_hours: capNum
           };
+          updatedObj = mod;
+          return mod;
         }
         return t;
       });
+
+      if (typeof window !== "undefined" && updatedObj) {
+        window.dispatchEvent(new CustomEvent("planify_faculty_updated", { detail: { teacher: updatedObj } }));
+      }
+
+      saveToCloud({ teachers: updated }, true);
+      return updated;
     });
 
     // 2. Persist to Supabase faculty_profiles if connected
@@ -1671,7 +1694,7 @@ export function AcademicProvider({ children }) {
         console.warn("Supabase workload capacity update notice:", err);
       }
     }
-  }, []);
+  }, [saveToCloud]);
 
   const value = {
     user,

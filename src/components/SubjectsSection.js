@@ -77,6 +77,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
   const [teacher, setTeacher] = useState(effectiveTeachers[0]?.name || "");
   const [selectedSections, setSelectedSections] = useState([]);
   const [isLab, setIsLab] = useState(false);
+  const [requiredSlots, setRequiredSlots] = useState(4);
   const [colorIndex, setColorIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all"); // "all" | "theory" | "lab"
@@ -120,8 +121,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
     const trimmedCode = code.trim();
     const trimmedName = name.trim();
     if (trimmedName && teacher) {
-      // Dynamic slot allocation: 4 periods/week for theory, 4 periods/week (2x2 continuous) for laboratory
-      const dynamicSlots = 4;
+      const dynamicSlots = Math.max(1, parseInt(requiredSlots, 10) || 4);
       const newSubject = {
         code: trimmedCode,
         name: trimmedName,
@@ -137,6 +137,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
       setCode("");
       setName("");
       setIsLab(false);
+      setRequiredSlots(4);
       setSelectedSections([]);
       setColorIndex((colorIndex + 1) % SUBJECT_COLORS.length);
     }
@@ -321,7 +322,7 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
           </div>
 
           {/* Teacher */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Assigned Teacher *</label>
             <select
               className="input-premium w-full text-xs bg-slate-800 border-slate-700 text-white cursor-pointer"
@@ -346,6 +347,35 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
                 ))}
               </optgroup>
             </select>
+          </div>
+
+          {/* Slots / Week */}
+          <div className="lg:col-span-1">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Slots / Wk</label>
+            <div className="flex items-center bg-slate-800 border border-slate-700 rounded-xl p-0.5">
+              <button
+                type="button"
+                onClick={() => setRequiredSlots(prev => Math.max(1, (parseInt(prev, 10) || 4) - 1))}
+                className="w-6 h-6 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                min="1"
+                max="30"
+                className="w-8 bg-transparent text-center font-mono text-xs font-black text-indigo-300 focus:outline-none"
+                value={requiredSlots}
+                onChange={(e) => setRequiredSlots(parseInt(e.target.value, 10) || 1)}
+              />
+              <button
+                type="button"
+                onClick={() => setRequiredSlots(prev => (parseInt(prev, 10) || 4) + 1)}
+                className="w-6 h-6 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs"
+              >
+                +
+              </button>
+            </div>
           </div>
 
           {/* Add Action Button */}
@@ -644,11 +674,59 @@ export default function SubjectsSection({ subjects = [], teachers = [], sections
 
                 {/* Footer Controls: Automated Dynamic Load & Curriculum Metadata */}
                 <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-semibold">Institutional Load:</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-xs font-black">
-                      {sub.is_lab ? "4 Periods (2x2 Lab Block)" : "4 Periods / Week"}
-                    </span>
+                  <span className="text-[11px] text-slate-400 font-semibold">Weekly Load:</span>
+                  <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center bg-slate-950/70 border border-slate-700/90 rounded-xl p-0.5 shadow-inner">
+                      <button
+                        type="button"
+                        title="Decrease weekly slots"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const currentSlots = Number(sub.required_slots || 4);
+                          const next = Math.max(1, currentSlots - 1);
+                          const updated = [...subjects];
+                          updated[originalIndex] = { ...sub, required_slots: next };
+                          onChange(updated);
+                        }}
+                        className="w-6 h-6 rounded-lg flex items-center justify-center bg-slate-800 hover:bg-indigo-600 active:scale-95 text-slate-200 hover:text-white font-bold text-xs transition-all"
+                      >
+                        -
+                      </button>
+                      <div className="flex items-center px-1.5">
+                        <input
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={sub.required_slots || 4}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 1) {
+                              const updated = [...subjects];
+                              updated[originalIndex] = { ...sub, required_slots: val };
+                              onChange(updated);
+                            }
+                          }}
+                          className="w-8 bg-transparent text-center font-mono text-xs font-black text-indigo-300 focus:outline-none focus:bg-slate-800 rounded py-0.5"
+                          title="Enter weekly periods/slots"
+                        />
+                        <span className="text-[10px] font-bold text-slate-400 select-none">{sub.is_lab ? "lab slots/wk" : "slots/wk"}</span>
+                      </div>
+                      <button
+                        type="button"
+                        title="Increase weekly slots"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const currentSlots = Number(sub.required_slots || 4);
+                          const next = currentSlots + 1;
+                          const updated = [...subjects];
+                          updated[originalIndex] = { ...sub, required_slots: next };
+                          onChange(updated);
+                        }}
+                        className="w-6 h-6 rounded-lg flex items-center justify-center bg-slate-800 hover:bg-indigo-600 active:scale-95 text-slate-200 hover:text-white font-bold text-xs transition-all"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
