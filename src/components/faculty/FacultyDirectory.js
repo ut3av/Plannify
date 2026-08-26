@@ -141,47 +141,50 @@ export default function FacultyDirectory({
 
     // ONE stable Supabase Realtime subscription — created on mount, removed on unmount
     let supaChannel = null;
-    if (supabase) {
-      supaChannel = supabase
-        .channel('realtime_faculty_directory')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'faculty_profiles' },
-          (payload) => {
-            if (payload.eventType === 'INSERT' && payload.new) {
-              const newProfile = {
-                ...payload.new,
-                department_name: payload.new.department_name || payload.new.department || "Computer Applications",
-              };
-              setFaculty(prev => {
-                // Deduplicate: if a record with this ID already exists, update it; otherwise prepend
-                const exists = prev.some(f => f.id === newProfile.id);
-                if (exists) {
-                  return prev.map(f => f.id === newProfile.id ? { ...f, ...newProfile } : f);
-                }
-                return [newProfile, ...prev];
-              });
-            } else if (payload.eventType === 'UPDATE' && payload.new) {
-              setFaculty(prev => prev.map(f => f.id === payload.new.id ? { ...f, ...payload.new } : f));
-            } else if (payload.eventType === 'DELETE' && payload.old) {
-              const oldId = payload.old.id;
-              setFaculty(prev => prev.filter(f => f.id !== oldId));
-              // Also clear from deletedKeys tracking
-              setDeletedKeys(prev => {
-                const next = new Set(prev);
-                next.delete(oldId);
-                return next;
-              });
+    if (supabase && typeof supabase.channel === 'function') {
+      try {
+        const ch = supabase.channel('realtime_faculty_directory');
+        if (ch && typeof ch.on === 'function') {
+          supaChannel = ch.on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'faculty_profiles' },
+            (payload) => {
+              if (payload.eventType === 'INSERT' && payload.new) {
+                const newProfile = {
+                  ...payload.new,
+                  department_name: payload.new.department_name || payload.new.department || "Computer Applications",
+                };
+                setFaculty(prev => {
+                  const exists = prev.some(f => f.id === newProfile.id);
+                  if (exists) {
+                    return prev.map(f => f.id === newProfile.id ? { ...f, ...newProfile } : f);
+                  }
+                  return [newProfile, ...prev];
+                });
+              } else if (payload.eventType === 'UPDATE' && payload.new) {
+                setFaculty(prev => prev.map(f => f.id === payload.new.id ? { ...f, ...payload.new } : f));
+              } else if (payload.eventType === 'DELETE' && payload.old) {
+                const oldId = payload.old.id;
+                setFaculty(prev => prev.filter(f => f.id !== oldId));
+                setDeletedKeys(prev => {
+                  const next = new Set(prev);
+                  next.delete(oldId);
+                  return next;
+                });
+              }
             }
-            // NOTE: We do NOT call fetchFaculty(true) here — the local state mutation
-            // above is sufficient and avoids race conditions / stale overwrites
+          );
+          if (typeof supaChannel.subscribe === 'function') {
+            supaChannel.subscribe();
           }
-        )
-        .subscribe();
+        }
+      } catch {
+        // Fallback
+      }
     }
 
     return () => {
-      if (supaChannel && supabase) {
+      if (supaChannel && supabase && typeof supabase.removeChannel === 'function') {
         supabase.removeChannel(supaChannel);
       }
     };
@@ -367,6 +370,20 @@ export default function FacultyDirectory({
     setTimeout(() => setCopiedCredentials(false), 3000);
   };
 
+  const isFormNameDuplicate = useMemo(() => {
+    const name = form.teacher_name.trim();
+    if (!name) return false;
+    return faculty.some(f => (f.teacher_name || f.name || "").trim().toLowerCase() === name.toLowerCase()) ||
+      (Array.isArray(teachers) && teachers.some(t => (typeof t === 'string' ? t : (t.name || t.teacher_name || "")).trim().toLowerCase() === name.toLowerCase()));
+  }, [form.teacher_name, faculty, teachers]);
+
+  const isFormEmpIdDuplicate = useMemo(() => {
+    const id = form.employee_id.trim();
+    if (!id) return false;
+    return faculty.some(f => (f.employee_id || "").trim().toLowerCase() === id.toLowerCase()) ||
+      (Array.isArray(teachers) && teachers.some(t => (t.employee_id || "").trim().toLowerCase() === id.toLowerCase()));
+  }, [form.employee_id, faculty, teachers]);
+
   const handleAdd = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -377,6 +394,18 @@ export default function FacultyDirectory({
     const newTeacherName = form.teacher_name.trim();
     if (!newTeacherName) {
       setErrorMessage("Please provide a faculty name.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (isFormNameDuplicate) {
+      setErrorMessage(`A faculty member named "${newTeacherName}" already exists. Faculty names must be unique to prevent timetable and attendance conflicts.`);
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (isFormEmpIdDuplicate) {
+      setErrorMessage(`Employee ID "${form.employee_id.trim()}" is already assigned to another faculty member.`);
       setIsSubmitting(false);
       return;
     }
@@ -837,23 +866,33 @@ export default function FacultyDirectory({
               <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Full Name *</label>
               <input
                 type="text"
-                className="input"
+                className={`input ${isFormNameDuplicate ? "border-amber-500/70 focus:border-amber-500 ring-1 ring-amber-500/30" : ""}`}
                 placeholder="e.g. Dr. John Doe"
                 value={form.teacher_name}
                 onChange={e => setForm({ ...form, teacher_name: e.target.value })}
                 required
               />
+              {isFormNameDuplicate && (
+                <span className="text-[11px] text-amber-400 font-semibold mt-1 block">
+                  ⚠️ Faculty with this name already exists in the directory.
+                </span>
+              )}
             </div>
             <div>
               <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Employee ID *</label>
               <input
                 type="text"
-                className="input font-mono"
+                className={`input font-mono ${isFormEmpIdDuplicate ? "border-amber-500/70 focus:border-amber-500 ring-1 ring-amber-500/30" : ""}`}
                 placeholder="EMP-LNCT-1001"
                 value={form.employee_id}
                 onChange={e => setForm({ ...form, employee_id: e.target.value })}
                 required
               />
+              {isFormEmpIdDuplicate && (
+                <span className="text-[11px] text-amber-400 font-semibold mt-1 block">
+                  ⚠️ Employee ID is already assigned to another faculty member.
+                </span>
+              )}
             </div>
             <div>
               <label className="block font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Email Address</label>
