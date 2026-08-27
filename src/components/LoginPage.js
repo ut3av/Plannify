@@ -7,9 +7,7 @@ import BrandLogo from "./common/BrandLogo";
 import { useAcademic } from "../context/AcademicContext";
 import {
   verifyDeveloperKey,
-  isDeveloperEmail,
-  DEV_RESTRICTION_MESSAGE,
-  DEV_RESTRICTION_TITLE
+  isDeveloperEmail
 } from "../utils/devAuth";
 
 export default function LoginPage() {
@@ -255,10 +253,6 @@ export default function LoginPage() {
         if (signInData?.user) {
           const userMeta = signInData.user.user_metadata || {};
           let resolvedName = userMeta.name || userMeta.teacher_name || userMeta.full_name || name;
-          let resolvedDept = userMeta.department || userMeta.department_name || department;
-          let resolvedDesig = userMeta.designation || designation;
-          let resolvedEmpId = userMeta.employee_id || employeeId;
-          let resolvedPhone = userMeta.phone || phone;
 
           if (!resolvedName) {
             resolvedName = email.split('@')[0];

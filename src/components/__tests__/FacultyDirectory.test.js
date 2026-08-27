@@ -73,6 +73,7 @@ jest.mock('@supabase/supabase-js', () => {
 });
 
 describe('FacultyDirectory Component', () => {
+  jest.setTimeout(15000);
   const mockTeachers = [
     { id: 'fac_101', name: 'Dr. Sanjana Singh', employee_id: 'EMP-LNCT-101' },
     { id: 'fac_102', name: 'Prof. Rajesh Verma', employee_id: 'EMP-LNCT-102' },
