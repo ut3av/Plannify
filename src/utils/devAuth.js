@@ -1,26 +1,25 @@
 /**
  * Developer Access Control & Intellectual Property Verification Utility
  * Plannify Academic OS
- * Intellectual Property held by Ut3av & SujaL
+ * Intellectual Property held by plannify_developers
  */
 
 export const DEV_RESTRICTION_TITLE = "Private Development Mode — Restricted Access";
 
 export const DEV_RESTRICTION_MESSAGE = 
-  "This Software and app is currently under active development, and only the authorized developers have access to go through and interact with it, as it is the intellectual property held by Ut3av & SujaL.";
+  "This Software or app is under development, and developer has only access to go through it, as it is the intellectual property held by plannify_developers.";
 
 export const DEV_RESTRICTION_SHORT = 
-  "Under active development. Access restricted exclusively to developers (Ut3av & SujaL).";
+  "Under active development. Access restricted exclusively to developers (plannify_developers).";
 
 // Sole Authorized Developer Password
 export const DEVELOPER_MASTER_PASSWORD = "Pandey001#887283#";
 
 // Whitelisted developer emails
 const AUTHORIZED_DEV_EMAILS = [
-  "ut3av@plannify.dev",
-  "sujal@plannify.dev",
   "developer@plannify.dev",
-  "admin@plannify.dev"
+  "admin@plannify.dev",
+  "plannify_developers@plannify.dev"
 ];
 
 const STORAGE_KEY = "plannify_developer_session";
@@ -45,10 +44,10 @@ export function isDeveloperEmail(email) {
 /**
  * Creates a standard Developer User object with full administrative rights
  */
-export function createDeveloperUser(devName = "Ut3av & SujaL") {
+export function createDeveloperUser(devName = "plannify_developers") {
   return {
-    id: "dev-master-ut3av-sujal",
-    email: "ut3av@plannify.dev",
+    id: "dev-master-plannify-developers",
+    email: "developer@plannify.dev",
     name: devName,
     teacher_name: `${devName} (Lead Developer)`,
     full_name: `${devName} (System Architect)`,
@@ -115,6 +114,6 @@ export function isDeveloperUser(user) {
   if (!user) return false;
   if (user.isDeveloper) return true;
   if (isDeveloperEmail(user.email)) return true;
-  if (user.id === "dev-master-ut3av-sujal") return true;
+  if (user.id === "dev-master-plannify-developers") return true;
   return false;
 }

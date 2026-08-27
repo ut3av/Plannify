@@ -402,10 +402,10 @@ export default function HeaderBar({
         {/* User Profile Dropdown */}
         <div className="relative flex items-center gap-2">
           {/* Developer Access Badge */}
-          {(user?.isDeveloper || user?.id === "dev-master-ut3av-sujal") && (
+          {(user?.isDeveloper || user?.id === "dev-master-plannify-developers") && (
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-extrabold shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span>Ut3av & SujaL</span>
+              <span>plannify_developers</span>
             </div>
           )}
 
@@ -418,24 +418,24 @@ export default function HeaderBar({
             }`}
           >
             <div className={`w-8 h-8 rounded-xl border flex items-center justify-center font-bold text-xs ${
-              (user?.isDeveloper || user?.id === "dev-master-ut3av-sujal")
+              (user?.isDeveloper || user?.id === "dev-master-plannify-developers")
                 ? 'bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300'
                 : isLight
                 ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
                 : 'bg-indigo-600/30 border-indigo-400/40 text-indigo-300'
             }`}>
-              {(user?.isDeveloper || user?.id === "dev-master-ut3av-sujal") ? 'DEV' : (user?.email ? user.email[0].toUpperCase() : 'AD')}
+              {(user?.isDeveloper || user?.id === "dev-master-plannify-developers") ? 'DEV' : (user?.email ? user.email[0].toUpperCase() : 'AD')}
             </div>
             <div className="text-left hidden xl:block leading-none pr-1">
               <p className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
                 {user?.name || user?.email?.split('@')[0] || 'Administrator'}
               </p>
               <p className={`text-[10px] mt-0.5 ${
-                (user?.isDeveloper || user?.id === "dev-master-ut3av-sujal")
+                (user?.isDeveloper || user?.id === "dev-master-plannify-developers")
                   ? 'text-amber-600 dark:text-amber-400 font-bold'
                   : isLight ? 'text-slate-500' : 'text-slate-400'
               }`}>
-                {(user?.isDeveloper || user?.id === "dev-master-ut3av-sujal") ? 'Lead Developer & IP Owner' : (userRole || 'Admin')}
+                {(user?.isDeveloper || user?.id === "dev-master-plannify-developers") ? 'Lead Developer & IP Owner' : (userRole || 'Admin')}
               </p>
             </div>
           </button>
@@ -451,12 +451,12 @@ export default function HeaderBar({
                   {user?.name || user?.email || 'admin@lnctu.ac.in'}
                 </p>
                 <p className={`text-[10px] mt-0.5 font-semibold ${
-                  (user?.isDeveloper || user?.id === "dev-master-ut3av-sujal")
+                  (user?.isDeveloper || user?.id === "dev-master-plannify-developers")
                     ? 'text-amber-600 dark:text-amber-400'
                     : isLight ? 'text-indigo-600' : 'text-indigo-400'
                 }`}>
-                  {(user?.isDeveloper || user?.id === "dev-master-ut3av-sujal")
-                    ? '🛡️ Verified Developer (Ut3av & SujaL)'
+                  {(user?.isDeveloper || user?.id === "dev-master-plannify-developers")
+                    ? '🛡️ Verified Developer (plannify_developers)'
                     : 'Academic Dean / Admin'}
                 </p>
               </div>

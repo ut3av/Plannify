@@ -27,18 +27,17 @@ describe('Developer Authentication & IP Protection Utility', () => {
   });
 
   test('validates developer email whitelist', () => {
-    expect(isDeveloperEmail('ut3av@plannify.dev')).toBe(true);
-    expect(isDeveloperEmail('sujal@plannify.dev')).toBe(true);
     expect(isDeveloperEmail('developer@plannify.dev')).toBe(true);
+    expect(isDeveloperEmail('plannify_developers@plannify.dev')).toBe(true);
     expect(isDeveloperEmail('outsider@random.com')).toBe(false);
     expect(isDeveloperEmail('')).toBe(false);
   });
 
   test('creates developer user object with full admin privileges', () => {
-    const devUser = createDeveloperUser('Ut3av & SujaL');
+    const devUser = createDeveloperUser('plannify_developers');
     expect(devUser.isDeveloper).toBe(true);
     expect(devUser.role).toBe('Admin');
-    expect(devUser.name).toBe('Ut3av & SujaL');
+    expect(devUser.name).toBe('plannify_developers');
     expect(devUser.designation).toBe('Lead Developer & IP Owner');
   });
 
@@ -49,14 +48,14 @@ describe('Developer Authentication & IP Protection Utility', () => {
     const retrieved = getDeveloperSession();
     expect(retrieved).not.toBeNull();
     expect(retrieved.isDeveloper).toBe(true);
-    expect(retrieved.name).toBe('Ut3av & SujaL');
+    expect(retrieved.name).toBe('plannify_developers');
 
     clearDeveloperSession();
     expect(getDeveloperSession()).toBeNull();
   });
 
   test('identifies developer users correctly', () => {
-    const devUser = { isDeveloper: true, email: 'ut3av@plannify.dev' };
+    const devUser = { isDeveloper: true, email: 'developer@plannify.dev' };
     const normalUser = { isDeveloper: false, email: 'faculty@lnctu.ac.in' };
     expect(isDeveloperUser(devUser)).toBe(true);
     expect(isDeveloperUser(normalUser)).toBe(false);
@@ -64,7 +63,7 @@ describe('Developer Authentication & IP Protection Utility', () => {
   });
 
   test('contains correct intellectual property notice message', () => {
-    expect(DEV_RESTRICTION_MESSAGE).toContain('Ut3av & SujaL');
+    expect(DEV_RESTRICTION_MESSAGE).toContain('plannify_developers');
     expect(DEV_RESTRICTION_MESSAGE).toContain('intellectual property');
   });
 });

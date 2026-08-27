@@ -351,7 +351,7 @@ export default function PublicTimetablePortal() {
         <span className="bg-black/25 text-amber-200 text-[9px] uppercase font-black px-2 py-0.5 rounded-full border border-amber-300/30">
           Dev Preview
         </span>
-        <span>Plannify is under active development · Intellectual property held by <strong>Ut3av & SujaL</strong></span>
+        <span>Plannify is under active development · Intellectual property held by <strong>plannify_developers</strong></span>
       </div>
 
       {/* ── Top Bar / Header ── */}

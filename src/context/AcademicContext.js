@@ -1647,7 +1647,7 @@ export function AcademicProvider({ children }) {
     }
   }, [result, saveToCloud]);
 
-  const loginAsDeveloper = useCallback((devName = "Ut3av & SujaL") => {
+  const loginAsDeveloper = useCallback((devName = "plannify_developers") => {
     const devUser = createDeveloperUser(devName);
     setDeveloperSession(devUser);
     setUser(devUser);

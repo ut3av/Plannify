@@ -124,7 +124,7 @@ export default function LandingPage({ onExploreDemo }) {
         <span className="bg-black/25 text-amber-200 text-[10px] uppercase font-black px-2 py-0.5 rounded-full border border-amber-300/30">
           Under Active Development
         </span>
-        <span>Intellectual Property held by <strong>Ut3av & SujaL</strong> · Access restricted to developers</span>
+        <span>Intellectual Property held by <strong>plannify_developers</strong> · Access restricted to developers</span>
         <button onClick={handleLaunchApp} className="underline hover:opacity-80 ml-1 font-black flex items-center gap-1 text-amber-100">
           Developer Entry →
         </button>
@@ -141,7 +141,7 @@ export default function LandingPage({ onExploreDemo }) {
               <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 w-max">
                 Dev Preview
               </span>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">By Ut3av & SujaL · Proprietary Solver</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">By plannify_developers · Proprietary Solver</p>
             </div>
           </div>
 
