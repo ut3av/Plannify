@@ -346,6 +346,14 @@ export default function PublicTimetablePortal() {
         </div>
       )}
 
+      {/* ── Top Announcement / Dev Notice Banner ── */}
+      <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-indigo-700 text-white text-[11px] font-bold py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm no-print">
+        <span className="bg-black/25 text-amber-200 text-[9px] uppercase font-black px-2 py-0.5 rounded-full border border-amber-300/30">
+          Dev Preview
+        </span>
+        <span>Plannify is under active development · Intellectual property held by <strong>Ut3av & SujaL</strong></span>
+      </div>
+
       {/* ── Top Bar / Header ── */}
       <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm no-print px-4 py-3 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

@@ -120,11 +120,13 @@ export default function LandingPage({ onExploreDemo }) {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white font-sans antialiased overflow-x-hidden">
       
       {/* ── TOP ANNOUNCEMENT BANNER ── */}
-      <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white text-xs font-bold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
-        <span className="bg-white/20 text-white text-[10px] uppercase font-black px-2 py-0.5 rounded-full">New</span>
-        <span>Plannify Academic OS v3.70 is live with Google OR-Tools AI Constraint Engine</span>
-        <button onClick={handleLaunchApp} className="underline hover:opacity-80 ml-1 font-extrabold flex items-center gap-1">
-          Explore Portal →
+      <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-indigo-700 text-white text-xs font-bold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
+        <span className="bg-black/25 text-amber-200 text-[10px] uppercase font-black px-2 py-0.5 rounded-full border border-amber-300/30">
+          Under Active Development
+        </span>
+        <span>Intellectual Property held by <strong>Ut3av & SujaL</strong> · Access restricted to developers</span>
+        <button onClick={handleLaunchApp} className="underline hover:opacity-80 ml-1 font-black flex items-center gap-1 text-amber-100">
+          Developer Entry →
         </button>
       </div>
 
@@ -136,10 +138,10 @@ export default function LandingPage({ onExploreDemo }) {
           <div className="flex items-center gap-3.5 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <BrandLogo size="lg" isWarm={false} />
             <div className="hidden sm:flex flex-col justify-center pl-3 border-l border-slate-200 dark:border-slate-800">
-              <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 w-max">
-                Academic OS
+              <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 w-max">
+                Dev Preview
               </span>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Intelligent University Scheduling Platform</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">By Ut3av & SujaL · Proprietary Solver</p>
             </div>
           </div>
 
@@ -159,14 +161,14 @@ export default function LandingPage({ onExploreDemo }) {
               className="btn-secondary text-xs py-2 px-3.5 font-bold flex items-center gap-1.5 hover:border-indigo-500/40"
             >
               <svg className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <span>Public Timetable</span>
+              <span>Public Portal</span>
             </button>
             <button
               onClick={handleLaunchApp}
-              className="btn-primary text-xs py-2.5 px-4 font-bold shadow-lg shadow-indigo-500/20 flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform"
+              className="btn-primary text-xs py-2.5 px-4 font-extrabold shadow-lg shadow-amber-500/20 flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform bg-gradient-to-r from-amber-600 via-orange-600 to-indigo-600 border-none text-white"
             >
-              <span>Sign In / Launch</span>
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <svg className="w-3.5 h-3.5 text-amber-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Developer Sign In</span>
             </button>
           </div>
         </div>

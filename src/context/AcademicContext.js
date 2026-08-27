@@ -6,6 +6,13 @@ import { clearAllFacultyCaches, getFacultyWorkloadAnalytics } from '../services/
 import { API_BASE_URL } from '../apiConfig';
 import { buildApiPayload, formatResult } from '../utils/timetableFormatter';
 import { solveTimetableLocally } from '../utils/localSolver';
+import {
+  getDeveloperSession,
+  setDeveloperSession,
+  clearDeveloperSession,
+  isDeveloperUser,
+  createDeveloperUser
+} from '../utils/devAuth';
 
 const AcademicContext = createContext(null);
 
@@ -207,6 +214,15 @@ export function AcademicProvider({ children }) {
 
     const checkSession = async () => {
       try {
+        // 1. Check local developer session first (Ut3av & SujaL)
+        const devSession = getDeveloperSession();
+        if (devSession) {
+          setUser(devSession);
+          setUserRole("Admin");
+          return;
+        }
+
+        // 2. Check Supabase session
         if (!supabase?.auth?.getSession) return;
         const res = await supabase.auth.getSession();
         const session = res?.data?.session;
@@ -230,6 +246,13 @@ export function AcademicProvider({ children }) {
     let authSubscription = null;
     if (supabase?.auth?.onAuthStateChange) {
       const authRes = supabase.auth.onAuthStateChange((_event, session) => {
+        const currentDevSession = getDeveloperSession();
+        if (currentDevSession) {
+          setUser(currentDevSession);
+          setUserRole("Admin");
+          return;
+        }
+
         if (session?.user) {
           const normalized = normalizeUser(session.user);
           setUser(normalized);
@@ -1624,13 +1647,27 @@ export function AcademicProvider({ children }) {
     }
   }, [result, saveToCloud]);
 
+  const loginAsDeveloper = useCallback((devName = "Ut3av & SujaL") => {
+    const devUser = createDeveloperUser(devName);
+    setDeveloperSession(devUser);
+    setUser(devUser);
+    setUserRole("Admin");
+    return devUser;
+  }, []);
+
   const handleLogout = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
+      clearDeveloperSession();
+      if (supabase?.auth?.signOut) {
+        await supabase.auth.signOut();
+      }
       setUser(null);
       setUserRole("Admin");
     } catch (err) {
       console.error("Logout error:", err);
+      clearDeveloperSession();
+      setUser(null);
+      setUserRole("Admin");
     }
   }, []);
 
@@ -1790,6 +1827,8 @@ export function AcademicProvider({ children }) {
         window.__planify_refresh_state();
       }
     },
+    loginAsDeveloper,
+    isDeveloper: isDeveloperUser(user),
     handleLogout
   };
 

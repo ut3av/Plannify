@@ -400,7 +400,15 @@ export default function HeaderBar({
         )}
 
         {/* User Profile Dropdown */}
-        <div className="relative">
+        <div className="relative flex items-center gap-2">
+          {/* Developer Access Badge */}
+          {(user?.isDeveloper || user?.id === "dev-master-ut3av-sujal") && (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-extrabold shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span>Ut3av & SujaL</span>
+            </div>
+          )}
+
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className={`flex items-center gap-2 p-1 rounded-xl transition-colors border border-transparent ${
@@ -410,34 +418,46 @@ export default function HeaderBar({
             }`}
           >
             <div className={`w-8 h-8 rounded-xl border flex items-center justify-center font-bold text-xs ${
-              isLight
+              (user?.isDeveloper || user?.id === "dev-master-ut3av-sujal")
+                ? 'bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300'
+                : isLight
                 ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
                 : 'bg-indigo-600/30 border-indigo-400/40 text-indigo-300'
             }`}>
-              {user?.email ? user.email[0].toUpperCase() : 'AD'}
+              {(user?.isDeveloper || user?.id === "dev-master-ut3av-sujal") ? 'DEV' : (user?.email ? user.email[0].toUpperCase() : 'AD')}
             </div>
             <div className="text-left hidden xl:block leading-none pr-1">
               <p className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
-                {user?.email?.split('@')[0] || 'Administrator'}
+                {user?.name || user?.email?.split('@')[0] || 'Administrator'}
               </p>
-              <p className={`text-[10px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                {userRole || 'Admin'}
+              <p className={`text-[10px] mt-0.5 ${
+                (user?.isDeveloper || user?.id === "dev-master-ut3av-sujal")
+                  ? 'text-amber-600 dark:text-amber-400 font-bold'
+                  : isLight ? 'text-slate-500' : 'text-slate-400'
+              }`}>
+                {(user?.isDeveloper || user?.id === "dev-master-ut3av-sujal") ? 'Lead Developer & IP Owner' : (userRole || 'Admin')}
               </p>
             </div>
           </button>
 
           {showProfileMenu && (
-            <div className={`absolute right-0 mt-2 w-52 rounded-2xl border shadow-2xl p-2 z-50 text-xs animate-fade-in ${
+            <div className={`absolute right-0 mt-2 w-56 rounded-2xl border shadow-2xl p-2 z-50 text-xs animate-fade-in ${
               isLight
                 ? 'bg-white border-slate-200 text-slate-800 shadow-slate-200/80'
                 : 'bg-slate-900 border-slate-700 text-slate-200'
             }`}>
               <div className={`px-3 py-2 border-b ${isLight ? 'border-slate-100' : 'border-slate-800'}`}>
                 <p className={`font-bold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  {user?.email || 'admin@lnctu.ac.in'}
+                  {user?.name || user?.email || 'admin@lnctu.ac.in'}
                 </p>
-                <p className={`text-[10px] mt-0.5 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`}>
-                  Academic Dean / Admin
+                <p className={`text-[10px] mt-0.5 font-semibold ${
+                  (user?.isDeveloper || user?.id === "dev-master-ut3av-sujal")
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : isLight ? 'text-indigo-600' : 'text-indigo-400'
+                }`}>
+                  {(user?.isDeveloper || user?.id === "dev-master-ut3av-sujal")
+                    ? '🛡️ Verified Developer (Ut3av & SujaL)'
+                    : 'Academic Dean / Admin'}
                 </p>
               </div>
 
@@ -466,7 +486,7 @@ export default function HeaderBar({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-red-600 dark:hover:bg-red-500/20 dark:text-red-400 flex items-center gap-2 mt-1 font-semibold transition-colors"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                Sign Out
+                Sign Out / Exit Developer Mode
               </button>
             </div>
           )}
